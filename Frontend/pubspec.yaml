@@ -1,0 +1,34 @@
+name: Frontend
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  firebase_core: ^3.13.0
+  flutter:
+    sdk: flutter
+  http: ^1.3.0
+  kakao_flutter_sdk_user: ^1.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/kakaotalk_icon.png
+    - assets/images/alert.png
+    - assets/images/setting.png
+    - assets/images/refrigerator.png
+    - assets/images/menu.png
+    - assets/images/recipe.png
+    - assets/images/favorits.png
+    - assets/images/cart.png
+    - assets/images/plus.png
+    - assets/images/levelplus.png
+    - assets/images/minus.png
