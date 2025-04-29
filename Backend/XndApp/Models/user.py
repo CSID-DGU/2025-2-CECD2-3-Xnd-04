@@ -34,6 +34,3 @@ class User(models.Model):
     users = UserManager()
 
 
-
-# 냉장고 테이블
-

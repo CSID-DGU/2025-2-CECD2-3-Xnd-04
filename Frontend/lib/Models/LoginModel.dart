@@ -1,6 +1,6 @@
 // No Statement Management
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
-import 'package:Frontend/Login/kakaoLoginAbstract.dart';
+import 'package:Frontend/Abstracts/kakaoLoginAbstract.dart';
 
 class LoginModel{
   final SocialLogin _socialLogin;

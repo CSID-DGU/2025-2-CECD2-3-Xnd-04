@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import User
+from .Models.user import User
+from .Models.refrigerator import Refrigerator
 
 class UserSerializer(serializers.ModelSerializer):
     class meta:
