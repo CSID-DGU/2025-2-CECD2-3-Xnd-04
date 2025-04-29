@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:Frontend/Models/LoginModel.dart';
 import 'package:Frontend/Views/LoginView.dart';
-import 'package:Frontend/Login/kakaoLogin.dart';
+import 'package:Frontend/Abstracts/kakaoLogin.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 
 class SettingView extends StatefulWidget {

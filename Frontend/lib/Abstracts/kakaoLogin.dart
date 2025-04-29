@@ -1,5 +1,5 @@
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
-import 'package:Frontend/Login/kakaoLoginAbstract.dart';
+import 'package:Frontend/Abstracts/kakaoLoginAbstract.dart';
 
 // 카카오톡 로그인 버전(카카오 계정 로그인 X)
 class KakaoLogin implements SocialLogin {
