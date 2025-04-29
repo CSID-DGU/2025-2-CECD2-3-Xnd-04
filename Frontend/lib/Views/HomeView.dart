@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:Frontend/Login/kakaoLogin.dart';
+import 'package:Frontend/Abstracts/kakaoLogin.dart';
+import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:Frontend/Models/LoginModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:Frontend/Views/IngredientsView.dart';
