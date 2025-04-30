@@ -48,7 +48,7 @@ class LoginPage extends State<LoginView>{
                 onPressed: () async {
                   await loginViewModel.login();
                   Navigator.push(context, MaterialPageRoute(
-                    builder: (i) => const HomeView(),
+                    builder: (i) => pages[0],
                   ));
                 },
                 child: Row(

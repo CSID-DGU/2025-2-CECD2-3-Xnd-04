@@ -1,4 +1,5 @@
 import 'package:Frontend/Abstracts/RefrigeratorAbstract.dart';
+import 'package:flutter/services.dart';
 
 class Refrigerator implements RefrigeratorAbstract{
   int? _number;
@@ -6,7 +7,7 @@ class Refrigerator implements RefrigeratorAbstract{
   String? _label;
   String? _modelName;
 
-  Refrigerator(int? number, int? level, String? label, String? modelName){
+  Refrigerator({int? number, int? level, String? label, String? modelName}){
     this._number = number;
     this._level = level;
     this._label = label;
@@ -31,8 +32,21 @@ class Refrigerator implements RefrigeratorAbstract{
       this._modelName = modelName;
   }
 
+  // 단순 객체 리턴(필요할 지는 모르겠음)
   @override
   Refrigerator getRefrigerator(){
     return this;
+  }
+
+  // 단일 냉장고 데이터 JSON 형식으로 매핑
+  @override
+  Map<String, dynamic> toMap() {
+    Map<String, dynamic> mapRefrigerator = {};
+    mapRefrigerator['number'] = _number;
+    mapRefrigerator['level'] = _level;
+    mapRefrigerator['label'] = _label;
+    mapRefrigerator['modelName'] = _modelName;
+
+    return mapRefrigerator;
   }
 }

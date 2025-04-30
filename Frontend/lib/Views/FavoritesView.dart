@@ -25,7 +25,7 @@ class FavoritesPage extends State<FavoritesView> {
       // 냉장고 선택 페이지 UI
         appBar: basicBar(),
         backgroundColor: Colors.white,
-        bottomNavigationBar: MainBottomView(),
+        bottomNavigationBar: const MainBottomView(),
         body: Center(
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,

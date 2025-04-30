@@ -8,4 +8,6 @@ abstract class RefrigeratorAbstract{
 
   void getRefrigerator();
   void modify({int? number, int? level, String? label, String? modelName});
+
+  Map<String, dynamic> toMap();
 }
