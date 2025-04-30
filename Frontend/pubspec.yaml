@@ -32,3 +32,6 @@ flutter:
     - assets/images/plus.png
     - assets/images/levelplus.png
     - assets/images/minus.png
+    - assets/refrigerators/R1.png
+    - assets/refrigerators/R2.png
+    - assets/refrigerators/R3.png
