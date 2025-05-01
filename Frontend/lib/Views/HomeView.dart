@@ -46,7 +46,7 @@ class InitialHomePage extends State<InitialHomeView> {
                   });
                 },
                 child: Image.asset(
-                    'assets/images/plus.png', width: 200, height: 200),
+                    'assets/images/plus.png', width: screenHeight * 0.15, height: screenHeight * 0.15),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   shape: const CircleBorder(),
@@ -99,8 +99,8 @@ class InitialHomePage extends State<InitialHomeView> {
                             });
                           },
                             child: Image.asset(
-                                'assets/images/levelplus.png', width: 70,
-                                height: 70),
+                                'assets/images/levelplus.png', width: screenWidth * 0.11,
+                                height: screenWidth * 0.11),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               shape: const CircleBorder(),
@@ -138,8 +138,8 @@ class InitialHomePage extends State<InitialHomeView> {
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                               ),
-                              child: Text('확  인', style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 30))
+                              child: Text('확 인', style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: screenWidth * 0.035))
                           )
                       )
                     ]
@@ -175,7 +175,7 @@ class HomePage extends State<HomeView> {
           children: <Widget>[
             mainAppBar(name:'   Xnd'),
             Container(
-              height: screenHeight * 0.88,
+              height: screenHeight * 0.96 - 160,
               child: PageView.builder(
                   controller: PageController(),
                   itemCount: refrigerators.length + 1,
@@ -186,8 +186,12 @@ class HomePage extends State<HomeView> {
                             children: <Widget>[
                               SizedBox(height: screenHeight * 0.28),
 
-                              if (index != refrigerators.length) Text('${index + 1}번 냉장고',style: TextStyle(fontSize: 30))
-                              else Text('냉장고 추가',style: TextStyle(fontSize: 30)),
+                              if (index != refrigerators.length)
+                                Text('${index + 1}번 냉장고',
+                                  style: TextStyle(fontSize: screenHeight * 0.025))
+                              else
+                                Text('냉장고 추가',
+                                  style: TextStyle(fontSize: screenHeight * 0.025)),
 
                               SizedBox(height: screenHeight * 0.05),
 
@@ -200,7 +204,9 @@ class HomePage extends State<HomeView> {
                                       Navigator.of(context).pushNamed('/' + pages[1].toString());
                                     });
                                   },
-                                  child: Image.asset('assets/refrigerators/R${index + 1}.png', width: 250, height: 250),
+                                  child: Image.asset('assets/refrigerators/R${index + 1}.png',
+                                      width: screenHeight * 0.23,
+                                      height: screenHeight * 0.23),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.white,
                                     shape: const CircleBorder(),
@@ -215,7 +221,9 @@ class HomePage extends State<HomeView> {
                                       Navigator.of(context).pushNamed('/' + pages[0].toString());
                                     });
                                   },
-                                  child: Image.asset('assets/images/plus.png', width: 200, height: 200),
+                                  child: Image.asset('assets/images/plus.png',
+                                      width: screenHeight * 0.15,
+                                      height: screenHeight * 0.15),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.white,
                                     shape: const CircleBorder(),
