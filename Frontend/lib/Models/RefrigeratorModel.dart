@@ -1,10 +1,14 @@
 import 'package:Frontend/Abstracts/RefrigeratorAbstract.dart';
+import 'package:Frontend/Models/IngredientModel.dart';
+import 'package:Frontend/Views/MainFrameView.dart';
+import 'package:flutter/material.dart';
 
 class Refrigerator implements RefrigeratorAbstract{
   int? _number;
   int? _level;
   String? _label;
   String? _modelName;
+  List<List<dynamic>>? _ingredientStorage;            // 층수에 들어온 순서대로 식재료를 인덱스에 저장, 층수별로 식재료가 없는 인덱스는 null값
 
   Refrigerator({int? number, int? level, String? label, String? modelName}){
     this._number = number;
@@ -18,6 +22,7 @@ class Refrigerator implements RefrigeratorAbstract{
   int? get level => _level;
   String? get label => _label;
   String? get modelName => _modelName;
+  get ingredientStorage => _ingredientStorage;
 
   @override
   void modify({int? number, int? level, String? label, String? modelName}){
@@ -47,5 +52,43 @@ class Refrigerator implements RefrigeratorAbstract{
     mapRefrigerator['modelName'] = _modelName;
 
     return mapRefrigerator;
+  }
+
+  @override
+  void makeIngredientStorage(){
+    this._ingredientStorage = List.generate(
+        level!,
+        (i) => List.generate(17, (i) => null),
+        growable: false
+    );
+    for(int i = 0; i < level!; i++)
+      _ingredientStorage![i][16] = 0;
+    // 남은 인덱스는 현재 있는 식재료의 수로 처리함
+  }
+
+  @override
+  int getNumOfIngredientsFloor({required int floor}){
+    return _ingredientStorage![floor - 1][16];
+  }
+  @override
+  void addNumOfIngredientsFloor(BuildContext context, {required int floor}) async {
+    if(_ingredientStorage![floor - 1][16] < 16)
+      _ingredientStorage![floor - 1][16] += 1;
+    else{
+      await Future.delayed(Duration.zero); // 안정화 타이밍 삽입
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Emergency~~ Paging Dr.Beat'),     // 이멀전씨~~ 페이징 닥털 빝~!!
+          content: Text('${floor}층은 현재 최대 수용가능 재료 수를 초과했습니다. 최대 재료 수 : 16'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('돌아가기'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 }
