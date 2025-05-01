@@ -30,7 +30,7 @@ class FavoritesPage extends State<FavoritesView> {
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  const mainAppBar(),
+                  mainAppBar(name:'   Xnd'),
                   Text('즐겨찾기 뷰 입니다.', style: TextStyle(fontSize: 40))
                 ]
             )

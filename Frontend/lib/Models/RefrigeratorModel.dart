@@ -1,5 +1,4 @@
 import 'package:Frontend/Abstracts/RefrigeratorAbstract.dart';
-import 'package:flutter/services.dart';
 
 class Refrigerator implements RefrigeratorAbstract{
   int? _number;

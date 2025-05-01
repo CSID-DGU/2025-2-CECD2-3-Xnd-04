@@ -37,7 +37,7 @@ class LoginPage extends State<LoginView>{
             SizedBox(height: screenHeight / 2 - 150),
             Text(
               '냉장고를 부탁해',
-              style: const TextStyle(fontSize: 70),
+              style: TextStyle(fontSize: screenWidth / 10),
             ),
             SizedBox(height: screenHeight / 6),
             // ✅ 로그인 상태가 false일 때만 로그인 버튼 표시
@@ -64,9 +64,9 @@ class LoginPage extends State<LoginView>{
                     borderRadius: BorderRadius.circular(10),
                   ),
                   backgroundColor: Colors.yellow,
-                  textStyle: const TextStyle(
+                  textStyle: TextStyle(
                     color: Colors.black,
-                    fontSize: 25,
+                    fontSize: (screenWidth * 0.6) / 15,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
