@@ -33,8 +33,8 @@ class InitialHomePage extends State<InitialHomeView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            const mainAppBar(),
-            SizedBox(height: screenHeight / 2 - 200),
+            mainAppBar(name:'   Xnd'),
+            SizedBox(height: screenHeight * 0.35),
 
             (!isPlusButtonClicked) ?
 
@@ -57,7 +57,7 @@ class InitialHomePage extends State<InitialHomeView> {
 
             Container(
                 width: screenWidth * 0.7,
-                height: 300,
+                height: screenHeight * 0.2,
                 decoration: BoxDecoration( // Container의 배경색
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
@@ -79,14 +79,14 @@ class InitialHomePage extends State<InitialHomeView> {
                             });
                           },
                             child: Image.asset(
-                                'assets/images/minus.png', width: 70,
-                                height: 70),
+                                'assets/images/minus.png', width: screenWidth * 0.11,
+                                height: screenWidth * 0.11),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               shape: const CircleBorder(),
                             ),
                           ),
-                          SizedBox(width: 90, height: 70, child: Text(
+                          SizedBox(width: screenWidth * 0.15, height: 60, child: Text(
                             levelOfRefrigerator.toString(),
                             style: const TextStyle(fontSize: 50),
                             textAlign: TextAlign.center,)),
@@ -107,10 +107,10 @@ class InitialHomePage extends State<InitialHomeView> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 80,),
+                      SizedBox(height: 50,),
                       SizedBox(
-                          height: 70,
-                          width: 120,
+                          height: screenHeight * 0.05,
+                          width: screenWidth * 0.2,
                           child: ElevatedButton(onPressed: () {
                             setState(() {
                               refrigerators.add(Refrigerator(
@@ -137,7 +137,7 @@ class InitialHomePage extends State<InitialHomeView> {
                                 ),
                               ),
                               child: Text('확  인', style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 20))
+                                  fontWeight: FontWeight.bold, fontSize: 30))
                           )
                       )
                     ]
@@ -172,9 +172,9 @@ class HomePage extends State<HomeView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            const mainAppBar(),
+            mainAppBar(name:'   Xnd'),
             Container(
-              height: screenHeight - 150,
+              height: screenHeight * 0.88,
               child: PageView.builder(
                   controller: PageController(),
                   itemCount: refrigerators.length + 1,
@@ -183,12 +183,12 @@ class HomePage extends State<HomeView> {
                         child: Column(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: <Widget>[
-                              SizedBox(height: screenHeight / 3 - 50),
+                              SizedBox(height: screenHeight * 0.28),
 
                               if (index != refrigerators.length) Text('${index + 1}번 냉장고',style: TextStyle(fontSize: 30))
                               else Text('냉장고 추가',style: TextStyle(fontSize: 30)),
 
-                              SizedBox(height: 70),
+                              SizedBox(height: screenHeight * 0.05),
 
                               if (index != refrigerators.length)
                                 ElevatedButton(

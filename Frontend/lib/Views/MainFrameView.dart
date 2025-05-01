@@ -20,8 +20,11 @@ List<Widget> pages = [
 ];
 
 class mainAppBar extends StatelessWidget{
-  const mainAppBar({Key? key}) : super(key: key);
-  final String teamName = '   Xnd';
+  String? _name;
+
+  mainAppBar({Key? key, required name}) : super(key: key){
+    this._name = name;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,8 +36,13 @@ class mainAppBar extends StatelessWidget{
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
-          Text(teamName, style: const TextStyle(fontSize: 30, color: Colors.black, fontWeight: FontWeight.bold)),
-          SizedBox(width: screenWidth - 250),
+          Container(
+            margin: EdgeInsets.fromLTRB(10, 0, 0, 0),
+            width : screenWidth * 0.16, height : screenHeight * 0.04,
+            child: Text(this._name.toString(),
+              style: const TextStyle(fontSize: 20, color: Colors.black, fontWeight: FontWeight.bold)),
+          ),
+          SizedBox(width: screenWidth * 0.57),
           FilledButton(
               onPressed: () {
                 Navigator.of(context).pushNamed('/' + pages[6].toString());

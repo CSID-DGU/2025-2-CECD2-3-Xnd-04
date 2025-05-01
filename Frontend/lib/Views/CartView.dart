@@ -31,7 +31,7 @@ class CartPage extends State<CartView> {
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  const mainAppBar(),
+                  mainAppBar(name:'   Xnd'),
                   Text('장바구니 뷰 입니다.', style: TextStyle(fontSize: 40))
                 ]
             )
