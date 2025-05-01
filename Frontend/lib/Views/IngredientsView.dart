@@ -31,6 +31,15 @@ class IngredientsPage extends State<IngredientsView> {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
+    // 변동성있는 냉장고의 전체 사이즈를 구하는 알고리즘(20 더한건 모든 층에서 전부 20만큼 오버플로우 나서 더한거임)
+    double getRefrigeratorSize(){
+      double size = 20 + 0.06 * screenHeight * refrigerator.level!;
+      for(int floor = 1; floor <= refrigerator.level!; floor++)
+        size += screenHeight * 0.125 *
+            (refrigerator.getNumOfIngredientsFloor(floor: floor) * 0.25).ceil();
+      return size;
+    }
+
     return Scaffold(
       // 냉장고 선택 페이지 UI
         appBar: basicBar(),
@@ -47,14 +56,9 @@ class IngredientsPage extends State<IngredientsView> {
             controller: _scrollController,
             children: [
               mainAppBar(name:'${refrigerator.number}번 냉장고'),
-              // Text('냉장고 뷰 입니다.', style: TextStyle(fontSize: 40)),
-              // Text('${refrigerator.number}', style: TextStyle(fontSize: 20)),
-              // Text('단수 : ${refrigerator.level}', style: TextStyle(fontSize: 20)),
-              // Text('사용자 설정명 : ${refrigerator.label}', style: TextStyle(fontSize: 20)),
-              // Text('모델명 : ${refrigerator.modelName}', style: TextStyle(fontSize: 20))
 
               Container(
-                height : screenHeight * (0.5 * refrigerator.level! + 0.02),
+                height : getRefrigeratorSize(),           //교체
                 margin : EdgeInsets.all(20),
                 decoration: BoxDecoration
                 (
@@ -69,7 +73,9 @@ class IngredientsPage extends State<IngredientsView> {
                   children: <Widget>[
                     for (int floor = refrigerator.level!; floor > 0; floor--)
                       Container(
-                        height: screenHeight * 0.5,
+                        height: screenHeight * 0.06 +
+                            screenHeight * 0.125 *
+                            (refrigerator.getNumOfIngredientsFloor(floor: floor) * 0.25).ceil(),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: <Widget>[
@@ -81,7 +87,7 @@ class IngredientsPage extends State<IngredientsView> {
                                 children: <Widget>[
                                   Container(
                                     margin : EdgeInsets.fromLTRB(0, screenHeight * 0.01, 0, 0),
-                                    width: screenWidth * 0.15,
+                                    width: (screenWidth - 100) * 0.15,
                                     decoration: BoxDecoration(
                                       color: Colors.white,
                                       borderRadius: BorderRadius.circular(20),
@@ -95,13 +101,28 @@ class IngredientsPage extends State<IngredientsView> {
                                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15,),
                                       textAlign: TextAlign.center,)
                                   ),
-                                  Container(width: screenWidth * 0.85 - 100),
+                                  Container(width: (screenWidth - 100) * 0.65),
+                                  ElevatedButton(
+                                      onPressed: () async {
+                                      setState(() {
+                                        refrigerator.addNumOfIngredientsFloor(context, floor: floor);
+                                        Navigator.of(context).pushNamed('/' + pages[1].toString());
+                                      });
+                                    },
+                                      style: ElevatedButton.styleFrom(
+                                        shape: const CircleBorder(),
+                                        backgroundColor: Colors.yellow,
+                                      ),
+                                      child: Image.asset('assets/images/levelplus.png')
+                                  ),
                                 ],
                               )
-                            ),
+                            ),          // 층수 안내 컨테이너
                             Container(
                               margin : EdgeInsets.fromLTRB(20, 0, 20, 0),
-                              height: screenHeight * 0.45),
+                              height: screenHeight * 0.125 *
+                                  (refrigerator.getNumOfIngredientsFloor(floor: floor) * 0.25).ceil()                            //교체
+                            ),          // 식재료 컨테이너
                             Container(
                                 margin : EdgeInsets.fromLTRB(20, 0, 20, 0),
                                 height: screenHeight * 0.02,
@@ -109,7 +130,7 @@ class IngredientsPage extends State<IngredientsView> {
                                   color: Colors.grey,
                                   borderRadius: BorderRadius.circular(20),
                                 ),
-                            ),
+                            ),          // 층별로 쪼개는 컨테이너
                           ], // 프레임을 쪼개는 곳, 즉 여기에 들어가야 할 위젯은 3개
                         )
                       )

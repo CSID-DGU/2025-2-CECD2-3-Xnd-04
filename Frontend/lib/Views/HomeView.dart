@@ -15,7 +15,7 @@ class InitialHomeView extends StatefulWidget {
 }
 
 class InitialHomePage extends State<InitialHomeView> {
-  int levelOfRefrigerator = 0;
+  int levelOfRefrigerator = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +73,7 @@ class InitialHomePage extends State<InitialHomeView> {
                         children: <Widget>[
                           ElevatedButton(onPressed: () async {
                             setState(() {
-                              if (levelOfRefrigerator > 0) {
+                              if (levelOfRefrigerator > 1) {
                                 levelOfRefrigerator -= 1;
                               }
                             });
@@ -90,7 +90,8 @@ class InitialHomePage extends State<InitialHomeView> {
                             levelOfRefrigerator.toString(),
                             style: const TextStyle(fontSize: 50),
                             textAlign: TextAlign.center,)),
-                          ElevatedButton(onPressed: () async {
+                          ElevatedButton(
+                            onPressed: () async {
                             setState(() {
                               if (levelOfRefrigerator < 6) {
                                 levelOfRefrigerator += 1;
@@ -118,11 +119,12 @@ class InitialHomePage extends State<InitialHomeView> {
                                   level: levelOfRefrigerator,
                                   label: '${numOfRefrigerator + 1}번 냉장고',
                                   modelName: 'R${numOfRefrigerator + 1}')
-                              );
-                              pages[1] = IngredientsView(refrigerator: refrigerators[numOfRefrigerator]);
+                              );    // 냉장고 추가
+                              refrigerators[numOfRefrigerator].makeIngredientStorage();    // 냉장고 식재료 저장소 생성
+                              pages[1] = IngredientsView(refrigerator: refrigerators[numOfRefrigerator]);    // 위젯 갱신
                               Navigator.of(context).pushNamed('/' + pages[5].toString());
                               numOfRefrigerator += 1;
-                              isPlusButtonClicked = false;
+                              isPlusButtonClicked = false;    // + 버튼 체크 여부
                             });
                           },
                               style: ElevatedButton.styleFrom(
@@ -162,7 +164,6 @@ class HomePage extends State<HomeView> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-    double boxSize = screenHeight * 0.25;
 
     return Scaffold(
         appBar: basicBar(),
@@ -199,7 +200,7 @@ class HomePage extends State<HomeView> {
                                       Navigator.of(context).pushNamed('/' + pages[1].toString());
                                     });
                                   },
-                                  child: Image.asset('assets/refrigerators/R${index + 1}.png', width: 300, height: 300),
+                                  child: Image.asset('assets/refrigerators/R${index + 1}.png', width: 250, height: 250),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.white,
                                     shape: const CircleBorder(),
