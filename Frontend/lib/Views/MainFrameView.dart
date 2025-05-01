@@ -38,31 +38,37 @@ class mainAppBar extends StatelessWidget{
         children: <Widget>[
           Container(
             margin: EdgeInsets.fromLTRB(10, 0, 0, 0),
-            width : screenWidth * 0.16, height : screenHeight * 0.04,
+            width : screenWidth * 0.25, height : screenHeight * 0.04,
             child: Text(this._name.toString(),
               style: const TextStyle(fontSize: 20, color: Colors.black, fontWeight: FontWeight.bold)),
           ),
-          SizedBox(width: screenWidth * 0.57),
-          FilledButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/' + pages[6].toString());
-              },
-              child: Image.asset('assets/images/alert.png', width: 30, height: 30, fit: BoxFit.cover),
-              style: FilledButton.styleFrom(
-                minimumSize: Size(40, 40),
-                backgroundColor: Color(0xFFFFFFFF),
-              ),
+          SizedBox(width: screenWidth * 0.5),
+          Container(
+            width: screenWidth * 0.1,
+            child: FilledButton(
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/' + pages[6].toString());
+                },
+                child: Image.asset('assets/images/alert.png', width: screenWidth * 0.05, height: screenWidth * 0.05, fit: BoxFit.cover),
+                style: FilledButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  backgroundColor: Colors.white,
+                ),
+            ),
           ),
-          FilledButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/' + pages[7].toString());
-              },
-              child: Image.asset('assets/images/setting.png', width: 30, height: 30, fit: BoxFit.cover),
-              style: FilledButton.styleFrom(
-                minimumSize: Size(40, 40),
-                backgroundColor: Color(0xFFFFFFFF),
-              ),
-          ),
+          Container(
+            width: screenWidth * 0.1,
+            child: FilledButton(
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/' + pages[7].toString());
+                },
+                child: Image.asset('assets/images/setting.png', width: screenWidth * 0.05, height: screenWidth * 0.05, fit: BoxFit.cover),
+                style: FilledButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  backgroundColor: Colors.white,
+                ),
+            ),
+          )
         ],
       ),
     );
@@ -100,6 +106,7 @@ class MainBottomBar extends State<MainBottomView> {
 
   @override
   Widget build(BuildContext context) {
+
     return BottomNavigationBar(
       onTap: this.onItemTapped,
       showSelectedLabels: false,

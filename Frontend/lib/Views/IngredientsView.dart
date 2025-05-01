@@ -98,10 +98,10 @@ class IngredientsPage extends State<IngredientsView> {
                                       )
                                     ),
                                     child: Text('${floor}층',
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15,),
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: screenHeight * 0.01),
                                       textAlign: TextAlign.center,)
                                   ),
-                                  Container(width: (screenWidth - 100) * 0.65),
+                                  Container(width: (screenWidth - 100) * 0.6),
                                   ElevatedButton(
                                       onPressed: () async {
                                       setState(() {
