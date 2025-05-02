@@ -22,7 +22,7 @@ class UserManager(BaseUserManager):
     
 
 # User
-class User(models.Model):
+class User(AbstractBaseUser):
     # SocialLoginInfo
     social_id = models.CharField(max_length=255, unique=True)
     social_provider = models.CharField(max_length=20)
@@ -33,4 +33,6 @@ class User(models.Model):
     # Include UserManager
     users = UserManager()
 
+    USERNAME_FIELD = 'social_id'
+    REQUIRED_FIELDS = ['name','email']
 

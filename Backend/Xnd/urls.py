@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
-from Backend.XndApp.Views.loginViews import KakaoLoginView
-from Backend.XndApp.Views.loginViews import NaverLoginView
+from XndApp.Views.loginViews import KakaoLoginView
+from XndApp.Views.loginViews import NaverLoginView
 
 urlpatterns = [
     path('admin/', admin.site.urls),

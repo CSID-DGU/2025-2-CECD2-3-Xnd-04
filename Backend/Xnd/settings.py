@@ -3,10 +3,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-$@*dbvo&9ywvek6ru&%tar*tbp+ybc582$8y+^y^f@r6&f7%b&'
 
@@ -67,12 +63,10 @@ WSGI_APPLICATION = 'Xnd.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'Xnd',        # DB 이름
+        'NAME': 'XndDB',        # DB 이름
         'USER': 'root',        # MySQL 유저 이름
         'PASSWORD': '2022111993', # MySQL 비밀번호
         'HOST': 'localhost',   # 로컬 MySQL 서버

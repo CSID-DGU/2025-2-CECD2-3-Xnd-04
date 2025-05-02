@@ -23,13 +23,14 @@ class MyApp extends StatelessWidget {
       ),
       home: const LoginView(),
       routes: {
-        '/HomeView' : (context) => pages[0],
+        '/InitialHomeView' : (context) => pages[0],
         '/IngredientsView' : (context) => pages[1],
         '/RecipeView' : (context) => pages[2],
         '/FavoritesView' : (context) => pages[3],
         '/CartView' : (context) => pages[4],
-        '/AlertView' : (context) => pages[5],
-        '/SettingView' : (context) => pages[6],
+        '/HomeView' : (context) => pages[5],
+        '/AlertView' : (context) => pages[6],
+        '/SettingView' : (context) => pages[7],
       }
     );
   }

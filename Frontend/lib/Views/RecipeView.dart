@@ -26,12 +26,12 @@ class RecipePage extends State<RecipeView> {
       // 냉장고 선택 페이지 UI
         appBar: basicBar(),
         backgroundColor: Colors.white,
-        bottomNavigationBar: MainBottomView(),
+        bottomNavigationBar: const MainBottomView(),
         body: Center(
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  const mainAppBar(),
+                  mainAppBar(name:'   Xnd'),
                   Text('레시피 뷰 입니다.', style: TextStyle(fontSize: 40))
                 ]
             )

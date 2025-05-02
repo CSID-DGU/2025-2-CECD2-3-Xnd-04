@@ -4,6 +4,8 @@ import os
 import sys
 
 
+# 장고 실행 시 진입점
+
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Xnd.settings')

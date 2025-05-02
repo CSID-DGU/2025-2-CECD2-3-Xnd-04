@@ -6,21 +6,25 @@ import 'package:Frontend/Views/FavoritesView.dart';
 import 'package:Frontend/Views/CartView.dart';
 import 'package:Frontend/Views/AlertView.dart';
 import 'package:Frontend/Views/SettingView.dart';
-
+import 'package:Frontend/Models/RefrigeratorModel.dart';
 
 List<Widget> pages = [
-  const HomeView(),
-  const IngredientsView(levelOfRefrigerator: 0,),
+  const InitialHomeView(),
+  IngredientsView(refrigerator: Refrigerator(),),
   const RecipeView(),
   const FavoritesView(),
   const CartView(),
+  const HomeView(),
   const AlertView(),
   const SettingView(),
 ];
 
 class mainAppBar extends StatelessWidget{
-  const mainAppBar({Key? key}) : super(key: key);
-  final String teamName = '   Xnd';
+  String? _name;
+
+  mainAppBar({Key? key, required name}) : super(key: key){
+    this._name = name;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,14 +36,16 @@ class mainAppBar extends StatelessWidget{
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
-          Text(teamName, style: const TextStyle(fontSize: 30, color: Colors.black, fontWeight: FontWeight.bold)),
-          SizedBox(width: screenWidth - 250),
+          Container(
+            margin: EdgeInsets.fromLTRB(10, 0, 0, 0),
+            width : screenWidth * 0.16, height : screenHeight * 0.04,
+            child: Text(this._name.toString(),
+              style: const TextStyle(fontSize: 20, color: Colors.black, fontWeight: FontWeight.bold)),
+          ),
+          SizedBox(width: screenWidth * 0.57),
           FilledButton(
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(
-                  builder: (i) => pages[5],
-                  )
-                );
+                Navigator.of(context).pushNamed('/' + pages[6].toString());
               },
               child: Image.asset('assets/images/alert.png', width: 30, height: 30, fit: BoxFit.cover),
               style: FilledButton.styleFrom(
@@ -49,10 +55,7 @@ class mainAppBar extends StatelessWidget{
           ),
           FilledButton(
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(
-                builder: (i) => pages[6],
-                  )
-                );
+                Navigator.of(context).pushNamed('/' + pages[7].toString());
               },
               child: Image.asset('assets/images/setting.png', width: 30, height: 30, fit: BoxFit.cover),
               style: FilledButton.styleFrom(
@@ -85,9 +88,13 @@ class MainBottomView extends StatefulWidget {
 
 class MainBottomBar extends State<MainBottomView> {
 
+  // 관리하는 냉장고의 UI 수에 따라 화면을 새로 그림
   void onItemTapped(int index) {
     setState(() {
-      Navigator.of(context).pushNamed('/' + pages[index].toString());
+      if(refrigerators.length != 0 && index == 0)
+        Navigator.of(context).pushNamed('/' + pages[5].toString());
+      else
+        Navigator.of(context).pushNamed('/' + pages[index].toString());
     });
   }
 
@@ -102,11 +109,11 @@ class MainBottomBar extends State<MainBottomView> {
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home, size: 40),
-          label: 'refrigerator',
+          label: 'home',
         ),
         BottomNavigationBarItem(
           icon: ImageIcon(AssetImage('assets/images/menu.png'), size: 40),
-          label: 'menu',
+          label: 'refrigerator',
         ),
         BottomNavigationBarItem(
           icon: ImageIcon(AssetImage('assets/images/recipe.png'), size: 40),

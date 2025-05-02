@@ -9,7 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 # KakaoLoginView
 class KakaoLoginView(APIView):
-    def Post(self, request):
+    def post(self, request):
         kakao_access_token = request.data.get("access_token")
 
         if not kakao_access_token:
