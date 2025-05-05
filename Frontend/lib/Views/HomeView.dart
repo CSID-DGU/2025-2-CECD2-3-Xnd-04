@@ -112,31 +112,26 @@ class InitialHomePage extends State<InitialHomeView> {
                       SizedBox(
                           height: screenHeight * 0.05,
                           width: screenWidth * 0.2,
-                          child: ElevatedButton(onPressed: () {
-                            setState(() {
-                              refrigerators.add(Refrigerator(
-                                  number: numOfRefrigerator + 1,
-                                  level: levelOfRefrigerator,
-                                  label: '${numOfRefrigerator + 1}번 냉장고',
-                                  modelName: 'R${numOfRefrigerator + 1}')
-                              );    // 냉장고 추가
-                              refrigerators[numOfRefrigerator].makeIngredientStorage();    // 냉장고 식재료 저장소 생성
-                              pages[1] = IngredientsView(refrigerator: refrigerators[numOfRefrigerator]);    // 위젯 갱신
-                              Navigator.of(context).pushNamed('/' + pages[5].toString());
-                              numOfRefrigerator += 1;
-                              isPlusButtonClicked = false;    // + 버튼 체크 여부
-                            });
-                          },
+                          child: ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  refrigerators.add(Refrigerator(
+                                    number: numOfRefrigerator + 1,
+                                    level: levelOfRefrigerator,
+                                    label: '${numOfRefrigerator + 1}번 냉장고',
+                                    modelName: 'R${numOfRefrigerator + 1}')
+                                  );    // 냉장고 추가
+                                  refrigerators[numOfRefrigerator].makeIngredientStorage();    // 냉장고 식재료 저장소 생성
+                                  pages[1] = IngredientsView(refrigerator: refrigerators[numOfRefrigerator]);    // 위젯 갱신
+                                  Navigator.of(context).pushNamed('/' + pages[5].toString());
+                                  numOfRefrigerator += 1;
+                                  isPlusButtonClicked = false;    // + 버튼 체크 여부
+                                });
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.pinkAccent[100],
-                                side:
-                                BorderSide(
-                                  width: 5,
-                                ),
-                                shape:
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
+                                side: BorderSide(width: 5,),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                               ),
                               child: Text('확 인', style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: screenWidth * 0.035))

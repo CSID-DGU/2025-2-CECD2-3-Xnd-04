@@ -93,11 +93,26 @@ class MainBottomView extends StatefulWidget {
 }
 
 class MainBottomBar extends State<MainBottomView> {
-
-  // 관리하는 냉장고의 UI 수에 따라 화면을 새로 그림
-  void onItemTapped(int index) {
-    setState(() {
-      if(refrigerators.length != 0 && index == 0)
+  // 네비게이션 바는 냉장고가 하나라도 추가되어야 활성화
+  void onItemTapped(int index){
+    setState(() async {
+      if (refrigerators.length == 0){
+        await Future.delayed(Duration.zero);
+        showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('경고'),
+              content: Text('+ 버튼을 눌러 냉장고를 추가해 주세요'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text('확 인'),
+                ),
+              ],
+            )
+        );
+      }
+      else if (index == 0)
         Navigator.of(context).pushNamed('/' + pages[5].toString());
       else
         Navigator.of(context).pushNamed('/' + pages[index].toString());
@@ -108,7 +123,7 @@ class MainBottomBar extends State<MainBottomView> {
   Widget build(BuildContext context) {
 
     return BottomNavigationBar(
-      onTap: this.onItemTapped,
+      onTap: onItemTapped,
       showSelectedLabels: false,
       showUnselectedLabels: false,
       type: BottomNavigationBarType.fixed,
