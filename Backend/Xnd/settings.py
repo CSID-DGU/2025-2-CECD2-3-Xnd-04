@@ -61,19 +61,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Xnd.wsgi.application'
 
-
-# Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'XndDB',        # DB 이름
-        'USER': 'root',        # MySQL 유저 이름
-        'PASSWORD': '2022111993', # MySQL 비밀번호
-        'HOST': 'localhost',   # 로컬 MySQL 서버
-        'PORT': '3306',        # MySQL 기본 포트
-    }
-}
-
 AUTH_USER_MODEL = 'XndApp.User'
 
 # Password validation
@@ -116,3 +103,9 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# 로컬 설정 가져오기 (DB 정보)
+try:
+    from .local_settings import *
+except ImportError:
+    pass
