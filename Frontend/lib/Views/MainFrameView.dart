@@ -32,13 +32,14 @@ class mainAppBar extends StatelessWidget{
     double screenHeight = MediaQuery.of(context).size.height;
 
     return Container(
+      height : screenHeight * 0.04,
       color: Color(0xFFFFFFFF),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
           Container(
             margin: EdgeInsets.fromLTRB(10, 0, 0, 0),
-            width : screenWidth * 0.25, height : screenHeight * 0.04,
+            width : screenWidth * 0.25,
             child: Text(this._name.toString(),
               style: const TextStyle(fontSize: 20, color: Colors.black, fontWeight: FontWeight.bold)),
           ),
@@ -121,35 +122,40 @@ class MainBottomBar extends State<MainBottomView> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
 
-    return BottomNavigationBar(
-      onTap: onItemTapped,
-      showSelectedLabels: false,
-      showUnselectedLabels: false,
-      type: BottomNavigationBarType.fixed,
-      backgroundColor: const Color(0xFFFFFFFF),
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home, size: 40),
-          label: 'home',
-        ),
-        BottomNavigationBarItem(
-          icon: ImageIcon(AssetImage('assets/images/menu.png'), size: 40),
-          label: 'refrigerator',
-        ),
-        BottomNavigationBarItem(
-          icon: ImageIcon(AssetImage('assets/images/recipe.png'), size: 40),
-          label: 'recipe',
-        ),
-        BottomNavigationBarItem(
-          icon: ImageIcon(AssetImage('assets/images/favorits.png'), size: 40),
-          label: 'favorits',
-        ),
-        BottomNavigationBarItem(
-          icon: ImageIcon(AssetImage('assets/images/cart.png'), size: 40),
-          label: 'cart',
-        ),
-      ],
+    return Container(
+      height: screenHeight * 0.05,
+      child: BottomNavigationBar(
+        onTap: onItemTapped,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: const Color(0xFFFFFFFF),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home, size: 30),
+            label: 'home',
+          ),
+          BottomNavigationBarItem(
+            icon: ImageIcon(AssetImage('assets/images/menu.png'), size: 30),
+            label: 'refrigerator',
+          ),
+          BottomNavigationBarItem(
+            icon: ImageIcon(AssetImage('assets/images/recipe.png'), size: 30),
+            label: 'recipe',
+          ),
+          BottomNavigationBarItem(
+            icon: ImageIcon(AssetImage('assets/images/favorits.png'), size: 30),
+            label: 'favorits',
+          ),
+          BottomNavigationBarItem(
+            icon: ImageIcon(AssetImage('assets/images/cart.png'), size: 30),
+            label: 'cart',
+          ),
+        ],
+      )
     );
   }
 }
