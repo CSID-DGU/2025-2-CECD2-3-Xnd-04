@@ -60,9 +60,8 @@ class IngredientsPage extends State<IngredientsView> {
           // 그리드 뷰 구축 예정
           child: ListView(
             controller: _scrollController,
-            children: [
+            children: <Widget>[
               mainAppBar(name:'${refrigerator.number}번 냉장고'),
-
               Container(
                 height : getRefrigeratorSize(),           //교체
                 margin : EdgeInsets.all(20),
