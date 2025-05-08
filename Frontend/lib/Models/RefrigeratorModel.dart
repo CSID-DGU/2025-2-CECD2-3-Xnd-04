@@ -70,6 +70,8 @@ class Refrigerator implements RefrigeratorAbstract{
   int getNumOfIngredientsFloor({required int floor}){
     return _ingredientStorage![floor - 1][16];
   }
+
+  // 이걸 이제 DB에 식재료가 추가될때 마다 수정하는 방식 ㄱㄱ
   @override
   void addNumOfIngredientsFloor(BuildContext context, {required int floor}) async {
     if(_ingredientStorage![floor - 1][16] < 16)
