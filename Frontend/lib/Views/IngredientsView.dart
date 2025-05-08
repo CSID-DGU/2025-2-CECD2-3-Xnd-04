@@ -151,7 +151,7 @@ class IngredientsPage extends State<IngredientsView> {
                                     itemBuilder: (context, index) => Container(
                                       decoration: BoxDecoration(
                                         color: Colors.primaries[Random().nextInt(Colors.primaries.length)],
-                                        borderRadius: BorderRadius.circular(50)
+                                        borderRadius: BorderRadius.circular(30)
                                       ),
                                     ),
                                   ),
