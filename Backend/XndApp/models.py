@@ -1,2 +1,11 @@
-from .Models.user import User
-from .Models.refrigerator import Refrigerator
+from XndApp.Models import (
+    User,
+    Cart,
+    Fridge,
+    Category,
+    FridgeIngredients,
+    Recipes,
+    SavedRecipes,
+    SavedRecipeIngredients,
+    Tags,
+)

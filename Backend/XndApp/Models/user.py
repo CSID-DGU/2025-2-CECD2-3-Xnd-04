@@ -23,11 +23,12 @@ class UserManager(BaseUserManager):
 
 # User
 class User(AbstractBaseUser):
+    user_id = models.AutoField(primary_key=True)
     # SocialLoginInfo
     social_id = models.CharField(max_length=255, unique=True)
     social_provider = models.CharField(max_length=20)
     # userInfo(extra_fields)
-    name = models.CharField(max_length=10,default='')
+    name = models.CharField(max_length=100,default='')
     email = models.TextField(default='')
 
     # Include UserManager
