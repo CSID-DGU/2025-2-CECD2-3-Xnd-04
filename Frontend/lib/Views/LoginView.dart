@@ -55,7 +55,7 @@ class LoginPage extends State<LoginView>{
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Image.asset('assets/images/kakaotalk_icon.png'),
-                    const SizedBox(width: 20),
+                    SizedBox(width: screenWidth * 0.015),
                     const Text('카카오계정으로 로그인'),
                   ],
                 ),
