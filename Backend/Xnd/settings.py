@@ -62,6 +62,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'Xnd.wsgi.application'
 
 
+
 # Database
 DATABASES = {
     'default': {
@@ -73,6 +74,8 @@ DATABASES = {
         'PORT': config('DB_PORT', default='3306'),
     }
 }
+
+
 
 AUTH_USER_MODEL = 'XndApp.User'
 
@@ -116,3 +119,9 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# 로컬 설정 가져오기 (DB 정보)
+try:
+    from .local_settings import *
+except ImportError:
+    pass
