@@ -7,9 +7,14 @@ class KakaoLogin implements SocialLogin {
   Future<bool> login() async {
     try {
       bool isInstalled = await isKakaoTalkInstalled();
+
+      OAuthToken token;
+
       if (isInstalled) {
         try {
-          await UserApi.instance.loginWithKakaoTalk();
+          token = await UserApi.instance.loginWithKakaoTalk();
+          print('accessToken: ${token.accessToken}');
+          print('refreshToken: ${token.refreshToken}');
           return true;
         } catch (e) {
           print('카카오톡 앱 내에서 로그인 부탁드립니다. $e');
@@ -17,7 +22,9 @@ class KakaoLogin implements SocialLogin {
         }
       } else {
         try {
-          await UserApi.instance.loginWithKakaoAccount();
+          token = await UserApi.instance.loginWithKakaoAccount();
+          print('accessToken: ${token.accessToken}');
+          print('refreshToken: ${token.refreshToken}');
           return true;
         } catch (e) {
           print('카카오톡 계정을 생성하거나 앱 설치 후 로그인을 해주세요 : $e');
@@ -39,3 +46,4 @@ class KakaoLogin implements SocialLogin {
     }
   }
 }
+
