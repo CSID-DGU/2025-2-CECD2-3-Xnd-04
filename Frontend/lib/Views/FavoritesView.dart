@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:Frontend/Abstracts/kakaoLogin.dart';
 import 'package:Frontend/Models/LoginModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
-
 import '../Models/IngredientModel.dart';
 import '../Models/RecipeModel.dart';
+import 'package:Frontend/MordalViews/RecipeMordal.dart';
 
 class FavoritesView extends StatefulWidget {
   const FavoritesView({Key? key}) : super(key: key);
@@ -156,11 +156,15 @@ class FavoritesPage extends State<FavoritesView> {
                                           borderRadius: BorderRadius.circular(30),
                                         ),
                                         child: FilledButton(
-                                          onPressed: ()=>{
+                                          onPressed: (){
                                             setState(() {
-                                              // 이 부분에 모달 창 띄워줘야 함
-
-                                            })
+                                              // 이 부분에 모달 창
+                                              RecipeDialog recipedialog = RecipeDialog(recipe: recipe);
+                                              showDialog(
+                                                  context: context,
+                                                  builder: (context) => recipedialog.recipeDialog(context)
+                                              );
+                                            });
                                           },
                                           style: FilledButton.styleFrom(
                                             backgroundColor: Colors.white,

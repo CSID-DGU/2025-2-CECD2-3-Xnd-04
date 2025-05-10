@@ -1,8 +1,9 @@
 import 'package:Frontend/Models/RecipeModel.dart';
 import 'package:flutter/material.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
-
 import '../Models/IngredientModel.dart';
+import 'package:Frontend/MordalViews/RecipeMordal.dart';
+
 
 class RecipeView extends StatefulWidget {
   const RecipeView({Key? key}) : super(key: key);
@@ -106,11 +107,15 @@ class RecipePage extends State<RecipeView> {
                                       borderRadius: BorderRadius.circular(30),
                                     ),
                                     child: FilledButton(
-                                      onPressed: ()=>{
+                                      onPressed: (){
                                         setState(() {
-                                          // 이 부분에 모달 창 띄워줘야 함
-
-                                        })
+                                          // 이 부분에 모달 창
+                                          RecipeDialog recipedialog = RecipeDialog(recipe: recipe);
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) => recipedialog.recipeDialog(context)
+                                          );
+                                        });
                                       },
                                       style: FilledButton.styleFrom(
                                         backgroundColor: Colors.white,
@@ -160,7 +165,7 @@ class RecipePage extends State<RecipeView> {
                                                             SizedBox(width: 10),
                                                             Flexible(
                                                                 child: Text(ingredientsTypes[recipe.recipeNum!],
-                                                                    style: TextStyle(color: Colors.black)
+                                                                  style: TextStyle(color: Colors.black)
                                                                 )
                                                             )
                                                           ]
@@ -184,8 +189,8 @@ class RecipePage extends State<RecipeView> {
                                           ),
                                         ]
                                       ),
-                                      ),
-                                    )
+                                    ),
+                                  )
                                 ],
                               )
                             )
@@ -248,3 +253,4 @@ class RecipePage extends State<RecipeView> {
     );
   }
 }
+
