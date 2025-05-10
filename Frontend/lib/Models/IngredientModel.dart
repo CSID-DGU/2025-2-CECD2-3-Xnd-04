@@ -6,7 +6,7 @@ class Ingredient implements IngredientAbstract {
   String? _ingredientName;
   Image? _img;
 
-  Ingredient({int? number, String? ingredientName, Image? img}){
+  Ingredient({int? number, String? ingredientName, Image? img = null}){
     this._number = number;
     this._ingredientName = ingredientName;
     this._img = img;
