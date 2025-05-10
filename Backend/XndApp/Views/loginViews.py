@@ -26,12 +26,24 @@ class KakaoLoginView(APIView):
         
         # JSON 응답 -> 딕셔너리 형태로 계정 정보 반환
         kakao_account = kakao_response.json()
-        kakao_id = kakao_account.get("id")
+        kakao_id = kakao_account.get('id')
+
+        kakao_profile = kakao_account.get("kakao_account", {}).get("profile", {})
+
+        name = kakao_profile.get("nickname","")
+        email = kakao_account.get("kakao_account", {}).get("email", "")
         if not kakao_id:
             return Response({"error" : "No Kakao ID"},status=status.HTTP_400_BAD_REQUEST)
 
         # Save new User or get old User
-        user = User.users.get_or_create(social_id = kakao_id,social_provider = "kakao")
+        user, _ = User.users.get_or_create(
+            social_id = kakao_id,
+            social_provider = "kakao",
+            defaults={
+                "email": email,
+                "name": name
+            }
+        )
 
         # JWT 발급
         refresh = RefreshToken.for_user(user)
@@ -67,7 +79,7 @@ class NaverLoginView(APIView):
             return Response({"error" : "No Naver ID"},status=status.HTTP_400_BAD_REQUEST)
 
         # Save new User or get old User
-        user = User.users.get_or_create(
+        user, _ = User.users.get_or_create(
             social_id = naver_id,
             social_provider = "naver",
             defaults={'email': email, 'username': nickname}
