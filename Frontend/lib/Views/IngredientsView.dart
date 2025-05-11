@@ -152,15 +152,21 @@ class IngredientsPage extends State<IngredientsView> {
                                     itemCount: refrigerator.getNumOfIngredientsFloor(floor: floor),
                                     itemBuilder: (context, index) => Container(
                                       decoration: BoxDecoration(
-                                        color: Colors.primaries[Random().nextInt(Colors.primaries.length)],
-                                        borderRadius: BorderRadius.circular(30)
+                                        borderRadius: BorderRadius.circular(20)
                                       ),
                                       child: FilledButton(
                                         onPressed: (){
                                           pages[6] = IngredientsInfoView(ingredient: refrigerator.ingredientStorage[floor - 1][index]);
                                           Navigator.of(context).pushNamed('/' + pages[6].toString());
                                         },
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor: Colors.primaries[Random().nextInt(Colors.primaries.length)],
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(20)
+                                          )
+                                        ),
                                         child: Text('식재료 ${index + 1}'),
+
                                       )
                                     ),
                                   ),
