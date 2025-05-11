@@ -1,6 +1,9 @@
 import 'package:Frontend/Models/IngredientModel.dart';
 import 'package:Frontend/Models/RecipeModel.dart';
+import 'package:Frontend/Views/IngredientsInfoView.dart';
 import 'package:flutter/material.dart';
+
+import '../Views/MainFrameView.dart';
 
 class RecipeDialog extends Dialog{
   RecipeModel? _recipe;
@@ -96,7 +99,11 @@ class RecipeDialog extends Dialog{
                 children: <Widget>[
                   for(Ingredient ingredient in _recipe!.ingredients!)
                     ElevatedButton(
-                      onPressed: (){},
+                      onPressed: (){
+                        pages[6] = IngredientsInfoView(ingredient: ingredient);
+                        // 식재료 소개 페이지로 이동
+                        Navigator.of(context).pushNamed('/' + pages[6].toString());
+                      },
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,              // 이미지 + 텍스트 사이즈에 버튼 크기 맞추기
