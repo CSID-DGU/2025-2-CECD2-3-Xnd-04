@@ -3,6 +3,8 @@ import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 import 'dart:math';
 
+import 'IngredientsInfoView.dart';
+
 class IngredientsView extends StatefulWidget {
   // 냉장고 객체 자체 변경 x
   final Refrigerator refrigerator;
@@ -153,6 +155,13 @@ class IngredientsPage extends State<IngredientsView> {
                                         color: Colors.primaries[Random().nextInt(Colors.primaries.length)],
                                         borderRadius: BorderRadius.circular(30)
                                       ),
+                                      child: FilledButton(
+                                        onPressed: (){
+                                          pages[6] = IngredientsInfoView(ingredient: refrigerator.ingredientStorage[floor - 1][index]);
+                                          Navigator.of(context).pushNamed('/' + pages[6].toString());
+                                        },
+                                        child: Text('식재료 ${index + 1}'),
+                                      )
                                     ),
                                   ),
                             ), // 식재료 컨테이너

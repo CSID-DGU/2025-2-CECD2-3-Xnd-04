@@ -4,17 +4,20 @@ import 'package:Frontend/Views/IngredientsView.dart';
 import 'package:Frontend/Views/RecipeView.dart';
 import 'package:Frontend/Views/FavoritesView.dart';
 import 'package:Frontend/Views/CartView.dart';
+import 'package:Frontend/Views/IngredientsInfoView.dart';
 import 'package:Frontend/Views/AlertView.dart';
 import 'package:Frontend/Views/SettingView.dart';
 import 'package:Frontend/Models/RefrigeratorModel.dart';
+import 'package:Frontend/Models/IngredientModel.dart';
 
 List<Widget> pages = [
   const InitialHomeView(),
-  IngredientsView(refrigerator: Refrigerator(),),
+  IngredientsView(refrigerator: Refrigerator()),
   const RecipeView(),
   const FavoritesView(),
   const CartView(),
   const HomeView(),
+  IngredientsInfoView(ingredient: Ingredient()),
   const AlertView(),
   const SettingView(),
 ];
@@ -72,6 +75,32 @@ class mainAppBar extends StatelessWidget{
           )
         ],
       ),
+    );
+  }
+}
+
+class backBar extends StatelessWidget{
+  backBar({Key? key}) : super(key: key){}
+
+  Widget build(BuildContext context){
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+    return Container(
+      width: screenWidth,
+      height: screenHeight * 0.04,
+      color: Colors.white,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          SizedBox(width: 10),
+          IconButton(
+            icon: Icon(Icons.keyboard_backspace, color: Colors.grey[700], size: 25),
+            onPressed: (){
+              Navigator.of(context).pop();
+            },
+          )
+        ]
+      )
     );
   }
 }

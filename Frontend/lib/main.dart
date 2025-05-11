@@ -29,8 +29,9 @@ class MyApp extends StatelessWidget {
         '/FavoritesView' : (context) => pages[3],
         '/CartView' : (context) => pages[4],
         '/HomeView' : (context) => pages[5],
-        '/AlertView' : (context) => pages[6],
-        '/SettingView' : (context) => pages[7],
+        '/IngredientsInfoView' : (context) => pages[6],
+        '/AlertView' : (context) => pages[7],
+        '/SettingView' : (context) => pages[8],
       }
     );
   }
