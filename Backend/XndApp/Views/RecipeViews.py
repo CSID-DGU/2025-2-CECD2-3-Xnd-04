@@ -31,7 +31,8 @@ class RecipeView(APIView):
             recipes = recipes.filter(
                 Q(food_name__icontains=query) |
                 Q(tags__tag_name__icontains=query)
-            )
+            ).distinct()
+
 
         # 키워드
         if keyword:
