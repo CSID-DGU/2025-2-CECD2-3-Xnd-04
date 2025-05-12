@@ -86,7 +86,7 @@ class FavoritesPage extends State<FavoritesView> {
                     textAlignVertical: TextAlignVertical.center,
                     decoration: InputDecoration(
                       hintText: (_searchQuery.isEmpty) ? '레시피 검색' : null,
-                      hintStyle: TextStyle(color: Colors.grey[700], fontSize: 25, fontWeight: FontWeight.bold),
+                      hintStyle: TextStyle(color: Colors.grey[700], fontSize: screenHeight * 0.015, fontWeight: FontWeight.bold),
                       prefixIcon: IconButton(
                         icon: Icon(Icons.search, color: Colors.grey[700]),
                         onPressed: () {
@@ -116,7 +116,7 @@ class FavoritesPage extends State<FavoritesView> {
                   ),
                 ),
                 Container(
-                  height: screenHeight * 0.83,
+                  height: screenHeight * 0.75,
                   child: Scrollbar(
                       controller: _scrollController,
                       thumbVisibility: true,
@@ -195,7 +195,7 @@ class FavoritesPage extends State<FavoritesView> {
                                                                     Text(recipe.recipeName!,
                                                                         style: TextStyle(
                                                                             color: Colors.black,
-                                                                            fontWeight: FontWeight.bold
+                                                                            fontWeight: FontWeight.bold,
                                                                         )
                                                                     ),
                                                                   ]
@@ -214,7 +214,7 @@ class FavoritesPage extends State<FavoritesView> {
                                                                         SizedBox(width: 10),
                                                                         Flexible(
                                                                             child: Text(ingredientsTypes[recipe.recipeNum!],
-                                                                                style: TextStyle(color: Colors.black)
+                                                                                style: TextStyle(color: Colors.black, fontSize: screenHeight * 0.01)
                                                                             )
                                                                         )
                                                                       ]

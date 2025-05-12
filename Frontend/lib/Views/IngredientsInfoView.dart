@@ -33,7 +33,7 @@ class IngredientsInfoView extends StatelessWidget{
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(_ingredient!.ingredientName!,
-                      style: TextStyle(color: Colors.black, fontSize: 30, fontWeight: FontWeight.bold)
+                      style: TextStyle(color: Colors.black, fontSize: screenWidth * 0.06, fontWeight: FontWeight.bold)
                     )
                   )
                 ),
@@ -44,8 +44,8 @@ class IngredientsInfoView extends StatelessWidget{
                   child: Align(
                     alignment: Alignment.centerRight,
                     child: Container(
-                      width: 70,
-                      height: 30,
+                      width: screenWidth * 0.15,
+                      height: screenHeight * 0.03,
                       decoration: BoxDecoration(
                         color: Colors.grey[400],
                         borderRadius: BorderRadius.circular(20)
@@ -73,16 +73,16 @@ class IngredientsInfoView extends StatelessWidget{
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  Icon(Icons.add_card_rounded, size: 30),
-                  SizedBox(width : 30),
-                  Text('입고일', style: TextStyle(color: Colors.black, fontSize: 25)),
+                  Icon(Icons.add_card_rounded, size: screenWidth * 0.05),
+                  SizedBox(width : screenWidth * 0.05),
+                  Text('입고일', style: TextStyle(color: Colors.black, fontSize: screenWidth * 0.05)),
                   Container(
-                    width: screenWidth - 235,
+                    width: screenWidth * 0.75 - 100,
                     child: Align(
                       alignment: Alignment.centerRight,
                       child: Text('2025년 4월 8일',
                         style: TextStyle(
-                          fontSize: 25,
+                          fontSize: screenWidth * 0.05,
                           fontWeight: FontWeight.bold,
                         )
                       )
@@ -103,15 +103,15 @@ class IngredientsInfoView extends StatelessWidget{
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  Icon(Icons.access_time_filled, size: 30),
-                  SizedBox(width : 30),
-                  Text('보관일', style: TextStyle(color: Colors.black, fontSize: 25)),
+                  Icon(Icons.access_time_filled, size: screenWidth * 0.05),
+                  SizedBox(width : screenWidth * 0.05),
+                  Text('보관일', style: TextStyle(color: Colors.black, fontSize: screenWidth * 0.05)),
                   Container(
-                    width: screenWidth - 235,
+                    width: screenWidth * 0.75 - 100,
                     child: Align(
                         alignment: Alignment.centerRight,
                         child: Text('2025년 4월 20일', style: TextStyle(
-                          fontSize: 25,
+                          fontSize: screenWidth * 0.05,
                           fontWeight: FontWeight.bold,
                         )
                       )

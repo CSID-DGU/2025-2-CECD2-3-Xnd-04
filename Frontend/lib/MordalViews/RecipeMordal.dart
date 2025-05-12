@@ -16,7 +16,7 @@ class RecipeDialog extends Dialog{
   Dialog recipeDialog(BuildContext context){
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-    double mainContainerWidth = screenWidth * 0.85;
+    double mainContainerWidth = screenWidth * 0.75;
     double mainContainerHeight = screenHeight * 0.8;
 
     return Dialog(
@@ -41,7 +41,7 @@ class RecipeDialog extends Dialog{
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(_recipe!.recipeName!,
-                          style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)
+                          style: TextStyle(fontSize: screenHeight * 0.02, fontWeight: FontWeight.bold)
                       )
                     )
                   ),
@@ -53,7 +53,7 @@ class RecipeDialog extends Dialog{
                           onPressed: (){
                             Navigator.of(context).pop();
                           },
-                          icon: Icon(Icons.clear, size: 25),
+                          icon: Icon(Icons.clear, size: screenHeight * 0.02),
                           padding: EdgeInsets.zero
                       )
                     )
@@ -70,7 +70,7 @@ class RecipeDialog extends Dialog{
               ),
             ),
             Container(
-              height: 45,
+              height: screenHeight * 0.042,
               margin: EdgeInsets.only(top: 20),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -78,12 +78,12 @@ class RecipeDialog extends Dialog{
                   Align(
                     alignment: Alignment.topLeft,
                     child: Text('식재료',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: screenHeight * 0.015, fontWeight: FontWeight.bold),
                     ),
                   ),
                   Container(
                       width: mainContainerWidth - 40,
-                      child: Divider(color: Colors.black, thickness: 2.5),
+                      child: Divider(color: Colors.black, thickness: 1.5),
                   ),
                 ],
               )
@@ -109,10 +109,10 @@ class RecipeDialog extends Dialog{
                         mainAxisSize: MainAxisSize.min,              // 이미지 + 텍스트 사이즈에 버튼 크기 맞추기
                         children: <Widget>[
                           Text(ingredient.ingredientName!,
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: screenHeight * 0.01)
                           ),
                           SizedBox(width: 10),
-                          Image.asset('assets/images/cart.png', width: 20, height: 20, fit: BoxFit.cover),
+                          Image.asset('assets/images/cart.png', width: screenHeight * 0.01, height: screenHeight * 0.01, fit: BoxFit.cover),
                         ],
                       ),
                       style: ElevatedButton.styleFrom(
@@ -123,7 +123,7 @@ class RecipeDialog extends Dialog{
               ),
             ),
             Container(
-              height: 45,
+              height: screenHeight * 0.042,
               margin: EdgeInsets.only(top: 20),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -132,7 +132,7 @@ class RecipeDialog extends Dialog{
                     alignment: Alignment.topLeft,
                     child:
                     Text('레시피',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: screenHeight * 0.015, fontWeight: FontWeight.bold),
                     ),
                   ),
                   Container(
@@ -154,7 +154,7 @@ class RecipeDialog extends Dialog{
                           SizedBox(width: 10),
                           Flexible(
                               child: Text((idx + 1).toString() + '. ' + _recipe!.descriptions![idx],
-                                  style: TextStyle(color: Colors.black, fontSize: 20)
+                                  style: TextStyle(color: Colors.black, fontSize: screenHeight * 0.013)
                               )
                           )
                         ]
