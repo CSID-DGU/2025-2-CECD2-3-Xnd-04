@@ -163,10 +163,10 @@ class IngredientsPage extends State<IngredientsView> {
                                           backgroundColor: Colors.primaries[Random().nextInt(Colors.primaries.length)],
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(20)
-                                          )
+                                          ),
+                                          padding: EdgeInsets.zero,
                                         ),
-                                        child: Text('식재료 ${index + 1}'),
-
+                                        child: Text('식재료 ${index + 1}', style: TextStyle(fontSize:screenHeight * 0.01)),
                                       )
                                     ),
                                   ),

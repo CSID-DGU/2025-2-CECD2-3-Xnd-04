@@ -34,7 +34,7 @@ class InitialHomePage extends State<InitialHomeView> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
             mainAppBar(name:'   Xnd'),
-            SizedBox(height: screenHeight * 0.35),
+            SizedBox(height: screenHeight * 0.3),
 
             (!isPlusButtonClicked) ?
 
@@ -61,7 +61,7 @@ class InitialHomePage extends State<InitialHomeView> {
                 decoration: BoxDecoration( // Container의 배경색
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    width: 10,
+                    width: 5,
                     color: Colors.black, // 테두리 두께
                   ),
                 ),
@@ -86,9 +86,9 @@ class InitialHomePage extends State<InitialHomeView> {
                               shape: const CircleBorder(),
                             ),
                           ),
-                          SizedBox(width: screenWidth * 0.15, height: 60, child: Text(
+                          SizedBox(width: screenWidth * 0.15, height: screenHeight * 0.062, child: Text(
                             levelOfRefrigerator.toString(),
-                            style: const TextStyle(fontSize: 50),
+                            style: TextStyle(fontSize: screenHeight * 0.06),
                             textAlign: TextAlign.center,)),
                           ElevatedButton(
                             onPressed: () async {
@@ -108,7 +108,7 @@ class InitialHomePage extends State<InitialHomeView> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 50,),
+                      SizedBox(height: screenHeight * 0.05),
                       SizedBox(
                           height: screenHeight * 0.05,
                           width: screenWidth * 0.2,
@@ -130,11 +130,11 @@ class InitialHomePage extends State<InitialHomeView> {
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.pinkAccent[100],
-                                side: BorderSide(width: 5,),
+                                side: BorderSide(width: 2.5),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                               ),
                               child: Text('확 인', style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: screenWidth * 0.035))
+                                  fontWeight: FontWeight.bold, fontSize: screenHeight * 0.015))
                           )
                       )
                     ]
@@ -170,7 +170,7 @@ class HomePage extends State<HomeView> {
           children: <Widget>[
             mainAppBar(name:'   Xnd'),
             Container(
-              height: screenHeight * 0.89,
+              height: screenHeight * 0.81,
               child: PageView.builder(
                   controller: PageController(),
                   itemCount: refrigerators.length + 1,
