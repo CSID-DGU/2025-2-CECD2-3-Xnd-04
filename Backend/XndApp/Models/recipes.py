@@ -9,6 +9,7 @@ class Recipes(models.Model):
     category3 = models.CharField(max_length=100)
     category4 = models.CharField(max_length=100)
     food_name = models.CharField(max_length=100)
+    ingredient_all = models.TextField(max_length=300)
     steps = models.TextField(help_text="요리 순서(내용)")
     serving_size = models.CharField(max_length=50,help_text="N인분")
     cooking_time = models.CharField(max_length=50,help_text="~분 이내")
