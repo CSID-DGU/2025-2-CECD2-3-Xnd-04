@@ -1,11 +1,16 @@
 import 'package:dio/dio.dart';
+import 'package:network_info_plus/network_info_plus.dart';
+import 'dart:io';
 
+// 디버깅용, 실제 코드에서는 삭제, 노트북 Wifi 상에서만 구동 가능
 // 호스팅 기기를 안드로이드 애뮬레이터로 설정
-final String authURL = 'http://10.0.2.2:8000/api/auth/kakao-login/';
 
 Future<bool> sendKakaoAccessToken(String accessToken) async {
   final dio = Dio();
-
+  final ip = await NetworkInfo().getWifiIP().toString();
+  final String authURL = (ip.startsWith('10.0.2')) ?
+  'http://10.0.2.2:8000/api/auth/kakao-login/' :
+  'http://192.168.151.150:8000/api/auth/kakao-login/' ;
   try {
     final response = await dio.post(
       authURL, // 👉 백엔드 API 주소
@@ -34,6 +39,5 @@ Future<bool> sendKakaoAccessToken(String accessToken) async {
       print(e.toString());
     }
     return false;
-
   }
 }

@@ -219,7 +219,7 @@ class RecipePage extends State<RecipeView> {
         ),
         child: TextField(
           controller: _searchController,
-          style: TextStyle(color: Colors.black, fontSize: 25),
+          style: TextStyle(color: Colors.black, fontSize: screenHeight * 0.02),
           textAlignVertical: TextAlignVertical.center,
           decoration: InputDecoration(
             hintText: (_searchQuery.isEmpty) ? '레시피 검색' : null,
@@ -235,7 +235,7 @@ class RecipePage extends State<RecipeView> {
             ),
             suffixIcon: (_searchController.text.isNotEmpty)
                 ? IconButton(
-              icon: Icon(Icons.clear, color: Colors.red),
+              icon: Icon(Icons.clear, color: Colors.red, size: screenHeight * 0.02),
               onPressed: () {
                 setState(() {
                   _searchController.clear();
