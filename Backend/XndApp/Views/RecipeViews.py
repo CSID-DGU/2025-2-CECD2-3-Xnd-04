@@ -3,10 +3,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Q
 from ..Models.recipes import Recipes
-from XndApp.serializers.recipe_serializer import RecipeSerializer
+from XndApp.serializers.recipe_serializer import RecipeSerializer, RecipeDetailSerializer
 from django.utils import timezone
 from XndApp.Models.fridgeIngredients import FridgeIngredients
 from datetime import timedelta
+from django.shortcuts import get_object_or_404
 
 
 # 입력 검색 및 키워드 검색을 통한 레시피 (요리명, 이미지, 재료, 조리 순서 / 조리시간, 기준인원, 난이도) 조회
@@ -148,3 +149,12 @@ class RecipeView(APIView):
 
         # 정렬된 레시피 객체만 반환
         return [item['recipe'] for item in recipes_with_weights]
+
+
+# 레시피 상세 정보 조회
+class RecipeDetailView(APIView):
+    def get(self, request, recipe_id):
+        recipe = get_object_or_404(Recipes, recipe_id=recipe_id)
+
+        serializer = RecipeDetailSerializer(recipe)
+        return Response(serializer.data)
