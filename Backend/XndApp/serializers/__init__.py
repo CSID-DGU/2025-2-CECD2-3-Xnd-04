@@ -1,2 +1,4 @@
 from .user_serializers import UserSerializer
 from .recipe_serializer import RecipeSerializer
+from .fridge_serializer import FridgeSerializer
+from .fridge_ingredients_serializer import FridgeIngredientsSerializer
