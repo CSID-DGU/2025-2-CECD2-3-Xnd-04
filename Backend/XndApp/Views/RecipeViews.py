@@ -8,7 +8,7 @@ from django.utils import timezone
 from XndApp.Models.fridgeIngredients import FridgeIngredients
 from datetime import timedelta
 from django.shortcuts import get_object_or_404
-
+from rest_framework.permissions import AllowAny # 테스트용
 
 # 입력 검색 및 키워드 검색을 통한 레시피 (요리명, 이미지, 재료, 조리 순서 / 조리시간, 기준인원, 난이도) 조회
 
@@ -21,6 +21,8 @@ PREDEFINED_KEYWORDS = {
 }
 
 class RecipeView(APIView):
+
+    #permission_classes = [AllowAny] # 테스트용
 
     def get(self, request):
 

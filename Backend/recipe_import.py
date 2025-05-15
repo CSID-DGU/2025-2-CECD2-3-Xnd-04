@@ -22,7 +22,7 @@ def import_recipes():
         else:
             print("기존 데이터를 유지합니다. 새 데이터가 추가됩니다.")
 
-    file_path = r"C:\Users\wjdgu\Documents\카카오톡 받은 파일\recipe_dataset_recipe.csv"  # 엑셀 파일 컬럼 테이블 컬럼과 일치하는 부분만 남겨두기
+    file_path = r"C:\Users\wjdgu\Downloads\recipe_dataset__.csv"  # 엑셀 파일 컬럼 테이블 컬럼과 일치하는 부분만 남겨두기
 
     try:
         with open(file_path, 'r', encoding='utf-8-sig') as file:  # BOM 제거를 위한 utf-8-sig 사용
@@ -42,15 +42,10 @@ def import_recipes():
             for row in reader:
                 # BOM 문자가 있는 경우 처리
                 recipe_data = {}
-                # BOM 문자가 있는 경우 처리 (첫 번째 필드에만 영향)
                 if '\ufeffrecipe_id' in row:
                     recipe_data['recipe_id'] = row['\ufeffrecipe_id']
                 elif 'recipe_id' in row:
                     recipe_data['recipe_id'] = row['recipe_id']
-
-                # ingredient_detail을 ingredient_all로 매핑
-                if 'ingredient_detail' in row:
-                    recipe_data['ingredient_all'] = row['ingredient_detail']
 
                 # 나머지 필드 처리
                 for field in ['recipe_image', 'category1', 'category2', 'category3',
@@ -58,7 +53,6 @@ def import_recipes():
                               'cooking_time', 'cooking_level']:
                     if field in row:
                         recipe_data[field] = row[field]
-
 
                 # 객체 생성 및 저장
                 try:

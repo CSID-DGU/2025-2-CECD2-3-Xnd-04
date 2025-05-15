@@ -5,9 +5,11 @@ from XndApp.Models import FridgeIngredients
 from XndApp.Models import Fridge
 from django.shortcuts import get_object_or_404
 from ..serializers.Ingredient_serializers import IngredientSerializer
-
+from rest_framework.permissions import AllowAny # 테스트용
 
 class IngredientView(APIView):
+
+    #permission_classes = [AllowAny] #테스트용
 
     def get(self, request, id):
 
