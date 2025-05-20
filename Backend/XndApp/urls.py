@@ -7,6 +7,7 @@ from XndApp.Views.createFridgeViews import CreateFridgeView
 from XndApp.Views.fridgesViews import FridgeViews
 from XndApp.Views.fridgeDetailViews import FridgeDetailView
 from XndApp.Views.IngredientViews import IngredientView
+from XndApp.Views.CartViews import CartListView, CartManageView
 
 urlpatterns = [
     path('api/recipes/', RecipeView.as_view(), name='recipe-list'), # ?query ?keyword ?ingredient
@@ -17,4 +18,7 @@ urlpatterns = [
     path('api/fridge/',FridgeViews.as_view(),name='fridges'),
     path('api/fridge/<int:fridge_id>/',FridgeDetailView.as_view(),name='fridgeDetails'),
     path('api/fridge/create/',CreateFridgeView.as_view(),name='create_fridge'),
+    path('api/carts/', CartListView.as_view(), name='cart-list'),
+    path('api/carts/add/', CartManageView.as_view(), name='cart-add'),
+    path('api/carts/<int:cart_id>/', CartManageView.as_view(), name='cart-manage'),
 ]
