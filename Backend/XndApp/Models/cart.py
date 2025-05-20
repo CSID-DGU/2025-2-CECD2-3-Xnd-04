@@ -1,18 +1,15 @@
-# 장바구니(recipeIngredients - user관계 테이블)
 from django.db import models
-from XndApp.Models.savedRecipeIngredients import SavedRecipeIngredients
-from django.contrib.auth import get_user_model
+from XndApp.Models.user import User
+from XndApp.Models.ingredients import Ingredient
 
-User = get_user_model()
 
 class Cart(models.Model):
-    ingredient = models.ForeignKey(SavedRecipeIngredients,on_delete=models.CASCADE)
-    user =  models.ForeignKey(User,on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)  # 장바구니에 담은 수량
+
+    class Meta:
+        unique_together = (('user', 'ingredient'),)
 
     def __str__(self):
-        return f"재료명 : {self.ingredient.ingredient_name}, 사용자 : {self.user.get_full_name()}"
-
-# 메타데이터
-class Meta:
-    db_table = 'cart'  
-    ordering = ['user']  # 유저별 정렬
+        return f"재료명: {self.ingredient.name}, 사용자: {self.user.get_full_name()}"
