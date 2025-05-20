@@ -10,15 +10,22 @@ from XndApp.Views.IngredientViews import IngredientView
 from XndApp.Views.CartViews import CartListView, CartManageView
 
 urlpatterns = [
-    path('api/recipes/', RecipeView.as_view(), name='recipe-list'), # ?query ?keyword ?ingredient
-    path('api/recipes/<int:recipe_id>/', RecipeDetailView.as_view(), name='recipe-detail'),
-    path('api/ingredients/<int:id>/', IngredientView.as_view(), name='ingredient-detail'),
-    path('api/auth/kakao-login/', KakaoLoginView.as_view(), name='kakao_login'),
-    path('api/auth/naver-login/',NaverLoginView.as_view(),name='naver_login'),
-    path('api/fridge/',FridgeViews.as_view(),name='fridges'),
-    path('api/fridge/<int:fridge_id>/',FridgeDetailView.as_view(),name='fridgeDetails'),
-    path('api/fridge/create/',CreateFridgeView.as_view(),name='create_fridge'),
-    path('api/cart/', CartListView.as_view(), name='cart-list'),
-    path('api/cart/add/', CartManageView.as_view(), name='cart-add'),
-    path('api/cart/<int:cart_id>/', CartManageView.as_view(), name='cart-manage'),
+    # 로그인 및 인증
+    path('api/auth/kakao-login/', KakaoLoginView.as_view(), name='kakao_login'), # 카카오 로그인
+    path('api/auth/naver-login/',NaverLoginView.as_view(),name='naver_login'), # 네이버 로그인
+
+    # 냉장고
+    path('api/fridge/create/',CreateFridgeView.as_view(),name='create_fridge'), # 냉장고 생성
+    path('api/fridge/',FridgeViews.as_view(),name='fridges'), # 냉장고 정보 조회
+    path('api/fridge/<int:fridge_id>/',FridgeDetailView.as_view(),name='fridgeDetails'), # 냉장고 내부 조회
+    path('api/ingredients/<int:id>/', IngredientView.as_view(), name='ingredient-detail'),  # 냉장고 속 재료 하나 선택했을 때 정보 조회
+
+    # 검색
+    path('api/recipes/', RecipeView.as_view(), name='recipe-list'),  # 레시피 목록 조회 ?query ?keyword ?ingredient
+    path('api/recipes/<int:recipe_id>/', RecipeDetailView.as_view(), name='recipe-detail'),  # 레시피 상세 조회
+
+    # 장바구니
+    path('api/cart/', CartListView.as_view(), name='cart-list'), # 장바구니 목록 조회
+    path('api/cart/add/', CartManageView.as_view(), name='cart-add'), # 장바구니에 추가
+    path('api/cart/<int:cart_id>/', CartManageView.as_view(), name='cart-manage'), # 장바구니 수량 + - x (삭제)
 ]
