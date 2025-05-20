@@ -1,4 +1,4 @@
-# 크롤링한 레시피
+# 레시피
 from django.db import models
 
 class Recipes(models.Model):

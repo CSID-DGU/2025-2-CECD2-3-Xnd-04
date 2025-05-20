@@ -1,3 +1,4 @@
+# 레시피 리스트, 레시피 상세 조회
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,6 +10,9 @@ from XndApp.Models.fridgeIngredients import FridgeIngredients
 from datetime import timedelta
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import AllowAny # 테스트용
+from XndApp.Models.cart import Cart
+from XndApp.Models.user import User
+from XndApp.Models.RecipeIngredient import RecipeIngredient
 
 # 입력 검색 및 키워드 검색을 통한 레시피 (요리명, 이미지, 재료, 조리 순서 / 조리시간, 기준인원, 난이도) 조회
 
@@ -22,7 +26,7 @@ PREDEFINED_KEYWORDS = {
 
 class RecipeView(APIView):
 
-    #permission_classes = [AllowAny] # 테스트용
+    permission_classes = [AllowAny] # 테스트용
 
     def get(self, request):
 
@@ -154,9 +158,26 @@ class RecipeView(APIView):
 
 
 # 레시피 상세 정보 조회
+# views.py
 class RecipeDetailView(APIView):
+    permission_classes = [AllowAny]  # 테스트용
+
     def get(self, request, recipe_id):
         recipe = get_object_or_404(Recipes, recipe_id=recipe_id)
 
-        serializer = RecipeDetailSerializer(recipe)
+        # 장바구니 상태 포함 여부
+        include_cart_status = request.query_params.get('include_cart_status', 'true').lower() == 'true'
+
+        # 사용자 정보 (실제 환경에서는 request.user.id 사용)
+        user_id = 111  # 테스트용
+
+        # 컨텍스트 구성
+        context = {
+            'include_cart_status': include_cart_status,
+            'user_id': user_id
+        }
+
+        # 시리얼라이저 적용
+        serializer = RecipeDetailSerializer(recipe, context=context)
+
         return Response(serializer.data)
