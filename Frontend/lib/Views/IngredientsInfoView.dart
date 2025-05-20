@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:Frontend/Models/IngredientModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
+import 'package:flutter_colorful_tab/flutter_colorful_tab.dart';
 
 class IngredientsInfoView extends StatelessWidget{
   Ingredient? _ingredient;
@@ -120,7 +121,52 @@ class IngredientsInfoView extends StatelessWidget{
                 ],
               )
             ),
-
+            Container(
+              height: screenHeight * 0.44 - 105,
+              width: screenWidth - 60,
+              child: DefaultTabController(
+                length: 3,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    ColorfulTabBar(
+                      indicatorHeight: 0.1,
+                      topPadding: 0,
+                      alignment: TabAxisAlignment.start,
+                      tabs: [
+                        TabItem(color: Colors.red, title: Text('Home', style: TextStyle(fontSize: screenWidth * 0.03),)),
+                        TabItem(color: Colors.green, title: Text('Favorite', style: TextStyle(fontSize: screenWidth * 0.03),)),
+                        TabItem(color: Colors.orange, title: Text('Search', style: TextStyle(fontSize: screenWidth * 0.03),)),
+                      ]
+                    ),
+                    Container(
+                      height: screenHeight * 0.2,
+                      width : screenWidth - 60,
+                      child: TabBarView(
+                        children: <Widget>
+                        [
+                          Container(
+                            width: screenWidth - 60,
+                            height: screenHeight * 0.15,
+                            color: Colors.red,
+                          ),
+                          Container(
+                            width: screenWidth - 60,
+                            height: screenHeight * 0.15,
+                            color: Colors.green,
+                          ),
+                          Container(
+                            width: screenWidth - 60,
+                            height: screenHeight * 0.15,
+                            color: Colors.orange,
+                          ),
+                        ]
+                      )
+                    )
+                  ]
+                )
+              )
+            )
           ]
         )
       )

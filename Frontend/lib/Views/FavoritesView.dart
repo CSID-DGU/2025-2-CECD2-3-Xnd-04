@@ -116,7 +116,7 @@ class FavoritesPage extends State<FavoritesView> {
                   ),
                 ),
                 Container(
-                  height: screenHeight * 0.75,
+                  height: screenHeight * 0.78,
                   child: Scrollbar(
                       controller: _scrollController,
                       thumbVisibility: true,

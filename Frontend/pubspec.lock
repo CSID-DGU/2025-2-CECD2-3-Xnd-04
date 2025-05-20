@@ -158,6 +158,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_colorful_tab:
+    dependency: "direct main"
+    description:
+      name: flutter_colorful_tab
+      sha256: "8ff373bb5904624320924b9ebafff943153914f08e152e3e963878a414d1641f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.1"
   flutter_lints:
     dependency: "direct dev"
     description:

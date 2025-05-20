@@ -10,7 +10,7 @@ Future<bool> sendKakaoAccessToken(String accessToken) async {
   final ip = await NetworkInfo().getWifiIP().toString();
   final String authURL = (ip.startsWith('10.0.2')) ?
   'http://10.0.2.2:8000/api/auth/kakao-login/' :
-  'http://192.168.151.150:8000/api/auth/kakao-login/' ;
+  'http://192.168.119.150:8000/api/auth/kakao-login/' ;
   try {
     final response = await dio.post(
       authURL, // 👉 백엔드 API 주소

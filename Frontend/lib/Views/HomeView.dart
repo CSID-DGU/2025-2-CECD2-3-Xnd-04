@@ -170,7 +170,7 @@ class HomePage extends State<HomeView> {
           children: <Widget>[
             mainAppBar(name:'   Xnd'),
             Container(
-              height: screenHeight * 0.81,
+              height: screenHeight * 0.84,
               child: PageView.builder(
                   controller: PageController(),
                   itemCount: refrigerators.length + 1,
