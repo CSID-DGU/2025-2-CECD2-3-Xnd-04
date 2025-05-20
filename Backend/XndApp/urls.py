@@ -18,7 +18,7 @@ urlpatterns = [
     path('api/fridge/',FridgeViews.as_view(),name='fridges'),
     path('api/fridge/<int:fridge_id>/',FridgeDetailView.as_view(),name='fridgeDetails'),
     path('api/fridge/create/',CreateFridgeView.as_view(),name='create_fridge'),
-    path('api/carts/', CartListView.as_view(), name='cart-list'),
-    path('api/carts/add/', CartManageView.as_view(), name='cart-add'),
-    path('api/carts/<int:cart_id>/', CartManageView.as_view(), name='cart-manage'),
+    path('api/cart/', CartListView.as_view(), name='cart-list'),
+    path('api/cart/add/', CartManageView.as_view(), name='cart-add'),
+    path('api/cart/<int:cart_id>/', CartManageView.as_view(), name='cart-manage'),
 ]
