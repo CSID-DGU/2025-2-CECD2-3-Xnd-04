@@ -165,7 +165,9 @@ class MainBottomBar extends State<MainBottomView> {
 
     return SafeArea(
       child: Container(
-        height: screenHeight * 0.07,
+        height: screenHeight * 0.08,
+        width: screenWidth,
+        color: Colors.orangeAccent,
         child: BottomNavigationBar(
           onTap: onItemTapped,
           showSelectedLabels: false,
