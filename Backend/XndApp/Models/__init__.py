@@ -7,3 +7,6 @@ from .recipes import Recipes
 from .savedRecipes import SavedRecipes
 from .savedRecipeIngredients import SavedRecipeIngredients
 from .tags import Tags
+from .foodStorageLife import FoodStorageLife
+from .ingredients import Ingredient
+from .RecipeIngredient import RecipeIngredient
