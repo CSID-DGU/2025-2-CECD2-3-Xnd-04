@@ -6,7 +6,6 @@ from XndApp.Models.savedRecipes import SavedRecipes
 class SavedRecipeIngredients(models.Model):
     ingredient_name = models.CharField(max_length=100)
     recipe = models.ForeignKey(SavedRecipes,on_delete=models.CASCADE)
-    category = models.ForeignKey(Category,on_delete=models.CASCADE)
 
 # 메타데이터
 class Meta:
