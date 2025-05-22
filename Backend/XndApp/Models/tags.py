@@ -5,5 +5,5 @@ from XndApp.Models.recipes import Recipes
 class Tags(models.Model):
     tag_id = models.AutoField(primary_key=True)
     tag_name = models.CharField(max_length=50)
-    recipe = models.ForeignKey(Recipes,on_delete=models.CASCADE)
+    recipe = models.ManyToManyField(Recipes, related_name='tags')
 

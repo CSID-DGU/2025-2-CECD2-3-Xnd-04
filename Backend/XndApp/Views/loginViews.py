@@ -6,9 +6,11 @@ from rest_framework import status
 from ..Models.user import User
 from ..serializers import UserSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import AllowAny
 
 # KakaoLoginView
 class KakaoLoginView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         kakao_access_token = request.data.get("access_token")
 
@@ -55,6 +57,7 @@ class KakaoLoginView(APIView):
     
 # NaverLoginView
 class NaverLoginView(APIView):
+    permission_classes = [AllowAny]
     def post(self,request):
         naver_access_token = request.data.get("access_token")
         if not naver_access_token:
