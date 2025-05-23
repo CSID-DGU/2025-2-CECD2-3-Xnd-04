@@ -5,6 +5,8 @@ import 'dart:io';
 // 디버깅용, 실제 코드에서는 삭제, 노트북 Wifi 상에서만 구동 가능
 // 호스팅 기기를 안드로이드 애뮬레이터로 설정
 
+String? responsedAccessToken;
+
 Future<bool> sendKakaoAccessToken(String accessToken) async {
   final dio = Dio();
   final ip = await NetworkInfo().getWifiIP().toString();
