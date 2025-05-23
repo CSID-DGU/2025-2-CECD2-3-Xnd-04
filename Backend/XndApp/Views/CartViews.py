@@ -23,7 +23,7 @@ class CartListView(APIView):
         # 현재 로그인한 사용자의 카트 아이템 조회
         # user = request.user
         try:
-            user = User.users.get(user_id=111) # 테스트용
+            user = User.objects.get(user_id=111) # 테스트용
             if user.is_anonymous:
                 return Response({"error": "로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -74,7 +74,7 @@ class CartManageView(APIView):
             # 이미 카트에 있는지 확인
             cart_item, created = Cart.objects.get_or_create(
                 #user=request.user,
-                user=User.users.get(user_id=111), #테스트용
+                user=User.objects.get(user_id=111), #테스트용
                 ingredient=ingredient,
                 defaults={
                     'quantity': quantity
@@ -105,7 +105,7 @@ class CartManageView(APIView):
         
             cart_item = get_object_or_404(Cart, id=cart_id,
                                         # user=request.user
-                                        user=User.users.get(user_id=111) #테스트용
+                                        user=User.objects.get(user_id=111) #테스트용
                                         )
 
             action = request.data.get('action')
@@ -136,7 +136,7 @@ class CartManageView(APIView):
         try:
             cart_item = get_object_or_404(Cart, id=cart_id,
                                         #user=request.user
-                                        user=User.users.get(user_id=111) #테스트용
+                                        user=User.objects.get(user_id=111) #테스트용
                                         )
             cart_item.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
