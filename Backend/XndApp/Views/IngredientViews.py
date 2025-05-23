@@ -21,4 +21,4 @@ class IngredientView(APIView):
 
         ingredient = get_object_or_404(FridgeIngredients, id=id, fridge_id=fridge_id)
         serializer = IngredientSerializer(ingredient)
-        return Response(serializer.data)
+        return Response(serializer.data,status=status.HTTP_200_OK)

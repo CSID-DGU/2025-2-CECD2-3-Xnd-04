@@ -13,6 +13,7 @@ from rest_framework.permissions import AllowAny # 테스트용
 from XndApp.Models.cart import Cart
 from XndApp.Models.user import User
 from XndApp.Models.RecipeIngredient import RecipeIngredient
+from XndApp.Models.savedRecipes import SavedRecipes
 
 # 입력 검색 및 키워드 검색을 통한 레시피 (요리명, 이미지, 재료, 조리 순서 / 조리시간, 기준인원, 난이도) 조회
 
