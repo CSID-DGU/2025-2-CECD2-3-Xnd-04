@@ -20,6 +20,8 @@ class FridgeIngredients(models.Model):
     # 외부 테이블 참조 시 수정
     ingredient_name = models.CharField(max_length=100)
 
+    ingredient_pic = models.CharField(max_length=255)
+
     def save(self, *args, **kwargs):
         # layer값 검사
         if self.fridge and self.layer > self.fridge.layer_count:
