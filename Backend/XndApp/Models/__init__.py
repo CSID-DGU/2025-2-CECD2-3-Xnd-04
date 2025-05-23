@@ -1,7 +1,6 @@
 from .user import User
 from .cart import Cart
 from .fridge import Fridge
-from .category import Category
 from .fridgeIngredients import FridgeIngredients
 from .recipes import Recipes
 from .savedRecipes import SavedRecipes

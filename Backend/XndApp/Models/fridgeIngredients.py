@@ -15,7 +15,7 @@ class FridgeIngredients(models.Model):
         help_text="냉장고 내의 재료의 위치(단수)"
         )
     # category = models.ForeignKey(Category,on_delete=models.CASCADE)
-    foodStorageLife = models.ForeignKey(FoodStorageLife,on_delete=models.CASCADE)
+    foodStorageLife = models.ForeignKey(FoodStorageLife,on_delete=models.SET_DEFAULT, default=100) 
     storable_due = models.DateTimeField(null=True)
     # 외부 테이블 참조 시 수정
     ingredient_name = models.CharField(max_length=100)

@@ -4,12 +4,15 @@ from rest_framework import status
 from rest_framework.views import APIView
 from ..Models.fridge import Fridge
 from ..serializers.fridge_serializer import FridgeSerializer
+from rest_framework.permissions import AllowAny
 
 class FridgeViews(APIView):
+    permission_classes = [AllowAny] #테스트용
     def get(self,request):
-
+        
         try:
-            fridges = Fridge.objects.filter(user=request.user)
+            # user = request.user
+            fridges = Fridge.objects.filter(user=111)
             serializer = FridgeSerializer(fridges,many=True)
 
             return Response(
