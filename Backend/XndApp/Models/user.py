@@ -32,7 +32,7 @@ class User(AbstractBaseUser):
     email = models.TextField(default='')
 
     # Include UserManager
-    users = UserManager()
+    objects = UserManager()
 
     USERNAME_FIELD = 'social_id'
     REQUIRED_FIELDS = ['name','email']
