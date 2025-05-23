@@ -22,7 +22,7 @@ class SavedRecipesView(APIView):
         user = request.user
         
         try:
-            # 즐겨찾기 해제
+            # 중복 저장 방지
             if SavedRecipes.objects.filter(user=user, recipe=recipe).exists():
                 savedRecipe = SavedRecipes.objects.get(user=user, recipe=recipe)
                 savedRecipe.delete()
