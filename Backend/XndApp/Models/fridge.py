@@ -8,7 +8,7 @@ class Fridge(models.Model):
     fridge_id = models.AutoField(primary_key=True)
     layer_count = models.IntegerField(help_text="냉장고 단 수")
     model_label = models.CharField(max_length=100)
-    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    user = models.ForeignKey(User,on_delete=models.CASCADE,default=111)
     created_at = models.DateTimeField(auto_now_add=True)
 
     # Admin페이지에서 냉장고를 구분하기 위한 방법
