@@ -58,7 +58,7 @@ class CartManageView(APIView):
     permission_classes = [AllowAny]
 
     # user=request.user,
-    user = User.users.get(user_id=111) # 테스트용
+    user = User.objects.get(user_id=111) # 테스트용
 
     """ 장바구니 아이템 추가 (검색 결과 → 장바구니) """
     def post(self, request):
