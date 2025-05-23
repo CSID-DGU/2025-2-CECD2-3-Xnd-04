@@ -1,6 +1,5 @@
 # 저장된 레시피에 포함된 재료
 from django.db import models
-from XndApp.Models.category import Category
 from XndApp.Models.savedRecipes import SavedRecipes
 
 class SavedRecipeIngredients(models.Model):
