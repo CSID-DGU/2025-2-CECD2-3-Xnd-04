@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from ..Models.fridge import Fridge
 from ..serializers.fridge_serializer import FridgeSerializer
 from rest_framework.permissions import AllowAny
-from django.utils import timezone 
+from django.utils import timezone
 
 # 냉장고 List View
 class FridgeViews(APIView):
@@ -38,7 +38,7 @@ class FridgeViews(APIView):
     ## 냉장고 생성
     def post(self,request):
     
-        data = request.data.copy()
+        data = request.data.copy() #단수, 냉장고 이름
         data['user'] = request.user.id
         data['created_at'] = timezone.now()
 
