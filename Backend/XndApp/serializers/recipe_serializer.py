@@ -2,14 +2,28 @@ from rest_framework import serializers
 from ..Models.recipes import Recipes
 from ..Models.RecipeIngredient import RecipeIngredient
 from ..Models.cart import Cart
+from ..Models.savedRecipes import SavedRecipes
 
+# 레시피 sub 정보 (List View)
 class RecipeSerializer(serializers.ModelSerializer):
+
+    # 응답 반환시에만 쓰이는 변수로 실제 모델에는 존재 X
+    # 즐겨찾기 저장 유무
+    is_saved = serializers.SerializerMethodField()
+
     class Meta:
         model = Recipes
-        fields = ['recipe_id', 'food_name', 'recipe_image', 'serving_size', 'cooking_time', 'cooking_level']
+        fields = ['recipe_id', 'food_name', 'recipe_image', 'serving_size', 'cooking_time', 'cooking_level','is_saved']
+
+    def get_is_saved(self, obj):
+        user_id = self.context.get('user_id')
+        if not user_id:
+            return False
+        return SavedRecipes.objects.filter(user_id=user_id, recipe=obj).exists()
 
 
-# serializers.py
+
+# 레시피 전체 정보 (Detail View)
 class RecipeDetailSerializer(serializers.ModelSerializer):
     ingredients = serializers.SerializerMethodField()
 
