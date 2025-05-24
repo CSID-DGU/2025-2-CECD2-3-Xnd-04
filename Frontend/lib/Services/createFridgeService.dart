@@ -1,11 +1,11 @@
 import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:dio/dio.dart';
-import 'package:Frontend/Abstracts/kakaoLogin.dart';
 import 'package:Frontend/Services/authService.dart';
 import 'package:network_info_plus/network_info_plus.dart';
+import 'package:Frontend/Services/loadFridgeService.dart';
 
 // 모든 서비스는 함수로 관리함. 클래스 만들기 ㄱㅊ
-Future<bool> createFridge({required Refrigerator refrigerator}) async {
+Future<bool> createFridgeToServer({required Refrigerator refrigerator}) async {
   final dio = Dio();
   final String? ip = await NetworkInfo().getWifiIP();
 
@@ -16,11 +16,7 @@ Future<bool> createFridge({required Refrigerator refrigerator}) async {
   try {
     final response = await dio.post(
       fridgeCreateURL, // 👉 백엔드 API 주소
-      data: {
-        'fridge_id': refrigerator.number,
-        'layer_count': refrigerator.level,
-        'model_label': refrigerator.label,
-      },
+      data: refrigerator.toMap(),
       options: Options(
         headers: {
           'Authorization': 'Bearer ' + responsedAccessToken!,
@@ -29,6 +25,7 @@ Future<bool> createFridge({required Refrigerator refrigerator}) async {
       ),
     );
     print('응답 로그 : ${response.data}');
+    numOfFridge = numOfFridge! + 1;
     return true;
   }
   catch(e){

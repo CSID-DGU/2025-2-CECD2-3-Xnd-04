@@ -9,8 +9,8 @@ String? responsedAccessToken;
 
 Future<bool> sendKakaoAccessToken(String accessToken) async {
   final dio = Dio();
-  final ip = await NetworkInfo().getWifiIP().toString();
-  final String authURL = (ip.startsWith('10.0.2')) ?
+  final String? ip = await NetworkInfo().getWifiIP();
+  final String authURL = (ip!.startsWith('10.0.2')) ?
   'http://10.0.2.2:8000/api/auth/kakao-login/' :
   'http://192.168.119.150:8000/api/auth/kakao-login/' ;
   try {
@@ -27,6 +27,7 @@ Future<bool> sendKakaoAccessToken(String accessToken) async {
     );
 
     print('로그인 성공 ✅');
+    responsedAccessToken = response.data['access'];
     print('Access Token: ${response.data['access']}');
     print('Refresh Token: ${response.data['refresh']}');
     print('Status: ${response.statusCode}');

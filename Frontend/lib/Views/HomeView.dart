@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:Frontend/Views/IngredientsView.dart';
 import 'package:Frontend/Models/RefrigeratorModel.dart';
+import 'package:Frontend/Services/createFridgeService.dart';
+import 'package:Frontend/Services/loadFridgeService.dart';
 
 bool isPlusButtonClicked = false;
 List<Refrigerator> refrigerators = [];
@@ -15,7 +17,7 @@ class InitialHomeView extends StatefulWidget {
 }
 
 class InitialHomePage extends State<InitialHomeView> {
-  int levelOfRefrigerator = 1;
+  int levelOfRefrigerator = 1;             // 냉장고 추가할 때 사용하는 변수
 
   @override
   Widget build(BuildContext context) {
@@ -114,17 +116,19 @@ class InitialHomePage extends State<InitialHomeView> {
                           width: screenWidth * 0.2,
                           child: ElevatedButton(
                               onPressed: () {
-                                setState(() {
-                                  refrigerators.add(Refrigerator(
-                                    number: numOfRefrigerator + 1,
-                                    level: levelOfRefrigerator,
-                                    label: '${numOfRefrigerator + 1}번 냉장고',
-                                    modelName: 'R${numOfRefrigerator + 1}')
-                                  );    // 냉장고 추가
-                                  refrigerators[numOfRefrigerator].makeIngredientStorage();    // 냉장고 식재료 저장소 생성
-                                  pages[1] = IngredientsView(refrigerator: refrigerators[numOfRefrigerator]);    // 위젯 갱신
+                                setState(() async {
+                                  refrigerators.add(
+                                    Refrigerator(
+                                      number: numOfFridge! + 1,
+                                      level: levelOfRefrigerator,
+                                      label: '${numOfFridge! + 1}번 냉장고',
+                                      modelName: 'R${numOfFridge! + 1}'
+                                    )
+                                  ); // 냉장고 추가
+                                  await createFridgeToServer(refrigerator: refrigerators[numOfFridge!]);      // 서버로 Post 요청 보내기(요청이 성공하면 냉장고 수 하나 추가)
+                                  refrigerators[numOfFridge! - 1].makeIngredientStorage();    // 냉장고 식재료 저장소 생성
+                                  pages[1] = IngredientsView(refrigerator: refrigerators[numOfFridge! - 1]);    // 위젯 갱신
                                   Navigator.of(context).pushNamed('/' + pages[5].toString());
-                                  numOfRefrigerator += 1;
                                   isPlusButtonClicked = false;    // + 버튼 체크 여부
                                 });
                               },
@@ -194,12 +198,12 @@ class HomePage extends State<HomeView> {
                                 ElevatedButton(
                                   onPressed: () async {
                                     setState(() {
-                                      isPlusButtonClicked = true;
+                                      // isPlusButtonClicked = true;
                                       pages[1] = IngredientsView(refrigerator: refrigerators[index]);
                                       Navigator.of(context).pushNamed('/' + pages[1].toString());
                                     });
                                   },
-                                  child: Image.asset('assets/refrigerators/R${index + 1}.png',
+                                  child: Image.asset('assets/refrigerators/R1.png',
                                       width: screenHeight * 0.23,
                                       height: screenHeight * 0.23),
                                   style: ElevatedButton.styleFrom(

@@ -46,11 +46,8 @@ class Refrigerator implements RefrigeratorAbstract{
   @override
   Map<String, dynamic> toMap() {
     Map<String, dynamic> mapRefrigerator = {};
-    mapRefrigerator['number'] = _number;
-    mapRefrigerator['level'] = _level;
-    mapRefrigerator['label'] = _label;
-    mapRefrigerator['modelName'] = _modelName;
-
+    mapRefrigerator['layer_count'] = _level;
+    mapRefrigerator['model_label'] = _label;
     return mapRefrigerator;
   }
 

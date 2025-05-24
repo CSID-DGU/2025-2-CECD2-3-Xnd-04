@@ -9,6 +9,7 @@ import 'package:Frontend/Views/AlertView.dart';
 import 'package:Frontend/Views/SettingView.dart';
 import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:Frontend/Models/IngredientModel.dart';
+import 'package:Frontend/Services/loadFridgeService.dart';
 
 List<Widget> pages = [
   const InitialHomeView(),
