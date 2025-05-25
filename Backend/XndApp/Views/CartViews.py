@@ -15,17 +15,11 @@ class CartListView(APIView):
     """
     사용자의 카트 목록을 조회하는 API
     """
-    permission_classes = [AllowAny] #테스트용
-    #permission_classes = [IsAuthenticated]
 
     def get(self, request):
-
-        # 현재 로그인한 사용자의 카트 아이템 조회
-        # user = request.user
         try:
-            user = User.objects.get(user_id=111) # 테스트용
-            if user.is_anonymous:
-                return Response({"error": "로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED)
+            # 현재 로그인한 사용자의 카트 아이템 조회
+            user = request.user.user_id
 
             cart_items = Cart.objects.filter(user=user)
 
@@ -40,12 +34,12 @@ class CartListView(APIView):
             return Response({
                 "items": serializer.data
             })
-        
+
         except Exception as e:
             return Response(
                 {
-                    'error':'접근 오류',
-                    'message':str(e)
+                    'error': '접근 오류',
+                    'message': str(e)
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
@@ -55,14 +49,13 @@ class CartManageView(APIView):
     """
     카트에 식재료 추가 및 수량 관리 API
     """
-    permission_classes = [AllowAny]
-
-    # user=request.user,
-    user = User.objects.get(user_id=111) # 테스트용
+    # user_id = request.user.user_id  # 이 줄 삭제!
 
     """ 장바구니 아이템 추가 (검색 결과 → 장바구니) """
+
     def post(self, request):
         try:
+            user_id = request.user.user_id  # 메서드 안에서 정의
             ingredient_id = request.data.get('ingredient_id')
             quantity = request.data.get('quantity', 1)
 
@@ -73,8 +66,7 @@ class CartManageView(APIView):
 
             # 이미 카트에 있는지 확인
             cart_item, created = Cart.objects.get_or_create(
-                #user=request.user,
-                user=User.objects.get(user_id=111), #테스트용
+                user_id=user_id,  # 수정
                 ingredient=ingredient,
                 defaults={
                     'quantity': quantity
@@ -88,25 +80,23 @@ class CartManageView(APIView):
 
             serializer = CartSerializer(cart_item)
             return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
-        
+
         except Exception as e:
             return Response(
                 {
-                    'error':'접근 오류',
-                    'message':str(e)
+                    'error': '접근 오류',
+                    'message': str(e)
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     """ 장바구니 아이템의 수량 변경 (장바구니 페이지에서 +-클릭시) """
-    def patch(self, request, cart_id):
 
-        try: 
-        
-            cart_item = get_object_or_404(Cart, id=cart_id,
-                                        # user=request.user
-                                        user=User.objects.get(user_id=111) #테스트용
-                                        )
+    def patch(self, request, cart_id):
+        try:
+            user_id = request.user.user_id  # 수정
+
+            cart_item = get_object_or_404(Cart, id=cart_id, user=user_id)  # 수정
 
             action = request.data.get('action')
             if action == 'increase':
@@ -121,30 +111,31 @@ class CartManageView(APIView):
             cart_item.save()
             serializer = CartSerializer(cart_item)
             return Response(serializer.data)
-        
+
         except Exception as e:
             return Response(
                 {
-                    'error':'접근 오류',
-                    'message':str(e)
+                    'error': '접근 오류',
+                    'message': str(e)
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-    
+
     """ 장바구니에서 아이템 제거 (장바구니 페이지에서 X 클릭시) """
+
     def delete(self, request, cart_id):
         try:
-            cart_item = get_object_or_404(Cart, id=cart_id,
-                                        #user=request.user
-                                        user=User.objects.get(user_id=111) #테스트용
-                                        )
+            user_id = request.user.user_id  # 수정
+
+            cart_item = get_object_or_404(Cart, id=cart_id, user=user_id)  # 수정
             cart_item.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
         except Exception as e:
             return Response(
                 {
-                    'error':'접근 오류',
-                    'message':str(e)
+                    'error': '접근 오류',
+                    'message': str(e)
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

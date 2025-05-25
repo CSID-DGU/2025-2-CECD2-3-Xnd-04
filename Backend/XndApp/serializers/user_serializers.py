@@ -4,6 +4,6 @@ from XndApp.Models.fridge import Fridge
 from django.contrib.auth import get_user_model
 
 class UserSerializer(serializers.ModelSerializer):
-    class meta:
+    class Meta:
         model = get_user_model()
         fields = '__all__'
