@@ -14,8 +14,7 @@ Future<bool> checkFridgeNumAreNonZero() async {
 
   final String fridgeURL = (ip!.startsWith('10.0.2')) ?
   'http://10.0.2.2:8000/api/fridge/' :
-  'http://192.168.119.150:8000/api/fridge/';
-
+  'http://' + HOST! + APIURLS['loadFridge']!;
   try {
     final response = await dio.get(
       fridgeURL, // 👉 백엔드 API 주소

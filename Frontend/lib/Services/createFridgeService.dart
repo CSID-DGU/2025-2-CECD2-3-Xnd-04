@@ -11,8 +11,7 @@ Future<bool> createFridgeToServer({required Refrigerator refrigerator}) async {
 
   final String fridgeCreateURL = (ip!.startsWith('10.0.2')) ?
   'http://10.0.2.2:8000/api/fridge/create/' :
-  'http://192.168.119.150:8000/api/fridge/create/';
-
+  'http://' + HOST! + APIURLS['createFridge']!;
   try {
     final response = await dio.post(
       fridgeCreateURL, // 👉 백엔드 API 주소
