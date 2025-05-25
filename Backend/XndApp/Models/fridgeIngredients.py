@@ -31,8 +31,8 @@ class FridgeIngredients(models.Model):
         if self.stored_at and self.foodStorageLife and self.foodStorageLife.storage_life:
             self.storable_due = self.stored_at + timedelta(days=self.foodStorageLife.storage_life)
         super().save(*args, **kwargs)
-    
-# 메타데이터
-class Meta:
-    db_table = 'fridgeIngredients'  
-    ordering = ['-storable_due']  # 보관기한 임박순으로 정렬
+
+    # 메타데이터
+    class Meta:
+        db_table = 'xndapp_fridgeingredients'
+        ordering = ['-storable_due']  # 보관기한 임박순으로 정렬
