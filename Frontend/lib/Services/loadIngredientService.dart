@@ -10,8 +10,5 @@ Future<bool> temp() async{
   final String fridgeURL = (ip!.startsWith('10.0.2')) ?
   'http://10.0.2.2:8000/api/fridge/1(n)' :
   'http://192.168.119.150:8000/api/fridge/1(n)';
-
-
-
   return true;
 }
