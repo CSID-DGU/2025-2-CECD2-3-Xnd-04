@@ -27,7 +27,7 @@ PREDEFINED_KEYWORDS = {
 
 class RecipeView(APIView):
 
-    permission_classes = [AllowAny] # 테스트용
+
 
     def get(self, request):
 
@@ -71,8 +71,8 @@ class RecipeView(APIView):
         # 유통 기한 임박 재료가 포함된 레시피부터 정렬 (근데 5일 이하로 남은 식재료만 고려함)
         recipes = self.prioritize_by_expiring_ingredients(
             list(recipes),
-            # user_id = request.user.id
-            user_id = 111 # 테스트용
+            user_id = request.user.user_id
+
         )
 
         # 페이지네이션
@@ -161,7 +161,6 @@ class RecipeView(APIView):
 # 레시피 상세 정보 조회
 # views.py
 class RecipeDetailView(APIView):
-    permission_classes = [AllowAny]  # 테스트용
 
     def get(self, request, recipe_id):
         recipe = get_object_or_404(Recipes, recipe_id=recipe_id)
@@ -169,8 +168,8 @@ class RecipeDetailView(APIView):
         # 장바구니 상태 포함 여부
         include_cart_status = request.query_params.get('include_cart_status', 'true').lower() == 'true'
 
-        # 사용자 정보 (실제 환경에서는 request.user.id 사용)
-        user_id = 111  # 테스트용
+        # 사용자 정보
+        user_id = request.user.user_id
 
         # 컨텍스트 구성
         context = {

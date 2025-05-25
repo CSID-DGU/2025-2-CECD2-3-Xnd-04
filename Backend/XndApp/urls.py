@@ -19,7 +19,7 @@ urlpatterns = [
     path('api/fridge/create/',FridgeViews.as_view(),name='create_fridge'), # 냉장고 생성
     path('api/fridge/',FridgeViews.as_view(),name='fridges'), # 냉장고 정보 조회
     path('api/fridge/<int:fridge_id>/',FridgeDetailView.as_view(),name='fridgeDetails'), # 냉장고 내부 조회
-    path('api/ingredients/<int:id>/', IngredientView.as_view(), name='ingredient-detail'),  # 냉장고 속 재료 하나 선택했을 때 정보 조회
+    path('api/fridge/<int:fridge_id>/ingredients/<int:ingredient_id>/', IngredientView.as_view()), # 냉장고 속 재료 하나 선택했을 때 정보 조회
 
     # 검색
     path('api/recipes/', RecipeView.as_view(), name='recipe-list'),  # 레시피 목록 조회 ?query ?keyword ?ingredient
