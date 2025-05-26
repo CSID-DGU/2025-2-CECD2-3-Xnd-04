@@ -50,9 +50,14 @@ def import_recipes():
                 # 나머지 필드 처리
                 for field in ['recipe_image', 'category1', 'category2', 'category3',
                               'category4', 'food_name', 'steps', 'serving_size',
+                              'ingredient_all',
                               'cooking_time', 'cooking_level']:
                     if field in row:
-                        recipe_data[field] = row[field]
+                        # recipe_data[field] = row[field]
+                        if field == 'ingredient_all':
+                            recipe_data['ingredient_all'] = row[field]
+                        else:
+                            recipe_data[field] = row[field]
 
                 # 객체 생성 및 저장
                 try:

@@ -38,9 +38,12 @@ def main():
         # 각 재료 처리
         for ingredient_info in ingredients_list:
             # 재료 이름과 양 분리 (항상 콜론이 있다고 가정)
+            ingredient_info = ingredient_info.replace(' ', '')
             parts = ingredient_info.split(':', 1)
-            name_part = parts[0].strip()
-            amount_part = parts[1].strip() if len(parts) > 1 else ""
+            name_part = parts[0]
+            amount_part = parts[1] if len(parts) > 1 else ""
+            # name_part = parts[0].strip()
+            # amount_part = parts[1].strip() if len(parts) > 1 else ""
 
             # Ingredient 생성 또는 조회
             ingredient, created = Ingredient.objects.get_or_create(name=name_part)
