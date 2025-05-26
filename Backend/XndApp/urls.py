@@ -8,7 +8,7 @@ from XndApp.Views.fridgeDetailViews import FridgeDetailView
 from XndApp.Views.IngredientViews import IngredientView
 from XndApp.Views.CartViews import CartListView, CartManageView
 from XndApp.Views.savedRecipesViews import SavedRecipesView,SavedRecipeDetailView
-
+from XndApp.Views.NotificationViews import register_device
 
 urlpatterns = [
     # 로그인 및 인증
@@ -34,4 +34,7 @@ urlpatterns = [
     path('api/savedRecipe/add',SavedRecipesView.as_view(),name='saveRecipe'),
     path('api/savedRecipe/',SavedRecipesView.as_view(),name='savedRecipes'),
     path('api/savedRecipe/<int:id>',SavedRecipeDetailView.as_view(),name='savedRecipe-detail'),
+
+    # 푸시 알림
+    path('api/devices/register/', register_device, name='registerDevice'),  # 기기 등록
 ]

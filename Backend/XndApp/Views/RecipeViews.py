@@ -27,8 +27,6 @@ PREDEFINED_KEYWORDS = {
 
 class RecipeView(APIView):
 
-
-
     def get(self, request):
 
         query = request.query_params.get('query', '')           # 일반 검색 (제목, 태그, 재료)
