@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 import '../Models/IngredientModel.dart';
 import 'package:Frontend/MordalViews/RecipeMordal.dart';
-
+import 'package:Frontend/Services/loadRecipeService.dart';
 
 class RecipeView extends StatefulWidget {
   const RecipeView({Key? key}) : super(key: key);
@@ -16,10 +16,17 @@ class RecipePage extends State<RecipeView> {
   String _searchQuery = '';
   TextEditingController _searchController = TextEditingController();
   late ScrollController _scrollController;
-  RecipesModel recipeStorage = RecipesModel();
+
+  RecipesModel? recipeStorage;
 
   RecipePage(){
     super.initState();
+    List<RecipeModel> recipes = [];
+
+    for(int i = 0; i < 10; i++)
+      recipes.add(RecipeModel().setRecipe(i));
+
+    recipeStorage = RecipesModel(recipes);
     _scrollController = ScrollController();
   }
 
@@ -28,13 +35,12 @@ class RecipePage extends State<RecipeView> {
     super.dispose();
     _scrollController.dispose();
   }
-
+  // 식재료 종료를 화면에 뿌려줌
   List<String> getIngredientsType(){
     List<String> str = [];
     str.add('');
-    List<RecipeModel>? recipes = recipeStorage.recipes;
 
-    for(RecipeModel recipe in recipes!){
+    for(RecipeModel recipe in recipeStorage!.recipes!){
       String temp = '';
       for(Ingredient ingredient in recipe.ingredients!){
         temp += ingredient.ingredientName!;
@@ -50,10 +56,7 @@ class RecipePage extends State<RecipeView> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-    recipeStorage.makeRecipesList(num: 10);
 
-    //올바르게 작동하려면 레시피를 꾸준히 업데이트 하는 방식으로 수정해야함
-    List<RecipeModel>? recipes = recipeStorage.recipes;
     List<String> ingredientsTypes = getIngredientsType();
 
     return Scaffold(
@@ -77,7 +80,7 @@ class RecipePage extends State<RecipeView> {
                         controller: _scrollController,
                         children: <Widget>[
                           // 실제론 DB에서 랜덤으로 추천돌려서 레시피로 띄워줌
-                          for(RecipeModel recipe in recipes!)
+                          for(RecipeModel recipe in recipeStorage!.recipes!)
                             Container(
                               margin: EdgeInsets.all(20),
                               height: screenHeight * 0.18,
@@ -97,6 +100,10 @@ class RecipePage extends State<RecipeView> {
                                       color: Colors.white,
                                       borderRadius: BorderRadius.circular(30),
                                     ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(30),
+                                      child: Image.network(recipe.imgUrl!, fit: BoxFit.cover),
+                                    )
                                   ),
                                   // 레시피 설명
                                   Container(
@@ -108,12 +115,12 @@ class RecipePage extends State<RecipeView> {
                                     ),
                                     child: FilledButton(
                                       onPressed: (){
-                                        setState(() {
+                                        setState(() async {
                                           // 이 부분에 모달 창
-                                          RecipeDialog recipedialog = RecipeDialog(recipe: recipe);
+                                          RecipeDialog recipeWindow = RecipeDialog(recipe: recipe);
                                           showDialog(
                                             context: context,
-                                            builder: (context) => recipedialog.recipeDialog(context)
+                                            builder: (context) => recipeWindow.recipeDialog(context)
                                           );
                                         });
                                       },
@@ -164,7 +171,7 @@ class RecipePage extends State<RecipeView> {
                                                           children: <Widget>[
                                                             SizedBox(width: 10),
                                                             Flexible(
-                                                                child: Text(ingredientsTypes[recipe.recipeNum!],
+                                                                child: Text(ingredientsTypes[1],
                                                                   style: TextStyle(color: Colors.black,
                                                                     fontSize: screenHeight * 0.01
                                                                   )

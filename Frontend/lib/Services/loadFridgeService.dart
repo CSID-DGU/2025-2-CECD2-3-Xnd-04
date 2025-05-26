@@ -6,9 +6,11 @@ import 'package:Frontend/Views/HomeView.dart';
 
 int? numOfFridge;
 List<dynamic>? fridges;
+List<dynamic>? ids;
+bool programStarts = true;
 
 // 모든 서비스는 함수로 관리함. 클래스 만들기 ㄱㅊ
-Future<bool> checkFridgeNumAreNonZero() async {
+Future<bool> getFridgesInfo() async {
   final dio = Dio();
   final String? ip = await NetworkInfo().getWifiIP();
 
@@ -27,26 +29,36 @@ Future<bool> checkFridgeNumAreNonZero() async {
     );
     numOfFridge = response.data['fridge_count'];
     fridges = response.data['fridges'];
+    ids = response.data['id'];
 
     if (numOfFridge == 0)
       return false;
-    else {
+    else if (programStarts){
       // 프로그램을 실행시킬 때마다 DB에서 현재 저장된 냉장고 정보 로드
       for(int i = 0; i < numOfFridge!; i++){
         refrigerators.add(
           Refrigerator(
-            number: i + 1,
+            id: ids![i],
             level: fridges![i]['layer_count'],
             label: fridges![i]['model_label'],
-            modelName: 'R${i + 1}'
           )
         );
         refrigerators[i].makeIngredientStorage();
       }
-    }
+      programStarts = false;
       return true;
+    }
+    else {
+      refrigerators.add(
+          Refrigerator(
+            id: ids![numOfFridge! - 1],
+            level: fridges![numOfFridge! - 1]['layer_count'],
+            label: fridges![numOfFridge! - 1]['model_label'],
+          )
+      );
+      return true;
+    }
   }
-
   catch(e){
     print('에러 로그 : ${e}');
     return false;
