@@ -117,19 +117,49 @@ class InitialHomePage extends State<InitialHomeView> {
                           child: ElevatedButton(
                               onPressed: () {
                                 setState(() async {
-                                  refrigerators.add(
-                                    Refrigerator(
-                                      number: numOfFridge! + 1,
-                                      level: levelOfRefrigerator,
-                                      label: '${numOfFridge! + 1}번 냉장고',
-                                      modelName: 'R${numOfFridge! + 1}'
-                                    )
-                                  ); // 냉장고 추가
-                                  await createFridgeToServer(refrigerator: refrigerators[numOfFridge!]);      // 서버로 Post 요청 보내기(요청이 성공하면 냉장고 수 하나 추가)
-                                  refrigerators[numOfFridge! - 1].makeIngredientStorage();    // 냉장고 식재료 저장소 생성
-                                  pages[1] = IngredientsView(refrigerator: refrigerators[numOfFridge! - 1]);    // 위젯 갱신
-                                  Navigator.of(context).pushNamed('/' + pages[5].toString());
-                                  isPlusButtonClicked = false;    // + 버튼 체크 여부
+                                  // 냉장고 추가
+                                  bool sendCreateToServer = await createFridgeToServer(refrigerator: Refrigerator(level: levelOfRefrigerator, label: '${numOfFridge! + 1}번 냉장고'));      // 냉장고 추가 요청
+                                  if (sendCreateToServer) {
+                                    bool isArrivedFridgesInfo = await getFridgesInfo();                    // 냉장고 정보 수령 요청
+                                    if (isArrivedFridgesInfo) {
+                                      refrigerators[numOfFridge! - 1].makeIngredientStorage(); // 냉장고 식재료 저장소 생성
+                                      pages[1] = IngredientsView(refrigerator: refrigerators[numOfFridge! - 1]); // 위젯 갱신
+                                      Navigator.of(context).pushNamed('/' + pages[5].toString());
+                                      isPlusButtonClicked = false; // + 버튼 체크 여부
+                                    }
+                                    else{
+                                      await Future.delayed(Duration.zero);
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: Text('냉장고 정보 수령 불가'),     // 이멀전씨~~ 페이징 닥털 빝~!!
+                                          content: Text('서버 오류로 인해 냉장고를 로드할 수 없습니다.'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.of(context).pop(),
+                                              child: Text('돌아가기'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  else{
+                                    await Future.delayed(Duration.zero);
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: Text('서버 요청 불가'),     // 이멀전씨~~ 페이징 닥털 빝~!!
+                                        content: Text('서버 오류로 인해 요청이 불가합니다.'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.of(context).pop(),
+                                            child: Text('돌아가기'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
                                 });
                               },
                               style: ElevatedButton.styleFrom(
@@ -186,7 +216,7 @@ class HomePage extends State<HomeView> {
                               SizedBox(height: screenHeight * 0.28),
 
                               if (index != refrigerators.length)
-                                Text('${index + 1}번 냉장고',
+                                Text('${refrigerators[index].id}번 냉장고',
                                   style: TextStyle(fontSize: screenHeight * 0.025))
                               else
                                 Text('냉장고 추가',
@@ -198,7 +228,6 @@ class HomePage extends State<HomeView> {
                                 ElevatedButton(
                                   onPressed: () async {
                                     setState(() {
-                                      // isPlusButtonClicked = true;
                                       pages[1] = IngredientsView(refrigerator: refrigerators[index]);
                                       Navigator.of(context).pushNamed('/' + pages[1].toString());
                                     });

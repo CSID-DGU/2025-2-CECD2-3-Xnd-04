@@ -25,7 +25,7 @@ class FridgeViews(APIView):
                 {
                     'fridge_count': fridges.count(),
                     'fridges': serializer.data,
-
+                    'id' : fridges.values_list('fridge_id', flat=True),
                 },
                 status=status.HTTP_200_OK
             )

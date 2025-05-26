@@ -9,11 +9,14 @@ import 'package:Frontend/Views/AlertView.dart';
 import 'package:Frontend/Views/SettingView.dart';
 import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:Frontend/Models/IngredientModel.dart';
-import 'package:Frontend/Services/loadFridgeService.dart';
+import 'package:Frontend/Services/loadRecipeService.dart';
+
+Refrigerator nullProtectRefrigerator = (refrigerators.length != 0) ? refrigerators[0] : Refrigerator();
+List<List<dynamic>?>? RecipeInfo;
 
 List<Widget> pages = [
   const InitialHomeView(),
-  IngredientsView(refrigerator: Refrigerator()),
+  IngredientsView(refrigerator: nullProtectRefrigerator),
   const RecipeView(),
   const FavoritesView(),
   const CartView(),
@@ -138,22 +141,41 @@ class MainBottomBar extends State<MainBottomView> {
     setState(() async {
       if (refrigerators.length == 0){
         await Future.delayed(Duration.zero);
-        showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text('경고'),
-              content: Text('+ 버튼을 눌러 냉장고를 추가해 주세요'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text('확 인'),
-                ),
-              ],
-            )
-        );
+        if (index != 0) {
+          showDialog(
+              context: context,
+              builder: (context) =>
+                  AlertDialog(
+                    title: Text('경고'),
+                    content: Text('+ 버튼을 눌러 냉장고를 추가해 주세요'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text('확 인'),
+                      ),
+                    ],
+                  )
+          );
+        }
+        else {
+          isPlusButtonClicked = false;
+          Navigator.of(context).pushNamed('/' + pages[0].toString());
+        }
       }
       else if (index == 0)
         Navigator.of(context).pushNamed('/' + pages[5].toString());
+      // 레시피 로드
+      else if (index == 2 || index == 3){
+        if (recipeLoaded) {
+          print('레시피가 이미 로드되었습니다.');
+          Navigator.of(context).pushNamed('/' + pages[index].toString());
+        }
+        else {
+          RecipeInfo = await getRecipeInfo();
+          if (recipeLoaded)
+            Navigator.of(context).pushNamed('/' + pages[index].toString());
+        }
+      }
       else
         Navigator.of(context).pushNamed('/' + pages[index].toString());
     });
