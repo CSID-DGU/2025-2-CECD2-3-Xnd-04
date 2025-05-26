@@ -6,20 +6,23 @@ class RecipeModel extends RecipeAbstract{
   int? _recipeNum;
   String? _recipeName;
   List<Ingredient>? _ingredients;
-  List<Text>? _descriptions;             // 조리 순서 하드코딩
+  List<String>? _descriptions;             // 조리 순서 하드코딩
+  Image? _img;
 
-  RecipeModel({int? recipeNum, String? recipeName, List<Ingredient>? ingredients = null, List<Text>? descriptions = null}){
+  RecipeModel({int? recipeNum, String? recipeName, List<Ingredient>? ingredients = null, List<String>? descriptions = null, Image? img = null}){
     this._recipeNum = recipeNum;
     this._recipeName = recipeName;
     this._ingredients = ingredients;
     this._descriptions = descriptions;
+    this._img = img;
   }
 
   @override
   int? get recipeNum => _recipeNum;
   String? get recipeName => _recipeName;
   List<Ingredient>? get ingredients => _ingredients;
-  List<Text>? get descriptions => _descriptions;
+  List<String>? get descriptions => _descriptions;
+  Image? get img => _img;
 
   @override
   Map<String, dynamic> toMap(){
@@ -28,6 +31,7 @@ class RecipeModel extends RecipeAbstract{
     mapRecipe['recipeName'] = _recipeName;
     mapRecipe['ingredients'] = _ingredients;
     mapRecipe['descriptions'] = _descriptions;
+    mapRecipe['img'] = _img;
 
     return mapRecipe;
   }
@@ -48,13 +52,25 @@ class RecipesModel extends RecipesAbstract{
     Ingredient(number: 3, ingredientName: '식재료 6'),
   ];
 
+  List<String> _tempDescriptions = [
+    '이 밤 그날의 반딧불을 당신의 창 가까이 보낼게요',
+    '사랑한다는 말이에요, 나 우리의 첫 입맞춤을 떠올려',
+    '그럼 언제든 눈을 감고 가장 먼 곳으로 가요',
+    '난 파도가 머물던 모래 위에 적힌 글씨처럼',
+    '그대가 멀리 사라져 버릴 것 같아 늘 그리워, 그리워',
+    '여기 내 마음속에 모든 말을 다 꺼내어 줄 순 없지만',
+    '사랑한다는 말이에요 어떻게 나에게 그대란 행운이 온 걸까',
+    '지금 우리 함께 있다면 아, 얼마나 좋을까요'
+  ];
+
   @override
   void makeRecipesList({required int num}){
     this._recipes = List.generate(
         num, (idx) => RecipeModel(
           recipeNum: idx + 1,
           recipeName: '레시피 이름 ${idx + 1}',
-          ingredients: _tempIngredients
+          ingredients: _tempIngredients,
+          descriptions: _tempDescriptions
         ),
         growable: false
     );
@@ -64,7 +80,9 @@ class RecipesModel extends RecipesAbstract{
     _recipes!.add(RecipeModel(
         recipeNum: _recipes!.length + 1,
         recipeName: '레시피 이름 ${_recipes!.length + 1}',
-        ingredients: _tempIngredients)
+        ingredients: _tempIngredients,
+        descriptions: _tempDescriptions,
+    )
     );
   }
 }

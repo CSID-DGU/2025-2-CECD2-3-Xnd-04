@@ -6,7 +6,8 @@ abstract class RecipeAbstract{
   int? get recipeNum;
   String? get recipeName;
   List<Ingredient>? get ingredients;
-  List<Text>? get descriptions;
+  List<String>? get descriptions;
+  Image? get img;
 
   Map<String, dynamic> toMap();
 }

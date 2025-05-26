@@ -1,37 +1,14 @@
-import 'package:Frontend/nativeAppKey.dart';
 import 'package:flutter/material.dart';
 import 'package:Frontend/Views/LoginView.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
-import 'package:mysql_client/mysql_client.dart';
 
-void main() {
-  KakaoSdk.init(nativeAppKey: nativeAppKey);
+void main() async {
+  await dotenv.load(fileName: '.env');
+  final kakaoAppKey = dotenv.env['KAKAO_APP_KEY'];
+  KakaoSdk.init(nativeAppKey: kakaoAppKey);
   runApp(const MyApp());
-}
-
-Future<void> dbConnector() async {
-  print("Connecting to mysql server...");
-
-  // MySQL 접속 설정
-  final conn = await MySQLConnection.createConnection(
-    host: '127.0.0.1',
-    port: 0000,
-    userName: 'userName',
-    password: 'password',
-    databaseName: 'testdb', // optional
-  );
-
-  // 연결 대기
-  try {
-    print("Connecting...");
-    await conn.connect();
-  }
-  catch(e){
-    print('DB 연결 실패. 에러 로그${e}');
-  }
-  // 종료 대기
-  await conn.close();
 }
 
 class MyApp extends StatelessWidget {
@@ -54,8 +31,9 @@ class MyApp extends StatelessWidget {
         '/FavoritesView' : (context) => pages[3],
         '/CartView' : (context) => pages[4],
         '/HomeView' : (context) => pages[5],
-        '/AlertView' : (context) => pages[6],
-        '/SettingView' : (context) => pages[7],
+        '/IngredientsInfoView' : (context) => pages[6],
+        '/AlertView' : (context) => pages[7],
+        '/SettingView' : (context) => pages[8],
       }
     );
   }
