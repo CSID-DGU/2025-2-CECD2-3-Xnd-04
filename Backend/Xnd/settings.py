@@ -14,11 +14,11 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # JWT settings
 SIMPLE_JWT = {
-    "USER_ID_FIELD": "social_id", 
+    "USER_ID_FIELD": "social_id",
     "USER_ID_CLAIM": "user_id",
 }
 
@@ -132,8 +132,6 @@ STATIC_URL = 'static/'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
 service_account_key = {
 
   "type": config("TYPE"),
@@ -151,3 +149,6 @@ service_account_key = {
 
 cred = credentials.Certificate(service_account_key)
 firebase_admin.initialize_app(cred)
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+

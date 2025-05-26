@@ -4,17 +4,21 @@ import 'package:Frontend/Views/IngredientsView.dart';
 import 'package:Frontend/Views/RecipeView.dart';
 import 'package:Frontend/Views/FavoritesView.dart';
 import 'package:Frontend/Views/CartView.dart';
+import 'package:Frontend/Views/IngredientsInfoView.dart';
 import 'package:Frontend/Views/AlertView.dart';
 import 'package:Frontend/Views/SettingView.dart';
 import 'package:Frontend/Models/RefrigeratorModel.dart';
+import 'package:Frontend/Models/IngredientModel.dart';
+import 'package:Frontend/Services/loadFridgeService.dart';
 
 List<Widget> pages = [
   const InitialHomeView(),
-  IngredientsView(refrigerator: Refrigerator(),),
+  IngredientsView(refrigerator: Refrigerator()),
   const RecipeView(),
   const FavoritesView(),
   const CartView(),
   const HomeView(),
+  IngredientsInfoView(ingredient: Ingredient()),
   const AlertView(),
   const SettingView(),
 ];
@@ -31,47 +35,82 @@ class mainAppBar extends StatelessWidget{
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: <Widget>[
+        Container(
+          height : screenHeight * 0.04,
+          color: Colors.white,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                margin: EdgeInsets.fromLTRB(10, 0, 0, 0),
+                width : screenWidth * 0.25,
+                child: Text(this._name.toString(),
+                    style: const TextStyle(fontSize: 20, color: Colors.black, fontWeight: FontWeight.bold)),
+              ),
+              SizedBox(width: screenWidth * 0.5),
+              Container(
+                width: screenWidth * 0.1,
+                child: FilledButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/' + pages[7].toString());
+                  },
+                  child: Image.asset('assets/images/alert.png', width: screenWidth * 0.05, height: screenWidth * 0.05, fit: BoxFit.cover),
+                  style: FilledButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    backgroundColor: Colors.white,
+                  ),
+                ),
+              ),
+              Container(
+                width: screenWidth * 0.1,
+                child: FilledButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/' + pages[8].toString());
+                  },
+                  child: Image.asset('assets/images/setting.png', width: screenWidth * 0.05, height: screenWidth * 0.05, fit: BoxFit.cover),
+                  style: FilledButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    backgroundColor: Colors.white,
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+        Container(
+          color: Colors.grey[700],
+          child: Divider(height: 1)
+        ),
+      ]
+    );
+  }
+}
+
+class backBar extends StatelessWidget{
+  backBar({Key? key}) : super(key: key){}
+
+  Widget build(BuildContext context){
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
     return Container(
-      height : screenHeight * 0.04,
-      color: Color(0xFFFFFFFF),
+      width: screenWidth,
+      height: screenHeight * 0.04,
+      color: Colors.white,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
-          Container(
-            margin: EdgeInsets.fromLTRB(10, 0, 0, 0),
-            width : screenWidth * 0.25,
-            child: Text(this._name.toString(),
-              style: const TextStyle(fontSize: 20, color: Colors.black, fontWeight: FontWeight.bold)),
-          ),
-          SizedBox(width: screenWidth * 0.5),
-          Container(
-            width: screenWidth * 0.1,
-            child: FilledButton(
-                onPressed: () {
-                  Navigator.of(context).pushNamed('/' + pages[6].toString());
-                },
-                child: Image.asset('assets/images/alert.png', width: screenWidth * 0.05, height: screenWidth * 0.05, fit: BoxFit.cover),
-                style: FilledButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  backgroundColor: Colors.white,
-                ),
-            ),
-          ),
-          Container(
-            width: screenWidth * 0.1,
-            child: FilledButton(
-                onPressed: () {
-                  Navigator.of(context).pushNamed('/' + pages[7].toString());
-                },
-                child: Image.asset('assets/images/setting.png', width: screenWidth * 0.05, height: screenWidth * 0.05, fit: BoxFit.cover),
-                style: FilledButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  backgroundColor: Colors.white,
-                ),
-            ),
+          SizedBox(width: 10),
+          IconButton(
+            icon: Icon(Icons.keyboard_backspace, color: Colors.grey[700], size: 25),
+            onPressed: (){
+              Navigator.of(context).pop();
+            },
           )
-        ],
-      ),
+        ]
+      )
     );
   }
 }
@@ -125,36 +164,41 @@ class MainBottomBar extends State<MainBottomView> {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
-    return Container(
-      height: screenHeight * 0.05,
-      child: BottomNavigationBar(
-        onTap: onItemTapped,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFFFFFFFF),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home, size: 30),
-            label: 'home',
-          ),
-          BottomNavigationBarItem(
-            icon: ImageIcon(AssetImage('assets/images/menu.png'), size: 30),
-            label: 'refrigerator',
-          ),
-          BottomNavigationBarItem(
-            icon: ImageIcon(AssetImage('assets/images/recipe.png'), size: 30),
-            label: 'recipe',
-          ),
-          BottomNavigationBarItem(
-            icon: ImageIcon(AssetImage('assets/images/favorits.png'), size: 30),
-            label: 'favorits',
-          ),
-          BottomNavigationBarItem(
-            icon: ImageIcon(AssetImage('assets/images/cart.png'), size: 30),
-            label: 'cart',
-          ),
-        ],
+    return SafeArea(
+      child: Container(
+        height: screenHeight * 0.08,
+        width: screenWidth,
+        color: Colors.orangeAccent,
+        child: BottomNavigationBar(
+          onTap: onItemTapped,
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: const Color(0xFFFFFFFF),
+          selectedItemColor: Colors.black,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'home',
+            ),
+            BottomNavigationBarItem(
+              icon: ImageIcon(AssetImage('assets/images/menu.png')),
+              label: 'refrigerator',
+            ),
+            BottomNavigationBarItem(
+              icon: ImageIcon(AssetImage('assets/images/recipe.png')),
+              label: 'recipe',
+            ),
+            BottomNavigationBarItem(
+              icon: ImageIcon(AssetImage('assets/images/favorits.png')),
+              label: 'favorits',
+            ),
+            BottomNavigationBarItem(
+              icon: ImageIcon(AssetImage('assets/images/cart.png')),
+              label: 'cart',
+            ),
+          ],
+        )
       )
     );
   }

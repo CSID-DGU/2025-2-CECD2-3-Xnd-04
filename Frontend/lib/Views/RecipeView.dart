@@ -1,8 +1,9 @@
 import 'package:Frontend/Models/RecipeModel.dart';
 import 'package:flutter/material.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
-
 import '../Models/IngredientModel.dart';
+import 'package:Frontend/MordalViews/RecipeMordal.dart';
+
 
 class RecipeView extends StatefulWidget {
   const RecipeView({Key? key}) : super(key: key);
@@ -106,11 +107,15 @@ class RecipePage extends State<RecipeView> {
                                       borderRadius: BorderRadius.circular(30),
                                     ),
                                     child: FilledButton(
-                                      onPressed: ()=>{
+                                      onPressed: (){
                                         setState(() {
-                                          // 이 부분에 모달 창 띄워줘야 함
-
-                                        })
+                                          // 이 부분에 모달 창
+                                          RecipeDialog recipedialog = RecipeDialog(recipe: recipe);
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) => recipedialog.recipeDialog(context)
+                                          );
+                                        });
                                       },
                                       style: FilledButton.styleFrom(
                                         backgroundColor: Colors.white,
@@ -160,7 +165,9 @@ class RecipePage extends State<RecipeView> {
                                                             SizedBox(width: 10),
                                                             Flexible(
                                                                 child: Text(ingredientsTypes[recipe.recipeNum!],
-                                                                    style: TextStyle(color: Colors.black)
+                                                                  style: TextStyle(color: Colors.black,
+                                                                    fontSize: screenHeight * 0.01
+                                                                  )
                                                                 )
                                                             )
                                                           ]
@@ -184,8 +191,8 @@ class RecipePage extends State<RecipeView> {
                                           ),
                                         ]
                                       ),
-                                      ),
-                                    )
+                                    ),
+                                  )
                                 ],
                               )
                             )
@@ -212,11 +219,11 @@ class RecipePage extends State<RecipeView> {
         ),
         child: TextField(
           controller: _searchController,
-          style: TextStyle(color: Colors.black, fontSize: 25),
+          style: TextStyle(color: Colors.black, fontSize: screenHeight * 0.02),
           textAlignVertical: TextAlignVertical.center,
           decoration: InputDecoration(
             hintText: (_searchQuery.isEmpty) ? '레시피 검색' : null,
-            hintStyle: TextStyle(color: Colors.grey[700], fontSize: 25, fontWeight: FontWeight.bold),
+            hintStyle: TextStyle(color: Colors.grey[700], fontSize: screenHeight * 0.015, fontWeight: FontWeight.bold),
             prefixIcon: IconButton(
               icon: Icon(Icons.search, color: Colors.grey[700]),
               onPressed: () {
@@ -228,7 +235,7 @@ class RecipePage extends State<RecipeView> {
             ),
             suffixIcon: (_searchController.text.isNotEmpty)
                 ? IconButton(
-              icon: Icon(Icons.clear, color: Colors.red),
+              icon: Icon(Icons.clear, color: Colors.red, size: screenHeight * 0.02),
               onPressed: () {
                 setState(() {
                   _searchController.clear();
@@ -248,3 +255,4 @@ class RecipePage extends State<RecipeView> {
     );
   }
 }
+

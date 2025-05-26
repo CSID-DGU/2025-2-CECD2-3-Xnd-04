@@ -46,11 +46,8 @@ class Refrigerator implements RefrigeratorAbstract{
   @override
   Map<String, dynamic> toMap() {
     Map<String, dynamic> mapRefrigerator = {};
-    mapRefrigerator['number'] = _number;
-    mapRefrigerator['level'] = _level;
-    mapRefrigerator['label'] = _label;
-    mapRefrigerator['modelName'] = _modelName;
-
+    mapRefrigerator['layer_count'] = _level;
+    mapRefrigerator['model_label'] = _label;
     return mapRefrigerator;
   }
 
@@ -74,8 +71,12 @@ class Refrigerator implements RefrigeratorAbstract{
   // 이걸 이제 DB에 식재료가 추가될때 마다 수정하는 방식 ㄱㄱ
   @override
   void addNumOfIngredientsFloor(BuildContext context, {required int floor}) async {
-    if(_ingredientStorage![floor - 1][16] < 16)
+    if(_ingredientStorage![floor - 1][16] < 16) {
       _ingredientStorage![floor - 1][16] += 1;
+
+      int num = this.getNumOfIngredientsFloor(floor: floor);
+      _ingredientStorage![floor - 1][num - 1] = Ingredient(number: num, ingredientName: '식재료 ${num}');
+    }
     else{
       await Future.delayed(Duration.zero); // 안정화 타이밍 삽입
       showDialog(

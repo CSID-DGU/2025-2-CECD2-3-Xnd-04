@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:Frontend/Abstracts/kakaoLogin.dart';
 import 'package:Frontend/Models/LoginModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
-
 import '../Models/IngredientModel.dart';
 import '../Models/RecipeModel.dart';
+import 'package:Frontend/MordalViews/RecipeMordal.dart';
 
 class FavoritesView extends StatefulWidget {
   const FavoritesView({Key? key}) : super(key: key);
@@ -82,11 +82,11 @@ class FavoritesPage extends State<FavoritesView> {
                   ),
                   child: TextField(
                     controller: _searchController,
-                    style: TextStyle(color: Colors.black, fontSize: 25),
+                    style: TextStyle(color: Colors.black, fontSize: screenHeight * 0.02),
                     textAlignVertical: TextAlignVertical.center,
                     decoration: InputDecoration(
                       hintText: (_searchQuery.isEmpty) ? '레시피 검색' : null,
-                      hintStyle: TextStyle(color: Colors.grey[700], fontSize: 25, fontWeight: FontWeight.bold),
+                      hintStyle: TextStyle(color: Colors.grey[700], fontSize: screenHeight * 0.015, fontWeight: FontWeight.bold),
                       prefixIcon: IconButton(
                         icon: Icon(Icons.search, color: Colors.grey[700]),
                         onPressed: () {
@@ -98,7 +98,7 @@ class FavoritesPage extends State<FavoritesView> {
                       ),
                       suffixIcon: (_searchController.text.isNotEmpty)
                           ? IconButton(
-                        icon: Icon(Icons.clear, color: Colors.red),
+                        icon: Icon(Icons.clear, color: Colors.red, size: screenHeight * 0.02),
                         onPressed: () {
                           setState(() {
                             _searchController.clear();
@@ -116,7 +116,7 @@ class FavoritesPage extends State<FavoritesView> {
                   ),
                 ),
                 Container(
-                  height: screenHeight * 0.83,
+                  height: screenHeight * 0.78,
                   child: Scrollbar(
                       controller: _scrollController,
                       thumbVisibility: true,
@@ -156,11 +156,15 @@ class FavoritesPage extends State<FavoritesView> {
                                           borderRadius: BorderRadius.circular(30),
                                         ),
                                         child: FilledButton(
-                                          onPressed: ()=>{
+                                          onPressed: (){
                                             setState(() {
-                                              // 이 부분에 모달 창 띄워줘야 함
-
-                                            })
+                                              // 이 부분에 모달 창
+                                              RecipeDialog recipedialog = RecipeDialog(recipe: recipe);
+                                              showDialog(
+                                                  context: context,
+                                                  builder: (context) => recipedialog.recipeDialog(context)
+                                              );
+                                            });
                                           },
                                           style: FilledButton.styleFrom(
                                             backgroundColor: Colors.white,
@@ -191,7 +195,7 @@ class FavoritesPage extends State<FavoritesView> {
                                                                     Text(recipe.recipeName!,
                                                                         style: TextStyle(
                                                                             color: Colors.black,
-                                                                            fontWeight: FontWeight.bold
+                                                                            fontWeight: FontWeight.bold,
                                                                         )
                                                                     ),
                                                                   ]
@@ -210,7 +214,7 @@ class FavoritesPage extends State<FavoritesView> {
                                                                         SizedBox(width: 10),
                                                                         Flexible(
                                                                             child: Text(ingredientsTypes[recipe.recipeNum!],
-                                                                                style: TextStyle(color: Colors.black)
+                                                                                style: TextStyle(color: Colors.black, fontSize: screenHeight * 0.01)
                                                                             )
                                                                         )
                                                                       ]
