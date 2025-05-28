@@ -10,12 +10,12 @@ from rest_framework.permissions import AllowAny
 
 
 class FridgeDetailView(APIView):
-    permission_classes = [AllowAny] #테스트용
+
     def get(self,request,fridge_id):
 
-        # user = request.user
+        user = request.user
         try:
-            fridge = Fridge.objects.get(fridge_id=fridge_id, user=111)
+            fridge = Fridge.objects.get(fridge_id=fridge_id, user=user)
             ingredients = FridgeIngredients.objects.filter(fridge=fridge_id).order_by('layer')
             serializer = FridgeIngredientsSerializer(ingredients, many=True)
 

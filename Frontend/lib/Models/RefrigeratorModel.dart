@@ -4,36 +4,31 @@ import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:flutter/material.dart';
 
 class Refrigerator implements RefrigeratorAbstract{
-  int? _number;
+  int? _id;
   int? _level;
   String? _label;
   String? _modelName;
   List<List<dynamic>>? _ingredientStorage;            // 층수에 들어온 순서대로 식재료를 인덱스에 저장, 층수별로 식재료가 없는 인덱스는 null값
 
-  Refrigerator({int? number, int? level, String? label, String? modelName}){
-    this._number = number;
+  Refrigerator({int? id, int? level, String? label}){
+    this._id = id;
     this._level = level;
     this._label = label;
-    this._modelName = modelName;
   }
 
   @override
-  int? get number => _number;
+  int? get id => _id;
   int? get level => _level;
   String? get label => _label;
   String? get modelName => _modelName;
   get ingredientStorage => _ingredientStorage;
 
   @override
-  void modify({int? number, int? level, String? label, String? modelName}){
-    if (number != null)
-      this._number = number;
+  void modify({int? level, String? label}){
     if (level != null)
       this._level = level;
     if (label != null)
       this._label = label;
-    if (modelName != null)
-      this._modelName = modelName;
   }
 
   // 단순 객체 리턴(필요할 지는 모르겠음)
@@ -46,11 +41,8 @@ class Refrigerator implements RefrigeratorAbstract{
   @override
   Map<String, dynamic> toMap() {
     Map<String, dynamic> mapRefrigerator = {};
-    mapRefrigerator['number'] = _number;
-    mapRefrigerator['level'] = _level;
-    mapRefrigerator['label'] = _label;
-    mapRefrigerator['modelName'] = _modelName;
-
+    mapRefrigerator['layer_count'] = _level;
+    mapRefrigerator['model_label'] = _label;
     return mapRefrigerator;
   }
 
@@ -74,8 +66,12 @@ class Refrigerator implements RefrigeratorAbstract{
   // 이걸 이제 DB에 식재료가 추가될때 마다 수정하는 방식 ㄱㄱ
   @override
   void addNumOfIngredientsFloor(BuildContext context, {required int floor}) async {
-    if(_ingredientStorage![floor - 1][16] < 16)
+    if(_ingredientStorage![floor - 1][16] < 16) {
       _ingredientStorage![floor - 1][16] += 1;
+
+      int num = this.getNumOfIngredientsFloor(floor: floor);
+      _ingredientStorage![floor - 1][num - 1] = Ingredient(number: num, ingredientName: '식재료 ${num}');
+    }
     else{
       await Future.delayed(Duration.zero); // 안정화 타이밍 삽입
       showDialog(

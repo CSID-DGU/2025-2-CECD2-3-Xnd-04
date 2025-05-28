@@ -34,5 +34,5 @@ class FridgeIngredients(models.Model):
     
 # 메타데이터
 class Meta:
-    db_table = 'fridgeIngredients'  
+    db_table = 'xndapp_fridgeingredients'
     ordering = ['-storable_due']  # 보관기한 임박순으로 정렬

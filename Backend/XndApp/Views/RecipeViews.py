@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.permissions import AllowAny # 테스트용
 from XndApp.Models.cart import Cart
 from XndApp.Models.user import User
+from XndApp.Models.recipes import Recipes
 from XndApp.Models.RecipeIngredient import RecipeIngredient
 from XndApp.Models.savedRecipes import SavedRecipes
 
@@ -27,7 +28,7 @@ PREDEFINED_KEYWORDS = {
 
 class RecipeView(APIView):
 
-    permission_classes = [AllowAny] # 테스트용
+
 
     def get(self, request):
 
@@ -71,8 +72,8 @@ class RecipeView(APIView):
         # 유통 기한 임박 재료가 포함된 레시피부터 정렬 (근데 5일 이하로 남은 식재료만 고려함)
         recipes = self.prioritize_by_expiring_ingredients(
             list(recipes),
-            # user_id = request.user.id
-            user_id = 111 # 테스트용
+            user_id = request.user.user_id
+
         )
 
         # 페이지네이션
@@ -161,24 +162,36 @@ class RecipeView(APIView):
 # 레시피 상세 정보 조회
 # views.py
 class RecipeDetailView(APIView):
-    permission_classes = [AllowAny]  # 테스트용
 
     def get(self, request, recipe_id):
         recipe = get_object_or_404(Recipes, recipe_id=recipe_id)
-
-        # 장바구니 상태 포함 여부
-        include_cart_status = request.query_params.get('include_cart_status', 'true').lower() == 'true'
+        user=request.user
 
         # 사용자 정보 (실제 환경에서는 request.user.id 사용)
         user_id = 111  # 테스트용
+        
+        #해당 레시피 재료
+        recipeIngredients = Recipes.objects.filter(recipe_id=recipe_id)
 
-        # 컨텍스트 구성
-        context = {
-            'include_cart_status': include_cart_status,
-            'user_id': user_id
-        }
+        #사용자의 장바구니 재료 목록
+        cartIngredients = Cart.objects.filter(user=user).values_list('ingredient__name',flat=True)
+        
+        #사용자의 냉장고 속 재료 목록
+        fridgeIngredients = FridgeIngredients.objects.filter(user=user).values_list('ingredient_all',flat=True)
+        
 
+        #재료 명 + 장바구니 포함 여부
+        ingredients = []
+
+        for recipeIngredient in recipeIngredients:
+            # 장바구니 상태 포함 여부
+            include_cart_status = recipeIngredient in cartIngredients or recipeIngredient in fridgeIngredients
+            ingredients.append({
+                "ingredient": recipeIngredient,
+                "include_cart_status": include_cart_status
+            })
+        
         # 시리얼라이저 적용
-        serializer = RecipeDetailSerializer(recipe, context=context)
+        serializer = RecipeDetailSerializer(recipe, context={'ingredients': ingredients})
 
-        return Response(serializer.data)
+        return Response(serializer.data,status=status.HTTP_200_OK) 

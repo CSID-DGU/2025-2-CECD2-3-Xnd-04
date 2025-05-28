@@ -3,6 +3,8 @@ import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 import 'dart:math';
 
+import 'IngredientsInfoView.dart';
+
 class IngredientsView extends StatefulWidget {
   // 냉장고 객체 자체 변경 x
   final Refrigerator refrigerator;
@@ -61,7 +63,7 @@ class IngredientsPage extends State<IngredientsView> {
           child: ListView(
             controller: _scrollController,
             children: <Widget>[
-              mainAppBar(name:'${refrigerator.number}번 냉장고'),
+              mainAppBar(name:'${refrigerator.id}번 냉장고'),
               Container(
                 height : getRefrigeratorSize(),           //교체
                 margin : EdgeInsets.all(20),
@@ -150,9 +152,22 @@ class IngredientsPage extends State<IngredientsView> {
                                     itemCount: refrigerator.getNumOfIngredientsFloor(floor: floor),
                                     itemBuilder: (context, index) => Container(
                                       decoration: BoxDecoration(
-                                        color: Colors.primaries[Random().nextInt(Colors.primaries.length)],
-                                        borderRadius: BorderRadius.circular(30)
+                                        borderRadius: BorderRadius.circular(20)
                                       ),
+                                      child: FilledButton(
+                                        onPressed: (){
+                                          pages[6] = IngredientsInfoView(ingredient: refrigerator.ingredientStorage[floor - 1][index]);
+                                          Navigator.of(context).pushNamed('/' + pages[6].toString());
+                                        },
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor: Colors.primaries[Random().nextInt(Colors.primaries.length)],
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(20)
+                                          ),
+                                          padding: EdgeInsets.zero,
+                                        ),
+                                        child: Text('식재료 ${index + 1}', style: TextStyle(fontSize:screenHeight * 0.01)),
+                                      )
                                     ),
                                   ),
                             ), // 식재료 컨테이너

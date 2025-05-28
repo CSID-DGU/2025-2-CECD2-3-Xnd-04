@@ -22,7 +22,7 @@ def import_recipes():
         else:
             print("기존 데이터를 유지합니다. 새 데이터가 추가됩니다.")
 
-    file_path = r"C:\Users\wjdgu\Downloads\recipe_dataset__.csv"  # 엑셀 파일 컬럼 테이블 컬럼과 일치하는 부분만 남겨두기
+    file_path = r"C:\Users\pc\Desktop\study\Xnd-Refrigerator\Backend\recipe_dataset.csv"  # 엑셀 파일 컬럼 테이블 컬럼과 일치하는 부분만 남겨두기
 
     try:
         with open(file_path, 'r', encoding='utf-8-sig') as file:  # BOM 제거를 위한 utf-8-sig 사용
@@ -50,7 +50,7 @@ def import_recipes():
                 # 나머지 필드 처리
                 for field in ['recipe_image', 'category1', 'category2', 'category3',
                               'category4', 'food_name', 'steps', 'serving_size',
-                              'cooking_time', 'cooking_level']:
+                              'cooking_time', 'cooking_level','ingredient_all']:
                     if field in row:
                         recipe_data[field] = row[field]
 

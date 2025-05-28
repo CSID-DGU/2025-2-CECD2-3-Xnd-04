@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:Frontend/Abstracts/kakaoLogin.dart';
 import 'package:Frontend/Models/LoginModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
-
 import '../Models/IngredientModel.dart';
 import '../Models/RecipeModel.dart';
+import 'package:Frontend/MordalViews/RecipeMordal.dart';
 
 class FavoritesView extends StatefulWidget {
   const FavoritesView({Key? key}) : super(key: key);
@@ -17,10 +17,17 @@ class FavoritesPage extends State<FavoritesView> {
   String _searchQuery = '';
   TextEditingController _searchController = TextEditingController();
   late ScrollController _scrollController;
-  RecipesModel recipeStorage = RecipesModel();
+
+  RecipesModel? recipeStorage;
 
   FavoritesPage(){
     super.initState();
+    List<RecipeModel>? recipes = [];
+
+    for(int i = 0; i < 10; i++)
+      recipes!.add(RecipeModel().setRecipe(i));
+
+    recipeStorage = RecipesModel(recipes);
     _scrollController = ScrollController();
   }
 
@@ -33,9 +40,9 @@ class FavoritesPage extends State<FavoritesView> {
   List<String> getIngredientsType(){
     List<String> str = [];
     str.add('');
-    List<RecipeModel>? recipes = recipeStorage.recipes;
+    List<RecipeModel>? recipes = recipeStorage!.recipes;
 
-    for(RecipeModel recipe in recipes!){
+    for(RecipeModel recipe in recipeStorage!.recipes!){
       String temp = '';
       for(Ingredient ingredient in recipe.ingredients!){
         temp += ingredient.ingredientName!;
@@ -50,10 +57,8 @@ class FavoritesPage extends State<FavoritesView> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-    recipeStorage.makeRecipesList(num: 10);
 
     //올바르게 작동하려면 레시피를 꾸준히 업데이트 하는 방식으로 수정해야함
-    List<RecipeModel>? recipes = recipeStorage.recipes;
     List<String> ingredientsTypes = getIngredientsType();
 
     return Scaffold(
@@ -82,11 +87,11 @@ class FavoritesPage extends State<FavoritesView> {
                   ),
                   child: TextField(
                     controller: _searchController,
-                    style: TextStyle(color: Colors.black, fontSize: 25),
+                    style: TextStyle(color: Colors.black, fontSize: screenHeight * 0.02),
                     textAlignVertical: TextAlignVertical.center,
                     decoration: InputDecoration(
                       hintText: (_searchQuery.isEmpty) ? '레시피 검색' : null,
-                      hintStyle: TextStyle(color: Colors.grey[700], fontSize: 25, fontWeight: FontWeight.bold),
+                      hintStyle: TextStyle(color: Colors.grey[700], fontSize: screenHeight * 0.015, fontWeight: FontWeight.bold),
                       prefixIcon: IconButton(
                         icon: Icon(Icons.search, color: Colors.grey[700]),
                         onPressed: () {
@@ -98,7 +103,7 @@ class FavoritesPage extends State<FavoritesView> {
                       ),
                       suffixIcon: (_searchController.text.isNotEmpty)
                           ? IconButton(
-                        icon: Icon(Icons.clear, color: Colors.red),
+                        icon: Icon(Icons.clear, color: Colors.red, size: screenHeight * 0.02),
                         onPressed: () {
                           setState(() {
                             _searchController.clear();
@@ -116,7 +121,7 @@ class FavoritesPage extends State<FavoritesView> {
                   ),
                 ),
                 Container(
-                  height: screenHeight * 0.83,
+                  height: screenHeight * 0.78,
                   child: Scrollbar(
                       controller: _scrollController,
                       thumbVisibility: true,
@@ -126,7 +131,7 @@ class FavoritesPage extends State<FavoritesView> {
                           controller: _scrollController,
                           children: <Widget>[
                             // 실제론 DB에서 랜덤으로 추천돌려서 레시피로 띄워줌
-                            for(RecipeModel recipe in recipes!)
+                            for(RecipeModel recipe in recipeStorage!.recipes!)
                               Container(
                                   margin: EdgeInsets.all(20),
                                   height: screenHeight * 0.18,
@@ -143,9 +148,12 @@ class FavoritesPage extends State<FavoritesView> {
                                         width: (screenWidth - 40) * 0.3,
                                         height: (screenWidth - 40) * 0.3,
                                         decoration: BoxDecoration(
-                                          color: Colors.white,
                                           borderRadius: BorderRadius.circular(30),
                                         ),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(30),
+                                          child: Image.network(recipe.imgUrl!, fit: BoxFit.cover),
+                                        )
                                       ),
                                       // 레시피 설명
                                       Container(
@@ -156,11 +164,15 @@ class FavoritesPage extends State<FavoritesView> {
                                           borderRadius: BorderRadius.circular(30),
                                         ),
                                         child: FilledButton(
-                                          onPressed: ()=>{
+                                          onPressed: (){
                                             setState(() {
-                                              // 이 부분에 모달 창 띄워줘야 함
-
-                                            })
+                                              // 이 부분에 모달 창
+                                              RecipeDialog recipedialog = RecipeDialog(recipe: recipe);
+                                              showDialog(
+                                                  context: context,
+                                                  builder: (context) => recipedialog.recipeDialog(context)
+                                              );
+                                            });
                                           },
                                           style: FilledButton.styleFrom(
                                             backgroundColor: Colors.white,
@@ -191,7 +203,7 @@ class FavoritesPage extends State<FavoritesView> {
                                                                     Text(recipe.recipeName!,
                                                                         style: TextStyle(
                                                                             color: Colors.black,
-                                                                            fontWeight: FontWeight.bold
+                                                                            fontWeight: FontWeight.bold,
                                                                         )
                                                                     ),
                                                                   ]
@@ -209,8 +221,8 @@ class FavoritesPage extends State<FavoritesView> {
                                                                       children: <Widget>[
                                                                         SizedBox(width: 10),
                                                                         Flexible(
-                                                                            child: Text(ingredientsTypes[recipe.recipeNum!],
-                                                                                style: TextStyle(color: Colors.black)
+                                                                            child: Text(ingredientsTypes[1],
+                                                                                style: TextStyle(color: Colors.black, fontSize: screenHeight * 0.01)
                                                                             )
                                                                         )
                                                                       ]
