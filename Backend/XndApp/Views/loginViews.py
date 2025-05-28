@@ -38,7 +38,7 @@ class KakaoLoginView(APIView):
             return Response({"error" : "No Kakao ID"},status=status.HTTP_400_BAD_REQUEST)
 
         # Save new User or get old User
-        user, _ = User.users.get_or_create(
+        user, _ = User.objects.get_or_create(
             social_id = kakao_id,
             social_provider = "kakao",
             defaults={
