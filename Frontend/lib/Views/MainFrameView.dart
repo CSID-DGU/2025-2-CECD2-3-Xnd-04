@@ -8,11 +8,11 @@ import 'package:Frontend/Views/IngredientsInfoView.dart';
 import 'package:Frontend/Views/AlertView.dart';
 import 'package:Frontend/Views/SettingView.dart';
 import 'package:Frontend/Models/RefrigeratorModel.dart';
+import 'package:Frontend/Models/RecipeModel.dart';
 import 'package:Frontend/Models/IngredientModel.dart';
 import 'package:Frontend/Services/loadRecipeService.dart';
 
 Refrigerator nullProtectRefrigerator = (refrigerators.length != 0) ? refrigerators[0] : Refrigerator();
-List<List<dynamic>?>? RecipeInfo;
 
 List<Widget> pages = [
   const InitialHomeView(),
@@ -171,7 +171,7 @@ class MainBottomBar extends State<MainBottomView> {
           Navigator.of(context).pushNamed('/' + pages[index].toString());
         }
         else {
-          RecipeInfo = await getRecipeInfo();
+          RecipeInfo = await getRecipeInfoFromServer();
           if (recipeLoaded)
             Navigator.of(context).pushNamed('/' + pages[index].toString());
         }

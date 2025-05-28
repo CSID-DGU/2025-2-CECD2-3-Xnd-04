@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 abstract class IngredientAbstract{
+  int? get id;
   int? get number;
   String? get ingredientName;
   Image? get img;
