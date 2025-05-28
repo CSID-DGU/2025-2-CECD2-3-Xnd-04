@@ -5,11 +5,10 @@ import 'package:dio/dio.dart';
 abstract class RecipeAbstract{
   int? get id;
   String? get recipeName;
-  List<Ingredient>? get ingredients;
-  List<String>? get descriptions;
+  List<dynamic> get ingredients;
+  List<dynamic> get descriptions;
   String? get imgUrl;
+
 }
 
-abstract class RecipesAbstract{
-  void makeRecipesList({required int num});
-}
+abstract class RecipesAbstract{}

@@ -1,7 +1,7 @@
 import 'package:Frontend/Abstracts/RecipeAbstract.dart';
 import 'package:Frontend/Models/IngredientModel.dart';
-import 'package:Frontend/Views/MainFrameView.dart';
-import 'package:dio/dio.dart';
+
+List<List<dynamic>?>? RecipeInfo;
 
 List<Ingredient> _tempIngredients = [
   Ingredient(number: 1, ingredientName: '식재료 1'),
@@ -26,31 +26,34 @@ List<String> _tempDescriptions = [
 class RecipeModel extends RecipeAbstract{
   int? _id;
   String? _recipeName;
-  List<Ingredient>? _ingredients;
-  List<String>? _descriptions;             // 조리 순서 하드코딩
   String? _imgUrl;
+  List<dynamic> _ingredients = [];
+  List<dynamic> _descriptions = [];             // 조리 순서 하드코딩
 
-  RecipeModel({int? id, String? recipeName, List<Ingredient>? ingredients, List<String>? descriptions, String? imgUrl}){
+  RecipeModel({int? id, String? recipeName, String? imgUrl}){
     this._id = id;
     this._recipeName = recipeName;
-    this._ingredients = ingredients;
-    this._descriptions = descriptions;
     this._imgUrl = imgUrl;
   }
 
   @override
   int? get id => _id;
   String? get recipeName => _recipeName;
-  List<Ingredient>? get ingredients => _ingredients;
-  List<String>? get descriptions => _descriptions;
   String? get imgUrl => _imgUrl;
+  List<dynamic> get ingredients => [];
+  List<dynamic> get descriptions => [];
 
-  // 이름, 이미지 url
+  /// 전역변수에 레시피의 ID, 이름, 이미지 URL의 정보를 저장
   RecipeModel setRecipe(int idx){
-    this._recipeName = RecipeInfo![0]![idx];
-    this._imgUrl = RecipeInfo![1]![idx];
-    this._ingredients = _tempIngredients;
-    this._descriptions = _tempDescriptions;
+    this._id = RecipeInfo![0]![idx];
+    this._recipeName = RecipeInfo![1]![idx];
+    this._imgUrl = RecipeInfo![2]![idx];
+    return this;
+  }
+
+  RecipeModel setDetailRecipe(int idx){
+    this._ingredients = RecipeInfo![3]![idx];
+    // this._descriptions = RecipeInfo![4]![idx];
     return this;
   }
 }
@@ -61,18 +64,5 @@ class RecipesModel extends RecipesAbstract{
 
   RecipesModel(List<RecipeModel>? recipes){
     this._recipes = recipes;
-  }
-
-  @override
-  void makeRecipesList({required int num}){
-    this._recipes = List.generate(
-        num, (idx) => RecipeModel(
-          id: idx + 1,
-          recipeName: '레시피 이름 ${idx + 1}',
-          ingredients: _tempIngredients,
-          descriptions: _tempDescriptions
-        ),
-        growable: false
-    );
   }
 }
