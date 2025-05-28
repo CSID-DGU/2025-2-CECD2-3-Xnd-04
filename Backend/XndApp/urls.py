@@ -8,7 +8,9 @@ from XndApp.Views.fridgeDetailViews import FridgeDetailView
 from XndApp.Views.IngredientViews import IngredientView
 from XndApp.Views.CartViews import CartListView, CartManageView
 from XndApp.Views.savedRecipesViews import SavedRecipesView,SavedRecipeDetailView
-from XndApp.Views.NotificationViews import register_device
+from XndApp.Views.NotificationViews import RegisterDeviceView, DeviceManageView, NotificationView, NotificationDetailView
+
+
 
 urlpatterns = [
     # 로그인 및 인증
@@ -35,6 +37,11 @@ urlpatterns = [
     path('api/savedRecipe/',SavedRecipesView.as_view(),name='savedRecipes'),
     path('api/savedRecipe/<int:id>',SavedRecipeDetailView.as_view(),name='savedRecipe-detail'),
 
-    # 푸시 알림
-    path('api/devices/register/', register_device, name='registerDevice'),  # 기기 등록
+    # 기기 관리
+    path('api/devices/register/', RegisterDeviceView.as_view(), name='register_device'), # 알림 받을 기기 등록 (로그인시)
+    path('api/devices/toggle/', DeviceManageView.as_view(), name='toggle_notification'), # 알림 on/off
+
+    # 알림 관리
+    path('api/notifications/', NotificationView.as_view(), name='notifications'), # 알림 생성 및 조회
+    path('api/notifications/<int:notification_id>/', NotificationDetailView.as_view(), name='notification_detail'), # 알림 상태 변경 (취소는 따로 ...? )
 ]
