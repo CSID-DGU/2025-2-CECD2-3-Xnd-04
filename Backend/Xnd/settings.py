@@ -150,5 +150,18 @@ service_account_key = {
 cred = credentials.Certificate(service_account_key)
 firebase_admin.initialize_app(cred)
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# Celery Configuration - 개발용
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True
 
+# Celery Configuration
+'''
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+'''
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
