@@ -47,31 +47,74 @@ Future<int> getIngredientInfoFromServer(RecipeModel recipe) async {
   Response<dynamic>? response = await requestIngredient(recipe);
   try {
     List<List<dynamic>?>? li = RecipeInfo;
+    List<dynamic> Ingredients = [];
+    List<dynamic> Descriptions = [];
+    
+    String description = response!.data['steps'];
+
+    Descriptions = postprocessing(description);
+
     int recipeIdx = 0;
+    int len = response!.data['ingredients'].length;
+    
+    // 식재료 추가
+    for (int iidx = 0; iidx < len; iidx++)
+      Ingredients.add(Ingredient().toIngredient(response, iidx));
+
+    // for (int iidx = 0; iidx < len; iidx++)
+    //   Descriptions.add('');
+
+    // 일치하는 레시피 찾기
+    for (int idx = 0; idx < 10; idx++){
+      if(li![0]![idx] == recipe.id) {
+        recipeIdx = idx;
+        break;
+      }
+    }
 
     if (li!.length < 4) {
       li.add([]);
       li.add([]);
-      for (int idx = 0; idx < 10; idx++){
+      for (int idx = 0; idx < 10; idx++) {
         li[3]!.add(null);
-      }
-      for (int idx = 0; idx < 10; idx++){
         li[4]!.add(null);
       }
     }
 
-    for (int idx = 0; idx < 10; idx++){
-      if(li[0]![idx] == recipe.id) {
-        recipeIdx = idx;
-        li[3]![recipeIdx] = response!.data['ingredients'];
-        // li[4]![recipeIdx] = response!.data['steps'];
-        break;
-      }
-    }
+    li[3]![recipeIdx] = Ingredients;
+    li[4]![recipeIdx] = Descriptions;
+
     return recipeIdx;
   }
   catch(e){
     print('에러 로그 : ${e}');
     return -1;
   }
+}
+
+List<dynamic> postprocessing(String description){
+  List<dynamic> Descriptions = [];
+
+  String postprocessed = description;
+  postprocessed = postprocessed.replaceAll(RegExp(r'[\[\]\(\),]'), '');
+
+  bool processing = false;
+  String chunk = '';
+  for(int i = 0; i < postprocessed.length; i++){
+    if (postprocessed[i] == "'") {
+      if (processing){
+        processing = false;
+        Descriptions.add(chunk);
+        chunk = '';
+      }
+      else
+        processing = true;
+      continue;
+    }
+    if(processing)
+      chunk += postprocessed[i];
+    else
+      continue;
+  }
+  return Descriptions;
 }
