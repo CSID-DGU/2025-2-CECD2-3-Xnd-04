@@ -128,7 +128,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -142,8 +144,8 @@ service_account_key = {
   "client_id": config("CLIENT_ID"),
   "auth_uri": config("AUTH_URI"),
   "token_uri": config("TOKEN_URI"),
-  "auth_providy": config("AUTH_PROVIDY"),
-  "client_secret": config("CLIENT_SECRET"),
+  "auth_provider_x509_cert_url": config("AUTH_PROVIDER_X509_CERT_URL"),
+  "client_x509_cert_url": config("CLIENT_X509_CERT_URL"),
   "universe_domain": config("UNIVERSE_DOMAIN"),
 }
 
@@ -165,3 +167,7 @@ CELERY_TIMEZONE = TIME_ZONE
 '''
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# FireBase
+FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'firebase-service-account.json')
+
