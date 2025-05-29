@@ -35,7 +35,7 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
     def get_ingredients(self, recipe):
         # 컨텍스트에서 사용자 정보 및 장바구니 포함 여부 가져오기
         include_cart_status = self.context.get('include_cart_status', True)
-        user_id = self.context.get('user_id', 111)  # 기본값은 테스트용 ID
+        user_id = self.context.get('user_id')  # 기본값은 테스트용 ID
 
         # 레시피와 관련된 식재료 가져오기
         recipe_ingredients = RecipeIngredient.objects.filter(
