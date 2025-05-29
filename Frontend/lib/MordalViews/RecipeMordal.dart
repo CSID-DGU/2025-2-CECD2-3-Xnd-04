@@ -104,27 +104,30 @@ class RecipeDialog extends Dialog{
                 runSpacing: 10,
                 children: <Widget>[
                   for(Ingredient ingredient in recipe!.ingredients!)
-                    ElevatedButton(
-                      onPressed: () async {
-                        pages[6] = IngredientsInfoView(ingredient: ingredient);
-                        // 식재료 소개 페이지로 이동
-                        Navigator.of(context).pushNamed('/' + pages[6].toString());
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.fromLTRB(5, 0, 5, 0)
+                    Container(
+                      height: screenHeight * 0.015,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          pages[6] = IngredientsInfoView(ingredient: ingredient);
+                          // 식재료 소개 페이지로 이동
+                          Navigator.of(context).pushNamed('/' + pages[6].toString());
+                        },
+                        style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.fromLTRB(5, 0, 5, 0)
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,              // 이미지 + 텍스트 사이즈에 버튼 크기 맞추기
+                          children: <Widget>[
+                            Text(ingredient.ingredientName!,
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: screenHeight * 0.01)
+                            ),
+                            SizedBox(width: 10),
+                            Image.asset('assets/images/cart.png', width: screenHeight * 0.01, height: screenHeight * 0.01, fit: BoxFit.cover),
+                          ],
+                        ),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,              // 이미지 + 텍스트 사이즈에 버튼 크기 맞추기
-                        children: <Widget>[
-                          Text(ingredient.ingredientName!,
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: screenHeight * 0.01)
-                          ),
-                          SizedBox(width: 10),
-                          Image.asset('assets/images/cart.png', width: screenHeight * 0.01, height: screenHeight * 0.01, fit: BoxFit.cover),
-                        ],
-                      ),
-                    ),
+                    )
                 ],
               ),
             ),
@@ -148,26 +151,26 @@ class RecipeDialog extends Dialog{
                 ],
               )
             ),
-            Flexible(
-                fit: FlexFit.tight,
+            Expanded(
+              child: SingleChildScrollView(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     for (int idx = 0; idx < recipe!.descriptions!.length; idx++)
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: <Widget>[
-                          SizedBox(width: 10),
-                          Flexible(
-                              child: Text((idx + 1).toString() + '. ' + recipe!.descriptions![idx],
-                                  style: TextStyle(color: Colors.black, fontSize: screenHeight * 0.013)
-                              )
-                          )
-                        ]
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: <Widget>[
+                            SizedBox(width: 10),
+                            Flexible(
+                                child: Text((idx + 1).toString() + '. ' + recipe!.descriptions![idx],
+                                    style: TextStyle(color: Colors.black, fontSize: screenHeight * 0.013)
+                                )
+                            )
+                          ]
                       )
                   ],
-                )
-            ),
+                ),
+              )
+            )
           ]
         ),
       )

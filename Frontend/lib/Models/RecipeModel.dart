@@ -3,15 +3,6 @@ import 'package:Frontend/Models/IngredientModel.dart';
 
 List<List<dynamic>?>? RecipeInfo;
 
-List<Ingredient> _tempIngredients = [
-  Ingredient(number: 1, ingredientName: '식재료 1'),
-  Ingredient(number: 2, ingredientName: '식재료 2'),
-  Ingredient(number: 3, ingredientName: '식재료 3'),
-  Ingredient(number: 4, ingredientName: '식재료 4'),
-  Ingredient(number: 5, ingredientName: '식재료 5'),
-  Ingredient(number: 6, ingredientName: '식재료 6'),
-];
-
 List<String> _tempDescriptions = [
   '이 밤 그날의 반딧불을 당신의 창 가까이 보낼게요',
   '사랑한다는 말이에요, 나 우리의 첫 입맞춤을 떠올려',
@@ -40,8 +31,8 @@ class RecipeModel extends RecipeAbstract{
   int? get id => _id;
   String? get recipeName => _recipeName;
   String? get imgUrl => _imgUrl;
-  List<dynamic> get ingredients => [];
-  List<dynamic> get descriptions => [];
+  List<dynamic> get ingredients => _ingredients;
+  List<dynamic> get descriptions => _descriptions;
 
   /// 전역변수에 레시피의 ID, 이름, 이미지 URL의 정보를 저장
   RecipeModel setRecipe(int idx){
@@ -53,7 +44,7 @@ class RecipeModel extends RecipeAbstract{
 
   RecipeModel setDetailRecipe(int idx){
     this._ingredients = RecipeInfo![3]![idx];
-    // this._descriptions = RecipeInfo![4]![idx];
+    this._descriptions = RecipeInfo![4]![idx];
     return this;
   }
 }

@@ -104,7 +104,7 @@ class RecipePage extends State<RecipeView> {
                                       onPressed: (){
                                         setState(() async {
                                           int recipeIdx = await getIngredientInfoFromServer(recipe);
-                                          recipe.setRecipe(recipeIdx);
+                                          recipe.setDetailRecipe(recipeIdx);
                                           // 이 부분에 모달 창
                                           RecipeDialog recipeWindow = RecipeDialog(recipe: recipe);
                                           showDialog(

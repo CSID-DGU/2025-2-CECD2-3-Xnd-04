@@ -6,6 +6,8 @@ import '../Models/IngredientModel.dart';
 import '../Models/RecipeModel.dart';
 import 'package:Frontend/MordalViews/RecipeMordal.dart';
 
+import '../Services/loadIngredientService.dart';
+
 class FavoritesView extends StatefulWidget {
   const FavoritesView({Key? key}) : super(key: key);
 
@@ -147,8 +149,10 @@ class FavoritesPage extends State<FavoritesView> {
                                           borderRadius: BorderRadius.circular(30),
                                         ),
                                         child: FilledButton(
-                                          onPressed: (){
-                                            setState(() {
+                                          onPressed: () {
+                                            setState(() async {
+                                              int recipeIdx = await getIngredientInfoFromServer(recipe);
+                                              recipe.setDetailRecipe(recipeIdx);
                                               // 이 부분에 모달 창
                                               RecipeDialog recipedialog = RecipeDialog(recipe: recipe);
                                               showDialog(

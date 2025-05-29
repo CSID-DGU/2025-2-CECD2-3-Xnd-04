@@ -79,18 +79,18 @@ class IngredientsInfoView extends StatelessWidget{
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 Container(
-                  width: screenWidth * 0.5 - 30,
+                  width: screenWidth * 0.7 - 30,
                   height: screenHeight * 0.05,
                   margin: EdgeInsets.only(left: 30),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(_ingredient!.ingredientName!,
-                      style: TextStyle(color: Colors.black, fontSize: screenWidth * 0.06, fontWeight: FontWeight.bold)
+                      style: TextStyle(color: Colors.black, fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold)
                     )
                   )
                 ),
                 Container(
-                  width: screenWidth * 0.5 - 30,
+                  width: screenWidth * 0.3 - 30,
                   height: screenHeight * 0.05,
                   margin: EdgeInsets.only(right: 30),
                   child: Align(

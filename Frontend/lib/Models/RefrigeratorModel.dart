@@ -70,7 +70,7 @@ class Refrigerator implements RefrigeratorAbstract{
       _ingredientStorage![floor - 1][16] += 1;
 
       int num = this.getNumOfIngredientsFloor(floor: floor);
-      _ingredientStorage![floor - 1][num - 1] = Ingredient(number: num, ingredientName: '식재료 ${num}');
+      _ingredientStorage![floor - 1][num - 1] = Ingredient(id: num, ingredientName: '식재료 ${num}');
     }
     else{
       await Future.delayed(Duration.zero); // 안정화 타이밍 삽입

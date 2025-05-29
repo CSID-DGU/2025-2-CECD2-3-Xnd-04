@@ -1,12 +1,10 @@
-import 'package:flutter/material.dart';
-
 abstract class IngredientAbstract{
   int? get id;
-  int? get number;
   String? get ingredientName;
-  Image? get img;
+  String? get img;
+  DateTime? get storedAt;
+  DateTime? get storableDue;
+  bool? get inCart;
 
-  void modify({int? number, String? ingredientName, Image? img});
-
-  Map<String, dynamic> toMap();
+  // void modify({int? number, String? ingredientName, Image? img});
 }
