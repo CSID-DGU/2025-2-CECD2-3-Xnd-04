@@ -4,7 +4,7 @@ import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:flutter_colorful_tab/flutter_colorful_tab.dart';
 
 class IngredientsInfoView extends StatelessWidget{
-  Ingredient? _ingredient;
+  IngredientModel? _ingredient;
 
   IngredientsInfoView({Key? key, required ingredient}) : super(key : key){
     this._ingredient = ingredient;

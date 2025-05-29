@@ -2,6 +2,7 @@ import 'package:Frontend/Models/IngredientModel.dart';
 import 'package:Frontend/Models/RecipeModel.dart';
 import 'package:Frontend/Views/IngredientsInfoView.dart';
 import 'package:flutter/material.dart';
+import '../Services/loadFridgeIngredientInfoService.dart';
 import '../Views/MainFrameView.dart';
 import 'package:Frontend/Services/loadIngredientService.dart';
 
@@ -103,7 +104,7 @@ class RecipeDialog extends Dialog{
                 spacing: 10,
                 runSpacing: 10,
                 children: <Widget>[
-                  for(Ingredient ingredient in recipe!.ingredients!)
+                  for(IngredientModel ingredient in recipe!.ingredients!)
                     Container(
                       height: screenHeight * 0.015,
                       child: ElevatedButton(
