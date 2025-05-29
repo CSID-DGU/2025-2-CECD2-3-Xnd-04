@@ -21,7 +21,7 @@ urlpatterns = [
     path('api/fridge/<int:fridge_id>/',FridgeDetailView.as_view(),name='fridgeDetails'), # 냉장고 내부 조회
     path('api/fridge/<int:fridge_id>/ingredients/<int:ingredient_id>/', IngredientView.as_view()), # 냉장고 속 재료 하나 선택했을 때 정보 조회
 
-    # 검색
+    # 검색 및 레시피 조회
     path('api/recipes/', RecipeView.as_view(), name='recipe-list'),  # 레시피 목록 조회 ?query ?keyword ?ingredient
     path('api/recipes/<int:recipe_id>/', RecipeDetailView.as_view(), name='recipe-detail'),  # 레시피 상세 조회
 
@@ -31,7 +31,6 @@ urlpatterns = [
     path('api/cart/<int:cart_id>/', CartManageView.as_view(), name='cart-manage'), # 장바구니 수량 + - x (삭제)
 
     #즐겨찾기(레시피 저장)
-    path('api/savedRecipe/add',SavedRecipesView.as_view(),name='saveRecipe'),
-    path('api/savedRecipe/',SavedRecipesView.as_view(),name='savedRecipes'),
-    path('api/savedRecipe/<int:id>',SavedRecipeDetailView.as_view(),name='savedRecipe-detail'),
+    path('api/savedRecipe/',SavedRecipesView.as_view(),name='savedRecipes'), #저장된 레시피 목록, 즐겨찾기 추가,
+    path('api/savedRecipe/<int:id>',SavedRecipeDetailView.as_view(),name='savedRecipe-detail'), # 저장된 레시피 상세보기 및 상세보기 내에서 삭제
 ]

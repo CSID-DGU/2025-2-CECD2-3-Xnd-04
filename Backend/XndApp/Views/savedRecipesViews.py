@@ -4,12 +4,119 @@ from rest_framework import status
 from rest_framework.views import APIView
 from ..serializers.savedRecipes_serializer import SavedRecipeSerializer
 from ..serializers.savedRecipes_serializer import SavedRecipeDetailSerializer
+from XndApp.serializers.recipe_serializer import RecipeSerializer
 from ..Models.savedRecipes import SavedRecipes
 from ..Models.recipes import Recipes
-
+from XndApp.Models.cart import Cart
+from XndApp.Models.fridgeIngredients import FridgeIngredients
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from datetime import timedelta
 
 class SavedRecipesView(APIView):
 
+    # 즐겨찾기 레시피 리스트 로드
+    def get(self,request):
+        try:
+            user = request.user
+            savedRecipes = SavedRecipes.objects.filter(user = user).select_related('recipe')
+            recipes = [saved.recipe for saved in savedRecipes]
+            
+            #임박순으로 정렬
+            recipes = self.prioritize_by_expiring_ingredients(
+                list(recipes),
+                user_id = user.user_id
+            )
+            
+            if not savedRecipes.exists():
+                    return Response(
+                        {"message": "저장된 레시피가 없습니다."},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+            
+            # 페이지네이션
+            page = int(request.query_params.get('page', '1'))
+            page_size = int(request.query_params.get('page_size', '10'))
+            start = (page - 1) * page_size
+            end = start + page_size
+
+            paginated_recipes = recipes[start:end]
+
+            serializer = RecipeSerializer(paginated_recipes,many = True)
+            return Response(serializer.data,status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response(
+                {
+                    "error": "레시피 목록을 불러오는 중 오류가 발생했습니다.",
+                    "detail": str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    def prioritize_by_expiring_ingredients(self, recipe_list, user_id):
+        """
+        유통기한 임박(5일 이내) 재료가 포함된 레시피를 우선적으로 정렬합니다.
+
+        Args:
+            recipe_list: 레시피 객체 리스트
+            user_id: 사용자 ID
+
+        Returns:
+            정렬된 레시피 리스트
+        """
+        now = timezone.now()
+
+        # 5일 이내 유통기한 임박 재료 가져오기
+        expiring_ingredients = FridgeIngredients.objects.filter(
+            fridge__user_id=user_id,
+            storable_due__lte=now + timedelta(days=5)
+        ).order_by('storable_due')  # 유통기한 임박순 정렬
+
+        # 임박 재료가 없으면 원래 순서 유지
+        if not expiring_ingredients.exists():
+            return recipe_list
+
+        # 임박 재료 이름 목록
+        expiring_names = [ing.ingredient_name.lower() for ing in expiring_ingredients]
+
+        # 각 레시피에 대해 임박 재료 매칭 정보 및 가중치 추가
+        recipes_with_weights = []
+
+        for recipe in recipe_list:
+            recipe_ingredients = recipe.ingredient_all.split(',')
+            recipe_ingredients = [ing.strip() for ing in recipe_ingredients]
+
+            # 매칭되는 임박 재료 찾기
+            matching_count = 0
+            total_weight = 0
+
+            for i, ing_name in enumerate(expiring_names):
+                if any(ing_name in recipe_ing for recipe_ing in recipe_ingredients):
+                    matching_count += 1
+
+                    # 임박한 재료일수록 높은 가중치
+                    weight = len(expiring_names) - i
+                    total_weight += weight
+
+            # 가중치 정보 추가
+            recipes_with_weights.append({
+                'recipe': recipe,
+                'matching_count': matching_count,
+                'total_weight': total_weight,
+                'has_expiring': matching_count > 0
+            })
+
+        # 가중치 기반 정렬
+        # 1. 임박 재료 포함 여부 (True 우선)
+        # 2. 매칭되는 임박 재료의 총 가중치 (높을수록 우선)
+        recipes_with_weights.sort(
+            key=lambda x: (x['has_expiring'], x['total_weight']),
+            reverse=True
+        )
+
+        # 정렬된 레시피 객체만 반환
+        return [item['recipe'] for item in recipes_with_weights]
     # 즐겨찾기 추가
     def post(self,request):
         
@@ -34,37 +141,41 @@ class SavedRecipesView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-    # 즐겨찾기 레시피 리스트 로드
-    def get(self,request):
-        try:
-            user = request.user
-            savedRecipes = SavedRecipes.objects.filter(user = user)
-            serializer = SavedRecipeSerializer(savedRecipes,many = True)
-            
-            if not savedRecipes.exists():
-                    return Response(
-                        {"message": "저장된 레시피가 없습니다."},
-                        status=status.HTTP_404_NOT_FOUND
-                    )
-            return Response(serializer.data,status=status.HTTP_200_OK)
-        
-        except Exception as e:
-            return Response(
-                {
-                    "error": "레시피 목록을 불러오는 중 오류가 발생했습니다.",
-                    "detail": str(e)
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
 
 class SavedRecipeDetailView(APIView):
     # 특정 레시피 내용 열람
     def get(self,request,id):
 
         try:
-            savedRecipe = SavedRecipes.objects.filter(id=id,user=request.user).first()
+            user = request.user
+
+            recipe = get_object_or_404(Recipes, recipe_id=id)
+
+            #해당 레시피 재료
+            recipeIngredient = Recipes.objects.filter(recipe_id=id)
+            recipeIngredients = recipeIngredient.split(',')
+
+            #사용자의 장바구니 재료 목록
+            cartIngredients = Cart.objects.filter(user=user).values_list('ingredient__name',flat=True)
+            
+            #사용자의 냉장고 속 재료 목록
+            fridgeIngredients = FridgeIngredients.objects.filter(user=user).values_list('ingredient_all',flat=True)
+            
+
+            #재료 명 + 장바구니 포함 여부
+            ingredients = []
+
+            for recipeIngredient in recipeIngredients:
+                # 장바구니 상태 포함 여부
+                include_cart_status = recipeIngredient in cartIngredients or recipeIngredient in fridgeIngredients
+                ingredients.append({
+                    "ingredient": recipeIngredient,
+                    "include_cart_status": include_cart_status
+                })
+
+            savedRecipe = SavedRecipes.objects.filter(id=id,user=user).first()
             if savedRecipe:
-                serializer = SavedRecipeDetailSerializer(savedRecipe)
+                serializer = SavedRecipeDetailSerializer(savedRecipe,context={'ingredients': ingredients})
                 return Response(serializer.data,status=status.HTTP_200_OK)
         
         except SavedRecipes.DoesNotExist:
