@@ -9,6 +9,7 @@ from datetime import timedelta
 from XndApp.Models.notification import Device, PushNotification
 from XndApp.serializers.notification_serializers import DeviceSerializer, PushNotificationSerializer
 from tasks import schedule_push_notification
+from celery import current_app
 
 # 알림 받을 기기 등록
 class RegisterDeviceView(APIView):
@@ -68,14 +69,9 @@ class DeviceManageView(APIView):
 
 # 알림 생성 및 조회
 class NotificationView(APIView):
-
     permission_classes = [IsAuthenticated]
 
-    # 알림 생성 - 식재료 입고 시 함께
     def post(self, request):
-        print(f"=== 유통기한 알림 생성 API ===")
-        print(f"User: {request.user}")
-        print(f"Request Data: {request.data}")
 
         fridge_ingredient_id = request.data.get('fridge_ingredient')
 
@@ -93,15 +89,73 @@ class NotificationView(APIView):
             )
             print(f"식재료: {ingredient.ingredient_name}, 유통기한: {ingredient.storable_due}")
 
-            from fcm_services import create_expiry_notifications
-            notifications = create_expiry_notifications(ingredient)
+            user = request.user
+            ingredient_name = ingredient.ingredient_name
+            storable_due = ingredient.storable_due
 
-            print(f"생성된 알림: {len(notifications)}개")
+            if not storable_due or storable_due <= timezone.now():
+                return Response({
+                    'error': '유통기한이 현재 시간보다 이전입니다'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            notifications = []
+
+            # 48시간 전 알림 생성
+            if storable_due > timezone.now() + timedelta(hours=48):
+                notification_48h = PushNotification.objects.create(
+                    user=user,
+                    fridge_ingredient=ingredient,
+                    title="2일 전 알림",
+                    body=f"{ingredient_name}의 보관기한이 48시간 남았습니다",
+                    schedule_time=storable_due - timedelta(hours=48),
+                    status='pending'
+                )
+
+                # Celery 예약
+                try:
+                    task = schedule_push_notification.apply_async(
+                        args=[notification_48h.id],
+                        eta=notification_48h.schedule_time
+                    )
+                    notification_48h.celery_task_id = task.id
+                    notification_48h.save()
+                    print(f"48시간 전 알림 Celery 예약 성공")
+                except Exception as celery_error:
+                    print(f"48시간 전 알림 Celery 에러 (알림은 생성됨): {celery_error}")
+
+                notifications.append(notification_48h)
+
+            # 24시간 전 알림 생성
+            if storable_due > timezone.now() + timedelta(hours=24):
+                notification_24h = PushNotification.objects.create(
+                    user=user,
+                    fridge_ingredient=ingredient,
+                    title="1일 전 알림",
+                    body=f"{ingredient_name}의 보관기한이 24시간 남았습니다",
+                    schedule_time=storable_due - timedelta(hours=24),
+                    status='pending'
+                )
+
+                # Celery 예약
+                try:
+                    task = schedule_push_notification.apply_async(
+                        args=[notification_24h.id],
+                        eta=notification_24h.schedule_time
+                    )
+                    notification_24h.celery_task_id = task.id
+                    notification_24h.save()
+                    print(f"24시간 전 알림 Celery 예약 성공")
+                except Exception as celery_error:
+                    print(f"24시간 전 알림 Celery 에러 (알림은 생성됨): {celery_error}")
+
+                notifications.append(notification_24h)
+
+            print(f"총 {len(notifications)}개 알림 생성 완료")
 
             return Response({
-                'message': f'{ingredient.ingredient_name} 유통기한 알림 설정 완료',
-                'ingredient_name': ingredient.ingredient_name,
-                'storable_due': ingredient.storable_due,
+                'message': f'{ingredient_name} 유통기한 알림 설정 완료',
+                'ingredient_name': ingredient_name,
+                'storable_due': storable_due,
                 'notifications_created': len(notifications)
             }, status=status.HTTP_201_CREATED)
 
@@ -128,7 +182,7 @@ class NotificationView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-# 개별 알림 읽음 처리
+# 개별 알림 읽음 처리 및 삭제
 class NotificationDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -148,3 +202,44 @@ class NotificationDetailView(APIView):
             return Response({
                 'error': '알림을 찾을 수 없습니다'
             }, status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, notification_id):
+        try:
+            notification = PushNotification.objects.get(
+                id=notification_id,
+                user=request.user
+            )
+
+            # Celery 태스크 취소
+            if notification.celery_task_id:
+                current_app.control.revoke(notification.celery_task_id, terminate=True)
+
+            notification.delete()
+            return Response({'message': '알림 삭제 완료'})
+        except PushNotification.DoesNotExist:
+            return Response({'error': '알림을 찾을 수 없습니다'}, status=404)
+
+
+# 식재료별 알림 일괄 삭제 (출고 시 사용)
+class IngredientNotificationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, ingredient_id):
+        # 해당 식재료의 예약된 알림들만 삭제
+        notifications = PushNotification.objects.filter(
+            fridge_ingredient_id=ingredient_id,
+            user=request.user,
+            status='pending'  # 예약된 것만
+        )
+
+        # Celery 태스크 취소
+        for notification in notifications:
+            if notification.celery_task_id:
+                current_app.control.revoke(notification.celery_task_id, terminate=True)
+
+        count = notifications.count()
+        notifications.delete()
+
+        return Response({
+            'message': f'{count}개 알림 삭제 완료'
+        })
