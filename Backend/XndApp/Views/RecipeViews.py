@@ -165,13 +165,13 @@ class RecipeDetailView(APIView):
 
     def get(self, request, recipe_id):
         recipe = get_object_or_404(Recipes, recipe_id=recipe_id)
-        user=request.user
 
         # 사용자 정보 (실제 환경에서는 request.user.id 사용)
-        user_id = 111  # 테스트용
+        user=request.user
         
         #해당 레시피 재료
-        recipeIngredients = Recipes.objects.filter(recipe_id=recipe_id)
+        recipeIngredient = Recipes.objects.filter(recipe_id=recipe_id)
+        recipeIngredients = recipeIngredient.split(',')
 
         #사용자의 장바구니 재료 목록
         cartIngredients = Cart.objects.filter(user=user).values_list('ingredient__name',flat=True)
