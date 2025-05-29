@@ -11,3 +11,7 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 # Django 앱에서 tasks.py를 자동으로 발견
 app.autodiscover_tasks()
+
+@app.task(bind=True)
+def debug_task(self):
+    print(f'Request: {self.request!r}')
