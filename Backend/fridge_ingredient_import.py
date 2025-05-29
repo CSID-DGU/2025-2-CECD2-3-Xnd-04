@@ -1,4 +1,4 @@
-# fridge_ingredient_import_test.py
+# fridge_ingredient_import.py
 
 import os
 import time
@@ -49,9 +49,7 @@ def main():
     foodStorageLifes = FoodStorageLife.objects.all()
     print(f'유통기한 {foodStorageLifes.count()}개를 찾았습니다.')
 
-    print(f'마이그레이션 완료!')
-
-    intList = random.sample(range(1, ingredients.count()), 80)
+    intList = random.sample(range(1, ingredients.count()), fridges.count() * 16)
 
     step = 0
     # 냉장고 수에 맞춰서 fridgescount 조정
@@ -86,6 +84,8 @@ def main():
             time.sleep(1)      # 1초 간격으로 데이터 생성
             print(f'step {step}회 완료')
         nowFridge += 1
+
+    print(f'마이그레이션 완료!')
 
 if __name__ == "__main__":
     main()
