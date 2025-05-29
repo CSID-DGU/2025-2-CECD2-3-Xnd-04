@@ -8,7 +8,7 @@ from XndApp.Views.fridgeDetailViews import FridgeDetailView
 from XndApp.Views.IngredientViews import IngredientView
 from XndApp.Views.CartViews import CartListView, CartManageView
 from XndApp.Views.savedRecipesViews import SavedRecipesView,SavedRecipeDetailView
-from XndApp.Views.NotificationViews import RegisterDeviceView, DeviceManageView, NotificationView, NotificationDetailView
+from XndApp.Views.NotificationViews import RegisterDeviceView, DeviceManageView, NotificationView, NotificationDetailView, IngredientNotificationView
 
 
 
@@ -39,9 +39,11 @@ urlpatterns = [
 
     # 기기 관리
     path('api/devices/register/', RegisterDeviceView.as_view(), name='register_device'), # 알림 받을 기기 등록 (로그인시)
-    path('api/devices/toggle/', DeviceManageView.as_view(), name='toggle_notification'), # 알림 on/off
+    path('api/devices/toggle/', DeviceManageView.as_view(), name='toggle_notification'), # 기기별 알림 on/off
 
     # 알림 관리
-    path('api/notifications/', NotificationView.as_view(), name='notifications'), # 알림 생성 및 조회
-    path('api/notifications/<int:notification_id>/', NotificationDetailView.as_view(), name='notification_detail'), # 알림 상태 변경 (취소는 따로 ...? )
+    path('api/notifications/', NotificationView.as_view(), name='notifications'), # 유통기한 알림 예약 생성(POST), 알림창 알림 조회(GET)
+    path('api/notifications/ingredient/<int:ingredient_id>/', IngredientNotificationView.as_view(), name='ingredient_notifications'), # 식재료 유통기한 알림 예약 삭제
+    path('api/notifications/<int:notification_id>/', NotificationDetailView.as_view(), name='notification_detail'), # 개별 알림 삭제 및 읽음 처리
+
 ]
