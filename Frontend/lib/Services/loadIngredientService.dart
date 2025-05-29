@@ -52,14 +52,14 @@ Future<int> getIngredientInfoFromServer(RecipeModel recipe) async {
     
     String description = response!.data['steps'];
 
-    Descriptions = postprocessing(description);
+    Descriptions = postProcessing(description);
 
     int recipeIdx = 0;
     int len = response!.data['ingredients'].length;
     
     // 식재료 추가
     for (int iidx = 0; iidx < len; iidx++)
-      Ingredients.add(Ingredient().toIngredient(response, iidx));
+      Ingredients.add(IngredientModel().toIngredient(response, iidx));
 
     // for (int iidx = 0; iidx < len; iidx++)
     //   Descriptions.add('');
@@ -92,7 +92,7 @@ Future<int> getIngredientInfoFromServer(RecipeModel recipe) async {
   }
 }
 
-List<dynamic> postprocessing(String description){
+List<dynamic> postProcessing(String description){
   List<dynamic> Descriptions = [];
 
   String postprocessed = description;
