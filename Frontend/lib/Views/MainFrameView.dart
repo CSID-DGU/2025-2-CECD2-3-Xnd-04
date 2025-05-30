@@ -8,11 +8,11 @@ import 'package:Frontend/Views/IngredientsInfoView.dart';
 import 'package:Frontend/Views/AlertView.dart';
 import 'package:Frontend/Views/SettingView.dart';
 import 'package:Frontend/Models/RefrigeratorModel.dart';
+import 'package:Frontend/Models/RecipeModel.dart';
 import 'package:Frontend/Models/IngredientModel.dart';
 import 'package:Frontend/Services/loadRecipeService.dart';
 
-Refrigerator nullProtectRefrigerator = (refrigerators.length != 0) ? refrigerators[0] : Refrigerator();
-List<List<dynamic>?>? RecipeInfo;
+Refrigerator nullProtectRefrigerator = (fridges!.length != 0) ? fridges![0] : Refrigerator();
 
 List<Widget> pages = [
   const InitialHomeView(),
@@ -21,7 +21,7 @@ List<Widget> pages = [
   const FavoritesView(),
   const CartView(),
   const HomeView(),
-  IngredientsInfoView(ingredient: Ingredient()),
+  IngredientsInfoView(ingredient: IngredientModel()),
   const AlertView(),
   const SettingView(),
 ];
@@ -139,7 +139,7 @@ class MainBottomBar extends State<MainBottomView> {
   // 네비게이션 바는 냉장고가 하나라도 추가되어야 활성화
   void onItemTapped(int index){
     setState(() async {
-      if (refrigerators.length == 0){
+      if (fridges!.length == 0){
         await Future.delayed(Duration.zero);
         if (index != 0) {
           showDialog(
@@ -164,6 +164,9 @@ class MainBottomBar extends State<MainBottomView> {
       }
       else if (index == 0)
         Navigator.of(context).pushNamed('/' + pages[5].toString());
+      else if (index == 1){
+        Navigator.of(context).pushNamed('/' + pages[1].toString());
+      }
       // 레시피 로드
       else if (index == 2 || index == 3){
         if (recipeLoaded) {
@@ -171,7 +174,7 @@ class MainBottomBar extends State<MainBottomView> {
           Navigator.of(context).pushNamed('/' + pages[index].toString());
         }
         else {
-          RecipeInfo = await getRecipeInfo();
+          RecipeInfo = await getRecipeInfoFromServer();
           if (recipeLoaded)
             Navigator.of(context).pushNamed('/' + pages[index].toString());
         }

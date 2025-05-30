@@ -2,18 +2,22 @@ import 'package:Frontend/Models/IngredientModel.dart';
 import 'package:Frontend/Models/RecipeModel.dart';
 import 'package:Frontend/Views/IngredientsInfoView.dart';
 import 'package:flutter/material.dart';
-
+import '../Services/loadFridgeIngredientInfoService.dart';
 import '../Views/MainFrameView.dart';
+import 'package:Frontend/Services/loadIngredientService.dart';
 
 class RecipeDialog extends Dialog{
-  RecipeModel? _recipe;
+  RecipeModel? recipe;
 
   RecipeDialog({required RecipeModel? recipe}){
-    this._recipe = recipe;
+    this.recipe = recipe;
   }
 
-
-  Dialog recipeDialog(BuildContext context){
+  /// 기존 위젯에서 팝업 형태로 위젯을 띄움
+  /// 위젯이 실시간으로 값을 받아 갱신할 필요가 없기 때문에 Stateless 값을 반환 -> 이 말인 즉슨 setState문을 박을 수 없음
+  /// But, 현재 넣어야 하는 함수가 Future 클래스 내부에 없으면 작동하지 않는 함수다!
+  /// 그래서 이 문제를 어떻게 해결할까...? 고민중
+  Dialog recipeDialog(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
     double mainContainerWidth = screenWidth * 0.75;
@@ -32,21 +36,21 @@ class RecipeDialog extends Dialog{
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
             Container(
-              height: screenHeight * 0.04,
+              height: screenHeight * 0.07,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
                   Container(
-                    width: (mainContainerWidth - 40) * 0.5,
+                    width: (mainContainerWidth - 40) * 0.8,
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: Text(_recipe!.recipeName!,
+                      child: Text(recipe!.recipeName!,
                           style: TextStyle(fontSize: screenHeight * 0.02, fontWeight: FontWeight.bold)
                       )
                     )
                   ),
                   Container(
-                    width: (mainContainerWidth - 40) * 0.5,
+                    width: (mainContainerWidth - 40) * 0.2,
                     child: Align(
                       alignment: Alignment.centerRight,
                       child: IconButton(
@@ -66,8 +70,11 @@ class RecipeDialog extends Dialog{
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(40),
                 color: Colors.grey[300],
-                // 이미지 추가
               ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(40),
+                  child: Image.network(recipe!.imgUrl!, fit: BoxFit.cover),
+                )
             ),
             Container(
               height: screenHeight * 0.042,
@@ -97,28 +104,31 @@ class RecipeDialog extends Dialog{
                 spacing: 10,
                 runSpacing: 10,
                 children: <Widget>[
-                  for(Ingredient ingredient in _recipe!.ingredients!)
-                    ElevatedButton(
-                      onPressed: (){
-                        pages[6] = IngredientsInfoView(ingredient: ingredient);
-                        // 식재료 소개 페이지로 이동
-                        Navigator.of(context).pushNamed('/' + pages[6].toString());
-                      },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,              // 이미지 + 텍스트 사이즈에 버튼 크기 맞추기
-                        children: <Widget>[
-                          Text(ingredient.ingredientName!,
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: screenHeight * 0.01)
-                          ),
-                          SizedBox(width: 10),
-                          Image.asset('assets/images/cart.png', width: screenHeight * 0.01, height: screenHeight * 0.01, fit: BoxFit.cover),
-                        ],
+                  for(IngredientModel ingredient in recipe!.ingredients!)
+                    Container(
+                      height: screenHeight * 0.015,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          pages[6] = IngredientsInfoView(ingredient: ingredient);
+                          // 식재료 소개 페이지로 이동
+                          Navigator.of(context).pushNamed('/' + pages[6].toString());
+                        },
+                        style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.fromLTRB(5, 0, 5, 0)
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,              // 이미지 + 텍스트 사이즈에 버튼 크기 맞추기
+                          children: <Widget>[
+                            Text(ingredient.ingredientName!,
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: screenHeight * 0.01)
+                            ),
+                            SizedBox(width: 10),
+                            Image.asset('assets/images/cart.png', width: screenHeight * 0.01, height: screenHeight * 0.01, fit: BoxFit.cover),
+                          ],
+                        ),
                       ),
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.fromLTRB(5, 0, 5, 0)
-                      )
-                    ),
+                    )
                 ],
               ),
             ),
@@ -142,26 +152,26 @@ class RecipeDialog extends Dialog{
                 ],
               )
             ),
-            Flexible(
-                fit: FlexFit.tight,
+            Expanded(
+              child: SingleChildScrollView(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
-                    for (int idx = 0; idx < _recipe!.descriptions!.length; idx++)
+                    for (int idx = 0; idx < recipe!.descriptions!.length; idx++)
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: <Widget>[
-                          SizedBox(width: 10),
-                          Flexible(
-                              child: Text((idx + 1).toString() + '. ' + _recipe!.descriptions![idx],
-                                  style: TextStyle(color: Colors.black, fontSize: screenHeight * 0.013)
-                              )
-                          )
-                        ]
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: <Widget>[
+                            SizedBox(width: 10),
+                            Flexible(
+                                child: Text((idx + 1).toString() + '. ' + recipe!.descriptions![idx],
+                                    style: TextStyle(color: Colors.black, fontSize: screenHeight * 0.013)
+                                )
+                            )
+                          ]
                       )
                   ],
-                )
-            ),
+                ),
+              )
+            )
           ]
         ),
       )
