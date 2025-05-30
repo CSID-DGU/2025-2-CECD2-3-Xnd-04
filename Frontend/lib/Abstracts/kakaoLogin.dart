@@ -26,6 +26,7 @@ class KakaoLogin implements SocialLogin {
           print('카카오톡 계정을 생성하거나 앱 설치 후 로그인을 해주세요 : $e');
           return false;
         }
+        print(await KakaoSdk.origin);
       }
 
       isTokenResponsed = await sendKakaoAccessToken(token.accessToken);
