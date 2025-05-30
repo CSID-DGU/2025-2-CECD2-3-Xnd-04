@@ -16,5 +16,5 @@ class Fridge(models.Model):
         return f"{self.user.get_full_name()}의 냉장고 ({self.model_label})"
     # 메타데이터
     class Meta:
-        db_table = 'fridge'  
+        db_table = 'xndApp_fridge'  
         ordering = ['user','-created_at']  # 유저별 최근 등록순 정렬

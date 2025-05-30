@@ -15,6 +15,8 @@ from XndApp.Models.user import User
 from XndApp.Models.recipes import Recipes
 from XndApp.Models.RecipeIngredient import RecipeIngredient
 from XndApp.Models.savedRecipes import SavedRecipes
+from XndApp.Models.fridge import Fridge
+import re
 
 # 입력 검색 및 키워드 검색을 통한 레시피 (요리명, 이미지, 재료, 조리 순서 / 조리시간, 기준인원, 난이도) 조회
 
@@ -167,17 +169,24 @@ class RecipeDetailView(APIView):
         recipe = get_object_or_404(Recipes, recipe_id=recipe_id)
 
         # 사용자 정보 (실제 환경에서는 request.user.id 사용)
-        user=request.user
+        user=request.user.user_id
         
         #해당 레시피 재료
-        recipeIngredient = Recipes.objects.filter(recipe_id=recipe_id)
-        recipeIngredients = recipeIngredient.split(',')
+        recipeIngredient = Recipes.objects.filter(recipe_id=recipe_id).first().ingredient_all
+        # 대괄호 및 작은따옴표 제거 후 쉼표로 분리
+        cleaned = re.sub(r"[\[\]']", "", recipeIngredient)
+        recipeIngredients = [item.strip() for item in cleaned.split(',')]
 
         #사용자의 장바구니 재료 목록
         cartIngredients = Cart.objects.filter(user=user).values_list('ingredient__name',flat=True)
         
         #사용자의 냉장고 속 재료 목록
-        fridgeIngredients = FridgeIngredients.objects.filter(user=user).values_list('ingredient_all',flat=True)
+        fridges = Fridge.objects.filter(user=user).values_list('fridge_id',flat=True)
+        totalFridgeIngredients = []
+        for fridge in fridges:
+            fridgeIngredients = FridgeIngredients.objects.filter(fridge=fridge).values_list('ingredient__name',flat=True)
+            totalFridgeIngredients.extend(fridgeIngredients)
+        
         
 
         #재료 명 + 장바구니 포함 여부
@@ -185,10 +194,10 @@ class RecipeDetailView(APIView):
 
         for recipeIngredient in recipeIngredients:
             # 장바구니 상태 포함 여부
-            include_cart_status = recipeIngredient in cartIngredients or recipeIngredient in fridgeIngredients
+            include_cart_status = recipeIngredient in cartIngredients or recipeIngredient in totalFridgeIngredients
             ingredients.append({
                 "ingredient": recipeIngredient,
-                "include_cart_status": include_cart_status
+                "include_cart_status": include_cart_status,
             })
         
         # 시리얼라이저 적용
