@@ -2,15 +2,12 @@
 import 'package:flutter/material.dart';
 
 abstract class RefrigeratorAbstract{
-  int? get number;
+  int? get id;
   int? get level;
   String? get label;
-  String? get modelName;
 
-  void getRefrigerator();
-  void modify({int? number, int? level, String? label, String? modelName});
+  void modify({int? level, String? label});
   Map<String, dynamic> toMap();
-  void makeIngredientStorage();
+  void setIngredientStorage();
   int getNumOfIngredientsFloor({required int floor});
-  void addNumOfIngredientsFloor(BuildContext context, {required int floor});
 }

@@ -10,7 +10,7 @@ class SavedRecipes(models.Model):
     recipe = models.ForeignKey(Recipes,on_delete=models.CASCADE)
     
 
-# 메타데이터
-class Meta:
-    db_table = 'savedRecipes'  
-    ordering = ['user']  # 유저별 정렬
+    # 메타데이터
+    class Meta:
+        db_table = 'savedRecipes'  
+        ordering = ['user']  # 유저별 정렬

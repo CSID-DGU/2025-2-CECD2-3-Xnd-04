@@ -33,9 +33,8 @@ urlpatterns = [
     path('api/cart/<int:cart_id>/', CartManageView.as_view(), name='cart-manage'), # 장바구니 수량 + - x (삭제)
 
     #즐겨찾기(레시피 저장)
-    path('api/savedRecipe/add',SavedRecipesView.as_view(),name='saveRecipe'),
-    path('api/savedRecipe/',SavedRecipesView.as_view(),name='savedRecipes'),
-    path('api/savedRecipe/<int:id>',SavedRecipeDetailView.as_view(),name='savedRecipe-detail'),
+    path('api/savedRecipe/', SavedRecipesView.as_view(), name='savedRecipes'),  # 저장된 레시피 목록, 즐겨찾기 추가,
+    path('api/savedRecipe/<int:id>', SavedRecipeDetailView.as_view(), name='savedRecipe-detail'), # 저장된 레시피 상세보기 및 상세보기 내에서 삭제
 
     # 기기 관리
     path('api/devices/register/', RegisterDeviceView.as_view(), name='register_device'), # 알림 받을 기기 등록 (로그인시)
@@ -48,7 +47,5 @@ urlpatterns = [
 
     # 푸시 테스트
     path('fcm-test/', fcm_test_view, name='fcm_test'), # 테스트용 웹 FCM 발급 (추후 프론트로 수정)
-
-
 
 ]
