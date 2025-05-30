@@ -49,7 +49,7 @@ class LoginPage extends State<LoginView>{
                   // 로그인 시, 로그인 여부 확인하고 냉장고의 수를 체크하여 냉장고 수에 따라 다른 화면으로 이동
                   await loginViewModel.login();
 
-                  bool fridgeNonZero = await checkFridgeNumAreNonZero();
+                  bool fridgeNonZero = await getFridgesInfo();
 
                   (fridgeNonZero) ?
                   Navigator.push(context, MaterialPageRoute(builder: (i) => pages[5])):

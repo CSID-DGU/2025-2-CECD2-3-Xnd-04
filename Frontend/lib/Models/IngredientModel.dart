@@ -1,39 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:Frontend/Abstracts/IngredientAbstract.dart';
+import 'package:dio/dio.dart';
 
-class Ingredient implements IngredientAbstract {
-  int? _number;
+class IngredientModel implements IngredientAbstract {
+  int? _id;
   String? _ingredientName;
-  Image? _img;
+  String? _img;
+  DateTime? _storedAt;
+  DateTime? _storableDue;
+  bool? _inCart;
 
-  Ingredient({int? number, String? ingredientName, Image? img = null}){
-    this._number = number;
+  IngredientModel({int? id, String? ingredientName, bool? inCart}){
+    this._id = id;
     this._ingredientName = ingredientName;
-    this._img = img;
+    this._inCart = inCart;
   }
 
   @override
-  int? get number => _number;
+  int? get id => _id;
   String? get ingredientName => _ingredientName;
-  Image? get img => _img;
+  String? get img => _img;
+  DateTime? get storedAt => _storedAt;
+  DateTime? get storableDue => _storableDue;
+  bool? get inCart => _inCart;
 
-  @override
-  void modify({int? number, String? ingredientName, Image? img}){
-    if(number != null)
-      this._number = number;
-    if(ingredientName != null)
-      this._ingredientName = ingredientName;
-    if(img != null)
-      this._img = img;
+  IngredientModel toIngredient(Response ingredientResponse, int idx){
+    List<dynamic> data = ingredientResponse!.data['ingredients'];
+    this._id = data[idx]['id'];
+    this._ingredientName = data[idx]['name'];
+    this._inCart = data[idx]['in_cart'];
+    return this;
   }
 
-  @override
-  Map<String, dynamic> toMap(){
-    Map<String, dynamic> mapIngredient = {};
-    mapIngredient['number'] = _number;
-    mapIngredient['ingredientName'] = _ingredientName;
-    mapIngredient['img'] = _img;
-
-    return mapIngredient;
+  IngredientModel setIngredientDetailed(Response ingredientDetailedResponse, int idx){
+    return this;
   }
 }

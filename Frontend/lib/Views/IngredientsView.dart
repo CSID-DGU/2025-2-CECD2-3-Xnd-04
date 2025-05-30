@@ -3,6 +3,8 @@ import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 import 'dart:math';
 
+import '../Models/IngredientModel.dart';
+import '../Services/loadFridgeIngredientInfoService.dart';
 import 'IngredientsInfoView.dart';
 
 class IngredientsView extends StatefulWidget {
@@ -63,7 +65,7 @@ class IngredientsPage extends State<IngredientsView> {
           child: ListView(
             controller: _scrollController,
             children: <Widget>[
-              mainAppBar(name:'${refrigerator.number}번 냉장고'),
+              mainAppBar(name:'${refrigerator.id}번 냉장고'),
               Container(
                 height : getRefrigeratorSize(),           //교체
                 margin : EdgeInsets.all(20),
@@ -113,22 +115,6 @@ class IngredientsPage extends State<IngredientsView> {
                                   ),
                                   Container(
                                     width: (screenWidth - 100) * 0.6,
-                                  ),
-                                  Container(
-                                    width: (screenWidth - 100) * 0.25,
-                                    child: ElevatedButton(
-                                        onPressed: () async {
-                                        setState(() {
-                                          refrigerator.addNumOfIngredientsFloor(context, floor: floor);
-                                          Navigator.of(context).pushNamed('/' + pages[1].toString());
-                                        });
-                                      },
-                                        style: ElevatedButton.styleFrom(
-                                          shape: const CircleBorder(),
-                                          backgroundColor: Colors.yellow,
-                                        ),
-                                        child: Image.asset('assets/images/levelplus.png')
-                                    ),
                                   )
                                 ],
                               )
@@ -155,8 +141,8 @@ class IngredientsPage extends State<IngredientsView> {
                                         borderRadius: BorderRadius.circular(20)
                                       ),
                                       child: FilledButton(
-                                        onPressed: (){
-                                          pages[6] = IngredientsInfoView(ingredient: refrigerator.ingredientStorage[floor - 1][index]);
+                                        onPressed: () async {
+                                          pages[6] = IngredientsInfoView(ingredient: refrigerator.ingredientStorage![floor - 1][index]);
                                           Navigator.of(context).pushNamed('/' + pages[6].toString());
                                         },
                                         style: FilledButton.styleFrom(
