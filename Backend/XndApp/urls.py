@@ -47,7 +47,7 @@ urlpatterns = [
     path('api/notifications/<int:notification_id>/', NotificationDetailView.as_view(), name='notification_detail'), # 개별 알림 삭제 및 읽음 처리
 
     # 푸시 테스트
-    path('fcm-test/', fcm_test_view, name='fcm_test'), # ?
+    path('fcm-test/', fcm_test_view, name='fcm_test'), # 테스트용 웹 FCM 발급 (추후 프론트로 수정)
 
 
 
