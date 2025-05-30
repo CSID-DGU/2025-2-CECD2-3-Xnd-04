@@ -16,6 +16,7 @@ final APIURLS = {
   'createFridge' : 'api/fridge/create/',
   'loadFridge' : 'api/fridge/',
   'loadRecipe' : 'api/recipes/',
+  'loadIngredient' : 'api/ingredients',
   'loadCart' : 'api/cart/',
   'addCart' : 'api/cart/add/',
   'savedRecipe' : 'api/savedRecipe/',

@@ -5,6 +5,8 @@ import '../Models/IngredientModel.dart';
 import 'package:Frontend/MordalViews/RecipeMordal.dart';
 import 'package:Frontend/Services/loadRecipeService.dart';
 
+import '../Services/loadIngredientService.dart';
+
 class RecipeView extends StatefulWidget {
   const RecipeView({Key? key}) : super(key: key);
 
@@ -17,16 +19,20 @@ class RecipePage extends State<RecipeView> {
   TextEditingController _searchController = TextEditingController();
   late ScrollController _scrollController;
 
+  /// 페이지를 새로 로드할때마다 레시피 저장소를 받아오는 클래스 내 변수
   RecipesModel? recipeStorage;
+
+  /// 레시피 끌어오기
+  void getListedRecipes(){
+    List<RecipeModel> recipes = [];
+    for(int i = 0; i < 10; i++)
+      recipes.add(RecipeModel().setRecipe(i));
+    recipeStorage = RecipesModel(recipes);
+  }
 
   RecipePage(){
     super.initState();
-    List<RecipeModel> recipes = [];
-
-    for(int i = 0; i < 10; i++)
-      recipes.add(RecipeModel().setRecipe(i));
-
-    recipeStorage = RecipesModel(recipes);
+    getListedRecipes();
     _scrollController = ScrollController();
   }
 
@@ -35,29 +41,11 @@ class RecipePage extends State<RecipeView> {
     super.dispose();
     _scrollController.dispose();
   }
-  // 식재료 종료를 화면에 뿌려줌
-  List<String> getIngredientsType(){
-    List<String> str = [];
-    str.add('');
-
-    for(RecipeModel recipe in recipeStorage!.recipes!){
-      String temp = '';
-      for(Ingredient ingredient in recipe.ingredients!){
-        temp += ingredient.ingredientName!;
-        temp += ', ';
-      }
-      str.add(temp);
-    }
-
-    return str;
-  }
 
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-
-    List<String> ingredientsTypes = getIngredientsType();
 
     return Scaffold(
       // 냉장고 선택 페이지 UI
@@ -79,7 +67,6 @@ class RecipePage extends State<RecipeView> {
                       child: ListView(
                         controller: _scrollController,
                         children: <Widget>[
-                          // 실제론 DB에서 랜덤으로 추천돌려서 레시피로 띄워줌
                           for(RecipeModel recipe in recipeStorage!.recipes!)
                             Container(
                               margin: EdgeInsets.all(20),
@@ -116,6 +103,8 @@ class RecipePage extends State<RecipeView> {
                                     child: FilledButton(
                                       onPressed: (){
                                         setState(() async {
+                                          int recipeIdx = await getIngredientInfoFromServer(recipe);
+                                          recipe.setDetailRecipe(recipeIdx);
                                           // 이 부분에 모달 창
                                           RecipeDialog recipeWindow = RecipeDialog(recipe: recipe);
                                           showDialog(
@@ -144,43 +133,28 @@ class RecipePage extends State<RecipeView> {
                                                 mainAxisAlignment: MainAxisAlignment.start,
                                                 children: <Widget>[
                                                   Flexible(
-                                                    flex: 1,
+                                                    flex: 2,
                                                     fit: FlexFit.tight,
                                                     child: Row(
                                                       mainAxisAlignment: MainAxisAlignment.start,
                                                       children: <Widget>[
-                                                        SizedBox(width: 10),
-                                                        Text(recipe.recipeName!,
-                                                          style: TextStyle(
-                                                              color: Colors.black,
-                                                              fontWeight: FontWeight.bold
-                                                          )
-                                                        ),
+                                                        SizedBox(width: 15),
+                                                        Flexible(
+                                                          child: Text(recipe.recipeName!,
+                                                            style: TextStyle(
+                                                                color: Colors.black,
+                                                                fontWeight: FontWeight.bold,
+                                                                fontSize: screenHeight * 0.012
+                                                            )
+                                                          ),
+                                                        )
                                                       ]
                                                     )
                                                   ),
                                                   Flexible(
-                                                    flex: 4,
+                                                    flex: 3,
                                                     fit: FlexFit.tight,
-                                                    child: Column(
-                                                      mainAxisAlignment: MainAxisAlignment.start,
-                                                      children: <Widget>[
-                                                        // 컨테이너에서 텍스트 위치 설정하는 테크닉, 잘 기억해두길...
-                                                        Row(
-                                                          mainAxisAlignment: MainAxisAlignment.start,
-                                                          children: <Widget>[
-                                                            SizedBox(width: 10),
-                                                            Flexible(
-                                                                child: Text(ingredientsTypes[1],
-                                                                  style: TextStyle(color: Colors.black,
-                                                                    fontSize: screenHeight * 0.01
-                                                                  )
-                                                                )
-                                                            )
-                                                          ]
-                                                        )
-                                                      ],
-                                                    )
+                                                    child: SizedBox()
                                                   ),
                                                 ],
                                               )

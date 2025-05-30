@@ -3,10 +3,8 @@ import 'package:dio/dio.dart';
 import 'package:Frontend/Services/authService.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:Frontend/Views/HomeView.dart';
+import 'package:Frontend/Models/RefrigeratorModel.dart';
 
-int? numOfFridge;
-List<dynamic>? fridges;
-List<dynamic>? ids;
 bool programStarts = true;
 
 // 모든 서비스는 함수로 관리함. 클래스 만들기 ㄱㅊ
@@ -41,29 +39,29 @@ Future<bool> getFridgesInfo() async {
   if (response == null) return false;
 
   numOfFridge = response.data['fridge_count'];
-  fridges = response.data['fridges'];
-  ids = response.data['id'];
+  List<dynamic>? fridgeResponses = response.data['fridges'];
+  List<dynamic>? ids = response.data['id'];
 
   if (numOfFridge == 0) return false;
 
   if (programStarts) {
     for (int i = 0; i < numOfFridge!; i++) {
-      refrigerators.add(
+      fridges.add(
         Refrigerator(
           id: ids![i],
-          level: fridges![i]['layer_count'],
-          label: fridges![i]['model_label'],
+          level: fridgeResponses![i]['layer_count'],
+          label: fridgeResponses[i]['model_label'],
         ),
       );
-      refrigerators[i].makeIngredientStorage();
+      fridges[i].setIngredientStorage();
     }
     programStarts = false;
   } else {
-    refrigerators.add(
+    fridges.add(
       Refrigerator(
-        id: ids![numOfFridge! - 1],
-        level: fridges![numOfFridge! - 1]['layer_count'],
-        label: fridges![numOfFridge! - 1]['model_label'],
+        id: fridgeResponses![numOfFridge! - 1] + 1,
+        level: fridgeResponses[numOfFridge! - 1]['layer_count'],
+        label: fridgeResponses[numOfFridge! - 1]['model_label'],
       ),
     );
   }

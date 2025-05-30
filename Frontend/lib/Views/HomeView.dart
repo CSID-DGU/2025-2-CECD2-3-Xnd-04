@@ -6,8 +6,6 @@ import 'package:Frontend/Services/createFridgeService.dart';
 import 'package:Frontend/Services/loadFridgeService.dart';
 
 bool isPlusButtonClicked = false;
-List<Refrigerator> refrigerators = [];
-int numOfRefrigerator = refrigerators.length;
 
 class InitialHomeView extends StatefulWidget {
   const InitialHomeView({Key? key}) : super(key: key);
@@ -122,8 +120,8 @@ class InitialHomePage extends State<InitialHomeView> {
                                   if (sendCreateToServer) {
                                     bool isArrivedFridgesInfo = await getFridgesInfo();                    // 냉장고 정보 수령 요청
                                     if (isArrivedFridgesInfo) {
-                                      refrigerators[numOfFridge! - 1].makeIngredientStorage(); // 냉장고 식재료 저장소 생성
-                                      pages[1] = IngredientsView(refrigerator: refrigerators[numOfFridge! - 1]); // 위젯 갱신
+                                      fridges[numOfFridge! - 1].setIngredientStorage(); // 냉장고 식재료 저장소 생성
+                                      pages[1] = IngredientsView(refrigerator: fridges[numOfFridge! - 1]); // 위젯 갱신
                                       Navigator.of(context).pushNamed('/' + pages[5].toString());
                                       isPlusButtonClicked = false; // + 버튼 체크 여부
                                     }
@@ -207,7 +205,7 @@ class HomePage extends State<HomeView> {
               height: screenHeight * 0.84,
               child: PageView.builder(
                   controller: PageController(),
-                  itemCount: refrigerators.length + 1,
+                  itemCount: fridges.length + 1,
                   itemBuilder: (context, index) =>
                       Container(
                         child: Column(
@@ -215,8 +213,8 @@ class HomePage extends State<HomeView> {
                             children: <Widget>[
                               SizedBox(height: screenHeight * 0.28),
 
-                              if (index != refrigerators.length)
-                                Text('${refrigerators[index].id}번 냉장고',
+                              if (index != fridges.length)
+                                Text('${fridges![index].id}번 냉장고',
                                   style: TextStyle(fontSize: screenHeight * 0.025))
                               else
                                 Text('냉장고 추가',
@@ -224,11 +222,11 @@ class HomePage extends State<HomeView> {
 
                               SizedBox(height: screenHeight * 0.05),
 
-                              if (index != refrigerators.length)
+                              if (index != fridges.length)
                                 ElevatedButton(
                                   onPressed: () async {
                                     setState(() {
-                                      pages[1] = IngredientsView(refrigerator: refrigerators[index]);
+                                      pages[1] = IngredientsView(refrigerator: fridges[index]);
                                       Navigator.of(context).pushNamed('/' + pages[1].toString());
                                     });
                                   },

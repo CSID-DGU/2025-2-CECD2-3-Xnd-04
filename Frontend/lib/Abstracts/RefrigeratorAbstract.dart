@@ -5,12 +5,9 @@ abstract class RefrigeratorAbstract{
   int? get id;
   int? get level;
   String? get label;
-  String? get modelName;
 
-  void getRefrigerator();
   void modify({int? level, String? label});
   Map<String, dynamic> toMap();
-  void makeIngredientStorage();
+  void setIngredientStorage();
   int getNumOfIngredientsFloor({required int floor});
-  void addNumOfIngredientsFloor(BuildContext context, {required int floor});
 }
