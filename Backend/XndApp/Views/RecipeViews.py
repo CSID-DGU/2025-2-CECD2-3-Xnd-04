@@ -16,6 +16,7 @@ from XndApp.Models.recipes import Recipes
 from XndApp.Models.RecipeIngredient import RecipeIngredient
 from XndApp.Models.savedRecipes import SavedRecipes
 from XndApp.Models.fridge import Fridge
+from XndApp.Models.ingredients import Ingredient
 import re
 
 # 입력 검색 및 키워드 검색을 통한 레시피 (요리명, 이미지, 재료, 조리 순서 / 조리시간, 기준인원, 난이도) 조회
@@ -193,11 +194,22 @@ class RecipeDetailView(APIView):
         ingredients = []
 
         for recipeIngredient in recipeIngredients:
-            # 장바구니 상태 포함 여부
-            include_cart_status = recipeIngredient in cartIngredients or recipeIngredient in totalFridgeIngredients
+            # 각 재료의 id 확인
+            recipeIngredient_id = Ingredient.objects.filter(name=recipeIngredient).first()
+            # id가 없는 경우
+            if not recipeIngredient_id:
+                recipeIngredient_id = 'Unknown Id'
+            # id가 존재하는 경우
+            else:
+                recipeIngredient_id = recipeIngredient_id.id
+            # 장바구니 / 냉장고 존재 유무
+            include_cart_status = recipeIngredient in cartIngredients
+            include_fridge_status = recipeIngredient in totalFridgeIngredients
             ingredients.append({
-                "ingredient": recipeIngredient,
-                "include_cart_status": include_cart_status,
+                "id" : recipeIngredient_id,
+                "name": recipeIngredient,
+                "in_cart": include_cart_status,
+                "in_fridge" : include_fridge_status
             })
         
         # 시리얼라이저 적용
