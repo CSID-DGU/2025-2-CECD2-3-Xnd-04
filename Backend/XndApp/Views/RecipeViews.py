@@ -9,7 +9,7 @@ from django.utils import timezone
 from XndApp.Models.fridgeIngredients import FridgeIngredients
 from datetime import timedelta
 from django.shortcuts import get_object_or_404
-from rest_framework.permissions import AllowAny # 테스트용
+from rest_framework.permissions import AllowAny  # 테스트용
 from XndApp.Models.cart import Cart
 from XndApp.Models.user import User
 from XndApp.Models.recipes import Recipes
@@ -24,20 +24,19 @@ import re
 # 사전 정의 키워드
 PREDEFINED_KEYWORDS = {
     '빠른요리': {'cooking_time': '15분 이내'},
-    '특별한날': {'cooking_level' : '고급', 'category2': '영양식'},
+    '특별한날': {'cooking_level': '고급', 'category2': '영양식'},
     '쉬운요리': {'cooking_level': '아무나'},
-    '다이어트':{'food_name__icontains':'다이어트'},
+    '다이어트': {'food_name__icontains': '다이어트'},
 }
+
 
 class RecipeView(APIView):
 
-
-
     def get(self, request):
 
-        query = request.query_params.get('query', '')           # 일반 검색 (제목, 태그, 재료)
-        keyword = request.query_params.get('keyword', '')       # 키워드 (수집 카테고리, 조건 기반 카테고리, 트렌드)
-        ingredients = request.query_params.getlist('ingredient', []) # 재료 필드만 검색
+        query = request.query_params.get('query', '')  # 일반 검색 (제목, 태그, 재료)
+        keyword = request.query_params.get('keyword', '')  # 키워드 (수집 카테고리, 조건 기반 카테고리, 트렌드)
+        ingredients = request.query_params.getlist('ingredient', [])  # 재료 필드만 검색
 
         # 기본 쿼리셋
         recipes = Recipes.objects.all()
@@ -50,7 +49,6 @@ class RecipeView(APIView):
                 # | Q(ingredient_all__icontains=query)
             ).distinct()
 
-
         # 키워드
         if keyword:
             if keyword in PREDEFINED_KEYWORDS:
@@ -59,10 +57,10 @@ class RecipeView(APIView):
             else:
                 # 카테고리의 내용을 키워드인 것처럼. ...
                 recipes = recipes.filter(
-                    Q(category1__icontains=keyword) | # 볶음, 끓이기,
-                    Q(category2__icontains=keyword) | # 일상, 초스피드, 영양식,
-                    Q(category3__icontains=keyword) | # 소고기, 돼지고기, 닭고기, 해물류, 채소류, 달걀/유제품,
-                    Q(category4__icontains=keyword)   # 밑반찬, 메인반찬, 국/탕, 찌개
+                    Q(category1__icontains=keyword) |  # 볶음, 끓이기,
+                    Q(category2__icontains=keyword) |  # 일상, 초스피드, 영양식,
+                    Q(category3__icontains=keyword) |  # 소고기, 돼지고기, 닭고기, 해물류, 채소류, 달걀/유제품,
+                    Q(category4__icontains=keyword)  # 밑반찬, 메인반찬, 국/탕, 찌개
                 )
 
         # 재료 선택
@@ -75,8 +73,7 @@ class RecipeView(APIView):
         # 유통 기한 임박 재료가 포함된 레시피부터 정렬 (근데 5일 이하로 남은 식재료만 고려함)
         recipes = self.prioritize_by_expiring_ingredients(
             list(recipes),
-            user_id = request.user.user_id
-
+            user_id=request.user.user_id
         )
 
         # 페이지네이션
@@ -150,7 +147,7 @@ class RecipeView(APIView):
                 'has_expiring': matching_count > 0
             })
 
-        # 가중치 기반 정렬
+        # 가중치 기준 정렬
         # 1. 임박 재료 포함 여부 (True 우선)
         # 2. 매칭되는 임박 재료의 총 가중치 (높을수록 우선)
         recipes_with_weights.sort(
@@ -163,56 +160,40 @@ class RecipeView(APIView):
 
 
 # 레시피 상세 정보 조회
-# views.py
 class RecipeDetailView(APIView):
 
     def get(self, request, recipe_id):
         recipe = get_object_or_404(Recipes, recipe_id=recipe_id)
 
         # 사용자 정보 (실제 환경에서는 request.user.id 사용)
-        user=request.user.user_id
-        
-        #해당 레시피 재료
-        recipeIngredient = Recipes.objects.filter(recipe_id=recipe_id).first().ingredient_all
-        # 대괄호 및 작은따옴표 제거 후 쉼표로 분리
-        cleaned = re.sub(r"[\[\]']", "", recipeIngredient)
-        recipeIngredients = [item.strip() for item in cleaned.split(',')]
+        user = request.user.user_id
 
-        #사용자의 장바구니 재료 목록
-        cartIngredients = Cart.objects.filter(user=user).values_list('ingredient__name',flat=True)
-        
-        #사용자의 냉장고 속 재료 목록
-        fridges = Fridge.objects.filter(user=user).values_list('fridge_id',flat=True)
+        # 사용자의 장바구니 재료 목록
+        cartIngredients = Cart.objects.filter(user=user).values_list('ingredient__name', flat=True)
+
+        # 사용자의 냉장고 속 재료 목록
+        fridges = Fridge.objects.filter(user=user).values_list('fridge_id', flat=True)
         totalFridgeIngredients = []
         for fridge in fridges:
-            fridgeIngredients = FridgeIngredients.objects.filter(fridge=fridge).values_list('ingredient_name',flat=True)
+            fridgeIngredients = FridgeIngredients.objects.filter(fridge=fridge).values_list('ingredient_name',
+                                                                                            flat=True)
             totalFridgeIngredients.extend(fridgeIngredients)
-        
-        
 
-        #재료 명 + 장바구니 포함 여부
+        # RecipeIngredient 테이블에서 재료 정보 가져오기
+        recipe_ingredients = RecipeIngredient.objects.filter(recipe_id=recipe_id).select_related('ingredient')
+
         ingredients = []
-
-        for recipeIngredient in recipeIngredients:
-            # 각 재료의 id 확인
-            recipeIngredient_id = Ingredient.objects.filter(name=recipeIngredient).first()
-            # id가 없는 경우
-            if not recipeIngredient_id:
-                recipeIngredient_id = 'Unknown Id'
-            # id가 존재하는 경우
-            else:
-                recipeIngredient_id = recipeIngredient_id.id
-            # 장바구니 / 냉장고 존재 유무
-            include_cart_status = recipeIngredient in cartIngredients
-            include_fridge_status = recipeIngredient in totalFridgeIngredients
+        for ri in recipe_ingredients:
+            include_cart_status = ri.ingredient.name in cartIngredients
+            include_fridge_status = ri.ingredient.name in totalFridgeIngredients
             ingredients.append({
-                "id" : recipeIngredient_id,
-                "name": recipeIngredient,
+                "id": ri.ingredient.id,
+                "name": ri.ingredient.name,
                 "in_cart": include_cart_status,
-                "in_fridge" : include_fridge_status
+                "in_fridge": include_fridge_status
             })
-        
+
         # 시리얼라이저 적용
         serializer = RecipeDetailSerializer(recipe, context={'ingredients': ingredients})
 
-        return Response(serializer.data,status=status.HTTP_200_OK) 
+        return Response(serializer.data, status=status.HTTP_200_OK)
