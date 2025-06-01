@@ -15,6 +15,9 @@ from XndApp.Models.user import User
 from XndApp.Models.recipes import Recipes
 from XndApp.Models.RecipeIngredient import RecipeIngredient
 from XndApp.Models.savedRecipes import SavedRecipes
+from XndApp.Models.fridge import Fridge
+from XndApp.Models.ingredients import Ingredient
+import re
 
 # 입력 검색 및 키워드 검색을 통한 레시피 (요리명, 이미지, 재료, 조리 순서 / 조리시간, 기준인원, 난이도) 조회
 
@@ -167,28 +170,46 @@ class RecipeDetailView(APIView):
         recipe = get_object_or_404(Recipes, recipe_id=recipe_id)
 
         # 사용자 정보 (실제 환경에서는 request.user.id 사용)
-        user=request.user
+        user=request.user.user_id
         
         #해당 레시피 재료
-        recipeIngredient = Recipes.objects.filter(recipe_id=recipe_id)
-        recipeIngredients = recipeIngredient.split(',')
+        recipeIngredient = Recipes.objects.filter(recipe_id=recipe_id).first().ingredient_all
+        # 대괄호 및 작은따옴표 제거 후 쉼표로 분리
+        cleaned = re.sub(r"[\[\]']", "", recipeIngredient)
+        recipeIngredients = [item.strip() for item in cleaned.split(',')]
 
         #사용자의 장바구니 재료 목록
         cartIngredients = Cart.objects.filter(user=user).values_list('ingredient__name',flat=True)
         
         #사용자의 냉장고 속 재료 목록
-        fridgeIngredients = FridgeIngredients.objects.filter(user=user).values_list('ingredient_all',flat=True)
+        fridges = Fridge.objects.filter(user=user).values_list('fridge_id',flat=True)
+        totalFridgeIngredients = []
+        for fridge in fridges:
+            fridgeIngredients = FridgeIngredients.objects.filter(fridge=fridge).values_list('ingredient_name',flat=True)
+            totalFridgeIngredients.extend(fridgeIngredients)
+        
         
 
         #재료 명 + 장바구니 포함 여부
         ingredients = []
 
         for recipeIngredient in recipeIngredients:
-            # 장바구니 상태 포함 여부
-            include_cart_status = recipeIngredient in cartIngredients or recipeIngredient in fridgeIngredients
+            # 각 재료의 id 확인
+            recipeIngredient_id = Ingredient.objects.filter(name=recipeIngredient).first()
+            # id가 없는 경우
+            if not recipeIngredient_id:
+                recipeIngredient_id = 'Unknown Id'
+            # id가 존재하는 경우
+            else:
+                recipeIngredient_id = recipeIngredient_id.id
+            # 장바구니 / 냉장고 존재 유무
+            include_cart_status = recipeIngredient in cartIngredients
+            include_fridge_status = recipeIngredient in totalFridgeIngredients
             ingredients.append({
-                "ingredient": recipeIngredient,
-                "include_cart_status": include_cart_status
+                "id" : recipeIngredient_id,
+                "name": recipeIngredient,
+                "in_cart": include_cart_status,
+                "in_fridge" : include_fridge_status
             })
         
         # 시리얼라이저 적용

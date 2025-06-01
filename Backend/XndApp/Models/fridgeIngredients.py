@@ -17,7 +17,7 @@ class FridgeIngredients(models.Model):
     # category = models.ForeignKey(Category,on_delete=models.CASCADE)
     foodStorageLife = models.ForeignKey(FoodStorageLife,on_delete=models.SET_DEFAULT, default=100) 
     storable_due = models.DateTimeField(null=True)
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)  # 새 Ingredient 모델 참조
+    ingredient_name = models.CharField(max_length=100)
     ingredient_pic = models.CharField(max_length=255)
 
     def save(self, *args, **kwargs):

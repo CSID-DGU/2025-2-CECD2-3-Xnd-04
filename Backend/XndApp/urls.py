@@ -33,7 +33,7 @@ urlpatterns = [
     path('api/cart/<int:cart_id>/', CartManageView.as_view(), name='cart-manage'), # 장바구니 수량 + - x (삭제)
 
     #즐겨찾기(레시피 저장)
-    path('api/savedRecipe/', SavedRecipesView.as_view(), name='savedRecipes'),  # 저장된 레시피 목록, 즐겨찾기 추가,
+    path('api/savedRecipe/', SavedRecipesView.as_view(), name='savedRecipes'),  # 저장된 레시피 목록, 즐겨찾기 추가 및 삭제(토글)
     path('api/savedRecipe/<int:id>', SavedRecipeDetailView.as_view(), name='savedRecipe-detail'), # 저장된 레시피 상세보기 및 상세보기 내에서 삭제
 
     # 기기 관리

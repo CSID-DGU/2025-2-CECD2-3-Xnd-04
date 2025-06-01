@@ -7,11 +7,15 @@ from ..serializers.savedRecipes_serializer import SavedRecipeDetailSerializer
 from XndApp.serializers.recipe_serializer import RecipeSerializer
 from ..Models.savedRecipes import SavedRecipes
 from ..Models.recipes import Recipes
+from XndApp.Models.ingredients import Ingredient
 from XndApp.Models.cart import Cart
 from XndApp.Models.fridgeIngredients import FridgeIngredients
+from XndApp.Models.user import User
+from XndApp.Models.fridge import Fridge
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from datetime import timedelta
+import re
 
 class SavedRecipesView(APIView):
 
@@ -117,25 +121,27 @@ class SavedRecipesView(APIView):
 
         # 정렬된 레시피 객체만 반환
         return [item['recipe'] for item in recipes_with_weights]
-    # 즐겨찾기 추가
+    
+    # 즐겨찾기 추가 또는 삭제(토글)
     def post(self,request):
         
         # 클릭한 레시피
         recipe = request.data.get('recipe_id')
-
-        if not Recipes.objects.filter(recipe=recipe).exists():
+        if not Recipes.objects.filter(recipe_id=recipe).exists():
             return Response({'error': '존재하지 않는 레시피입니다.'}, status=status.HTTP_404_NOT_FOUND)
-        
-        user = request.user
-        
+        # 유저
+        user = request.user.user_id
+
+        user_obj = User.objects.get(pk=request.user.user_id)
+        recipe_obj = Recipes.objects.get(pk=recipe)
         try:
             # 중복 저장 방지
-            if SavedRecipes.objects.filter(user=user, recipe=recipe).exists():
+            if SavedRecipes.objects.filter(user=user, recipe_id=recipe).exists():
                 savedRecipe = SavedRecipes.objects.get(user=user, recipe=recipe)
                 savedRecipe.delete()
                 return Response({"message": "레시피가 삭제되었습니다."}, status=status.HTTP_200_OK)
             
-            SavedRecipes.objects.create(user=user, recipe=recipe)
+            SavedRecipes.objects.create(user=user_obj, recipe=recipe_obj)
             return Response({"message": "레시피가 저장되었습니다."}, status=status.HTTP_201_CREATED)
         
         except Exception as e:
@@ -147,46 +153,60 @@ class SavedRecipeDetailView(APIView):
     def get(self,request,id):
 
         try:
-            user = request.user
-
-            recipe = get_object_or_404(Recipes, recipe_id=id)
-
+            user_id = request.user.user_id
+            recipe_id = SavedRecipes.objects.get(id=id).recipe_id
             #해당 레시피 재료
-            recipeIngredient = Recipes.objects.filter(recipe_id=id)
-            recipeIngredients = recipeIngredient.split(',')
+            recipeIngredient = Recipes.objects.filter(recipe_id=recipe_id).first().ingredient_all
+            # 대괄호 및 작은따옴표 제거 후 쉼표로 분리
+            cleaned = re.sub(r"[\[\]']", "", recipeIngredient)
+            recipeIngredients = [item.strip() for item in cleaned.split(',')]
 
             #사용자의 장바구니 재료 목록
-            cartIngredients = Cart.objects.filter(user=user).values_list('ingredient__name',flat=True)
+            cartIngredients = Cart.objects.filter(user=user_id).values_list('ingredient__name',flat=True)
             
             #사용자의 냉장고 속 재료 목록
-            fridgeIngredients = FridgeIngredients.objects.filter(user=user).values_list('ingredient_all',flat=True)
-            
+            fridges = Fridge.objects.filter(user=user_id).values_list('fridge_id',flat=True)
+            totalFridgeIngredients = []
+            for fridge in fridges:
+                fridgeIngredients = FridgeIngredients.objects.filter(fridge=fridge).values_list('ingredient_name',flat=True)
+                totalFridgeIngredients.extend(fridgeIngredients)
 
             #재료 명 + 장바구니 포함 여부
             ingredients = []
 
             for recipeIngredient in recipeIngredients:
-                # 장바구니 상태 포함 여부
-                include_cart_status = recipeIngredient in cartIngredients or recipeIngredient in fridgeIngredients
+                # 각 재료의 id 확인
+                recipeIngredient_id = Ingredient.objects.filter(name=recipeIngredient).first()
+                # id가 없는 경우
+                if not recipeIngredient_id:
+                    recipeIngredient_id = 'Unknown Id'
+                # id가 존재하는 경우
+                else:
+                    recipeIngredient_id = recipeIngredient_id.id
+                # 장바구니 / 냉장고 존재 유무
+                include_cart_status = recipeIngredient in cartIngredients
+                include_fridge_status = recipeIngredient in totalFridgeIngredients
                 ingredients.append({
-                    "ingredient": recipeIngredient,
-                    "include_cart_status": include_cart_status
+                    "id" : recipeIngredient_id,
+                    "name": recipeIngredient,
+                    "in_cart": include_cart_status,
+                    "in_fridge" : include_fridge_status
                 })
+            savedRecipe = SavedRecipes.objects.filter(id=id).first()
 
-            savedRecipe = SavedRecipes.objects.filter(id=id,user=user).first()
             if savedRecipe:
                 serializer = SavedRecipeDetailSerializer(savedRecipe,context={'ingredients': ingredients})
                 return Response(serializer.data,status=status.HTTP_200_OK)
         
         except SavedRecipes.DoesNotExist:
             return Response(
-                {'error':'No Recipe'},
+                {'error':'No Recipe',},
                 status=status.HTTP_204_NO_CONTENT
             )
         
         except Exception as e:
             return Response(
-                {'error':'레시피를 불러오는 도중 오류가 발생하였습니다.'},
+                {'error':'레시피를 불러오는 도중 오류가 발생하였습니다.','message':str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
