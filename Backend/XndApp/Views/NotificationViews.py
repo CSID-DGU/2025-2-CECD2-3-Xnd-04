@@ -87,10 +87,10 @@ class NotificationView(APIView):
                 id=fridge_ingredient_id,
                 fridge__user=request.user
             )
-            print(f"식재료: {ingredient.ingredient.name}, 유통기한: {ingredient.storable_due}")
+            print(f"식재료: {ingredient.ingredient_name}, 유통기한: {ingredient.storable_due}")
 
             user = request.user
-            ingredient_name = ingredient.ingredient.name
+            ingredient_name = ingredient.ingredient_name
             storable_due = ingredient.storable_due
 
             if not storable_due or storable_due <= timezone.now():

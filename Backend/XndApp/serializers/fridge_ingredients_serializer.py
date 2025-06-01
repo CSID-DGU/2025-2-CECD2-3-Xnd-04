@@ -11,7 +11,7 @@ class FridgeIngredientsSerializer(serializers.ModelSerializer):
         model = FridgeIngredients
         fields = [
             'id',
-            'ingredient',
+            'ingredient_name',
             'layer',
             'stored_at',
             'storable_due',

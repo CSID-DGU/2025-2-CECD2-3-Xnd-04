@@ -8,4 +8,4 @@ class IngredientSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model = FridgeIngredients
-        fields = ['ingredient','stored_at', 'storable_due']
+        fields = ['ingredient_name','stored_at', 'storable_due']

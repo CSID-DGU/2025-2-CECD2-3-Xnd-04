@@ -185,7 +185,7 @@ class RecipeDetailView(APIView):
         fridges = Fridge.objects.filter(user=user).values_list('fridge_id',flat=True)
         totalFridgeIngredients = []
         for fridge in fridges:
-            fridgeIngredients = FridgeIngredients.objects.filter(fridge=fridge).values_list('ingredient__name',flat=True)
+            fridgeIngredients = FridgeIngredients.objects.filter(fridge=fridge).values_list('ingredient_name',flat=True)
             totalFridgeIngredients.extend(fridgeIngredients)
         
         
