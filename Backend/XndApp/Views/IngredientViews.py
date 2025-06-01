@@ -15,7 +15,7 @@ class IngredientView(APIView):
         fridge = get_object_or_404(Fridge, fridge_id=fridge_id, user_id=user_id)
 
         # 해당 냉장고의 특정 재료 가져오기
-        ingredient = get_object_or_404(FridgeIngredients, id=ingredient_id, fridge_id=fridge_id)
+        ingredient = get_object_or_404(FridgeIngredients, ingredient_id=ingredient_id, fridge_id=fridge_id)
 
         serializer = IngredientSerializer(ingredient)
         return Response(serializer.data, status=status.HTTP_200_OK)
