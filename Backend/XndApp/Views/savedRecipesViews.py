@@ -7,6 +7,7 @@ from ..serializers.savedRecipes_serializer import SavedRecipeDetailSerializer
 from XndApp.serializers.recipe_serializer import RecipeSerializer
 from ..Models.savedRecipes import SavedRecipes
 from ..Models.recipes import Recipes
+from XndApp.Models.ingredients import Ingredient
 from XndApp.Models.cart import Cart
 from XndApp.Models.fridgeIngredients import FridgeIngredients
 from XndApp.Models.user import User
@@ -167,20 +168,30 @@ class SavedRecipeDetailView(APIView):
             fridges = Fridge.objects.filter(user=user_id).values_list('fridge_id',flat=True)
             totalFridgeIngredients = []
             for fridge in fridges:
-                fridgeIngredients = FridgeIngredients.objects.filter(fridge=fridge).values_list('ingredient__name',flat=True)
+                fridgeIngredients = FridgeIngredients.objects.filter(fridge=fridge).values_list('ingredient_name',flat=True)
                 totalFridgeIngredients.extend(fridgeIngredients)
 
             #재료 명 + 장바구니 포함 여부
             ingredients = []
 
             for recipeIngredient in recipeIngredients:
-                # 장바구니 상태 포함 여부
-                include_cart_status = recipeIngredient in cartIngredients or recipeIngredient in totalFridgeIngredients
+                # 각 재료의 id 확인
+                recipeIngredient_id = Ingredient.objects.filter(name=recipeIngredient).first()
+                # id가 없는 경우
+                if not recipeIngredient_id:
+                    recipeIngredient_id = 'Unknown Id'
+                # id가 존재하는 경우
+                else:
+                    recipeIngredient_id = recipeIngredient_id.id
+                # 장바구니 / 냉장고 존재 유무
+                include_cart_status = recipeIngredient in cartIngredients
+                include_fridge_status = recipeIngredient in totalFridgeIngredients
                 ingredients.append({
-                    "ingredient": recipeIngredient,
-                    "include_cart_status": include_cart_status
+                    "id" : recipeIngredient_id,
+                    "name": recipeIngredient,
+                    "in_cart": include_cart_status,
+                    "in_fridge" : include_fridge_status
                 })
-
             savedRecipe = SavedRecipes.objects.filter(id=id).first()
 
             if savedRecipe:
