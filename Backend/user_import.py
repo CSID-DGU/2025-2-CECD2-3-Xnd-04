@@ -54,7 +54,7 @@ def import_fridge_ingredients():
         else:
             print("기존 데이터를 유지합니다. 새 데이터가 추가됩니다.")
 
-    file_path = r"C:\Users\wjdgu\Desktop\FridgeIngredients.csv"
+    file_path = "FridgeIngredients.csv"
 
     try:
         with open(file_path, 'r', encoding='utf-8-sig') as file:

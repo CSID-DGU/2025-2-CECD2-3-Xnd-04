@@ -1,18 +1,7 @@
 import 'package:Frontend/Abstracts/RecipeAbstract.dart';
 import 'package:Frontend/Models/IngredientModel.dart';
 
-List<List<dynamic>?>? RecipeInfo;
-
-List<String> _tempDescriptions = [
-  '이 밤 그날의 반딧불을 당신의 창 가까이 보낼게요',
-  '사랑한다는 말이에요, 나 우리의 첫 입맞춤을 떠올려',
-  '그럼 언제든 눈을 감고 가장 먼 곳으로 가요',
-  '난 파도가 머물던 모래 위에 적힌 글씨처럼',
-  '그대가 멀리 사라져 버릴 것 같아 늘 그리워, 그리워',
-  '여기 내 마음속에 모든 말을 다 꺼내어 줄 순 없지만',
-  '사랑한다는 말이에요 어떻게 나에게 그대란 행운이 온 걸까',
-  '지금 우리 함께 있다면 아, 얼마나 좋을까요'
-];
+List<List<dynamic>?>? Recipes;
 
 class RecipeModel extends RecipeAbstract{
   int? _id;
@@ -34,17 +23,19 @@ class RecipeModel extends RecipeAbstract{
   List<dynamic> get ingredients => _ingredients;
   List<dynamic> get descriptions => _descriptions;
 
-  /// 전역변수에 레시피의 ID, 이름, 이미지 URL의 정보를 저장
+  /// 전역변수의 레시피의 ID, 이름, 이미지 URL의 정보를 객체화
+  @override
   RecipeModel setRecipe(int idx){
-    this._id = RecipeInfo![0]![idx];
-    this._recipeName = RecipeInfo![1]![idx];
-    this._imgUrl = RecipeInfo![2]![idx];
+    this._id = Recipes![0]![idx];
+    this._recipeName = Recipes![1]![idx];
+    this._imgUrl = Recipes![2]![idx];
     return this;
   }
-
+  /// 전역변수의 레시피의 사용되는 식재료와 상세정보를 객체화
+  @override
   RecipeModel setDetailRecipe(int idx){
-    this._ingredients = RecipeInfo![3]![idx];
-    this._descriptions = RecipeInfo![4]![idx];
+    this._ingredients = Recipes![3]![idx];
+    this._descriptions = Recipes![4]![idx];
     return this;
   }
 }

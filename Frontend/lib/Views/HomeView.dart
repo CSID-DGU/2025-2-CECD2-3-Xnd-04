@@ -4,6 +4,7 @@ import 'package:Frontend/Views/IngredientsView.dart';
 import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:Frontend/Services/createFridgeService.dart';
 import 'package:Frontend/Services/loadFridgeService.dart';
+import 'package:Frontend/Services/loadFridgeIngredientInfoService.dart';
 
 bool isPlusButtonClicked = false;
 
@@ -116,12 +117,11 @@ class InitialHomePage extends State<InitialHomeView> {
                               onPressed: () {
                                 setState(() async {
                                   // 냉장고 추가
-                                  bool sendCreateToServer = await createFridgeToServer(refrigerator: Refrigerator(level: levelOfRefrigerator, label: '${numOfFridge! + 1}번 냉장고'));      // 냉장고 추가 요청
+                                  bool sendCreateToServer = await createFridgeToServer(refrigerator: RefrigeratorModel(level: levelOfRefrigerator, label: '${numOfFridge! + 1}번 냉장고'));      // 냉장고 추가 요청
                                   if (sendCreateToServer) {
                                     bool isArrivedFridgesInfo = await getFridgesInfo();                    // 냉장고 정보 수령 요청
                                     if (isArrivedFridgesInfo) {
-                                      fridges[0].setIngredientStorage(); // 냉장고 식재료 저장소 생성
-                                      pages[1] = IngredientsView(refrigerator: fridges[0]); // 위젯 갱신
+                                      pages[1] = IngredientsView(refrigerator: Fridges[0]); // 위젯 갱신
                                       Navigator.of(context).pushNamed('/' + pages[5].toString());
                                       isPlusButtonClicked = false; // + 버튼 체크 여부
                                     }
@@ -187,6 +187,21 @@ class HomeView extends StatefulWidget {
 }
 
 class HomePage extends State<HomeView> {
+
+  List<RefrigeratorModel> fridgeStorage = [];
+
+  /// 냉장고 끌어오기
+  void getFridges(){
+    fridgeStorage.clear();
+    for(int i = 0; i < numOfFridge!; i++)
+      fridgeStorage.add(RefrigeratorModel().setFridge(i));
+  }
+
+  HomePage(){
+    super.initState();
+    getFridges();
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -205,7 +220,7 @@ class HomePage extends State<HomeView> {
               height: screenHeight * 0.84,
               child: PageView.builder(
                   controller: PageController(),
-                  itemCount: fridges.length + 1,
+                  itemCount: fridgeStorage.length + 1,
                   itemBuilder: (context, index) =>
                       Container(
                         child: Column(
@@ -213,8 +228,8 @@ class HomePage extends State<HomeView> {
                             children: <Widget>[
                               SizedBox(height: screenHeight * 0.28),
 
-                              if (index != fridges.length)
-                                Text('${fridges![index].id}번 냉장고',
+                              if (index != fridgeStorage.length)
+                                Text('${fridgeStorage[index].id}번 냉장고',
                                   style: TextStyle(fontSize: screenHeight * 0.025))
                               else
                                 Text('냉장고 추가',
@@ -222,11 +237,15 @@ class HomePage extends State<HomeView> {
 
                               SizedBox(height: screenHeight * 0.05),
 
-                              if (index != fridges.length)
+                              if (index != fridgeStorage.length)
                                 ElevatedButton(
-                                  onPressed: () async {
-                                    setState(() {
-                                      pages[1] = IngredientsView(refrigerator: fridges[index]);
+                                  onPressed: () {
+                                    setState(() async {
+                                      if (fridgeStorage[index].ingredients == null){
+                                        await loadFridgeIngredientsInfo(fridgeStorage[index], index);
+                                      }
+                                      getFridges();
+                                      pages[1] = IngredientsView(refrigerator: fridgeStorage[index]);
                                       Navigator.of(context).pushNamed('/' + pages[1].toString());
                                     });
                                   },
