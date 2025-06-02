@@ -20,10 +20,10 @@ class IngredientModel implements IngredientAbstract {
 
   @override
   IngredientModel toIngredient(Response ingredientResponse, int idx){
-    List<dynamic> data = ingredientResponse!.data['ingredients'];
+    List<dynamic> data = ingredientResponse.data['ingredients'];
     this._id = data[idx]['id'];
-    this._ingredientName = data[idx]['ingredient_name'];
-    this._imgUrl = data[idx]['ingredient_pic'];
+    this._ingredientName = data[idx]['name'];
+    // this._imgUrl = data[idx]['ingredient_pic'];
     return this;
   }
 }
@@ -52,7 +52,7 @@ class FridgeIngredientModel extends IngredientModel implements FridgeIngredientA
 
   @override
   FridgeIngredientModel toIngredient(Response ingredientResponse, int idx){
-    List<dynamic> data = ingredientResponse!.data['ingredients'];
+    List<dynamic> data = ingredientResponse.data['ingredients'];
     this._id = data[idx]['id'];
     this._ingredientName = data[idx]['ingredient_name'];
     this._imgUrl = data[idx]['ingredient_pic'];
@@ -61,7 +61,7 @@ class FridgeIngredientModel extends IngredientModel implements FridgeIngredientA
 
   @override
   FridgeIngredientModel toFridgeIngredient(Response fridgeIngredientResponse, int idx){
-    List<dynamic> data = fridgeIngredientResponse!.data['ingredients'];
+    List<dynamic> data = fridgeIngredientResponse.data['ingredients'];
     this._layer = data[idx]['layer'];
     this._stored_at = data[idx]['stored_at'];
     this._storable_due = data[idx]['storable_due'];
