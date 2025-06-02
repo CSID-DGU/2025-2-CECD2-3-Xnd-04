@@ -120,8 +120,8 @@ class InitialHomePage extends State<InitialHomeView> {
                                   if (sendCreateToServer) {
                                     bool isArrivedFridgesInfo = await getFridgesInfo();                    // 냉장고 정보 수령 요청
                                     if (isArrivedFridgesInfo) {
-                                      fridges[numOfFridge! - 1].setIngredientStorage(); // 냉장고 식재료 저장소 생성
-                                      pages[1] = IngredientsView(refrigerator: fridges[numOfFridge! - 1]); // 위젯 갱신
+                                      fridges[0].setIngredientStorage(); // 냉장고 식재료 저장소 생성
+                                      pages[1] = IngredientsView(refrigerator: fridges[0]); // 위젯 갱신
                                       Navigator.of(context).pushNamed('/' + pages[5].toString());
                                       isPlusButtonClicked = false; // + 버튼 체크 여부
                                     }
