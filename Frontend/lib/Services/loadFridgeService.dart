@@ -42,19 +42,15 @@ Future<bool> getFridgesInfo() async {
   List<dynamic>? fridgeResponses = response.data['fridges'];
   List<dynamic>? ids = response.data['fridge_id'];
 
-  print(response.data);
-
   if (programStarts) {
-    print(ids);
     for (int i = 0; i < numOfFridge!; i++) {
-      fridges.add(
-        Refrigerator(
+      Fridges.add(
+        RefrigeratorModel(
           id: ids![i],
           level: fridgeResponses![i]['layer_count'],
           label: fridgeResponses[i]['model_label'],
         ),
       );
-      fridges[i].setIngredientStorage();
     }
     programStarts = false;
     if (numOfFridge == 0)
@@ -62,19 +58,18 @@ Future<bool> getFridgesInfo() async {
     return true;
   }
   else {
-    fridges.add(
-      Refrigerator()
+    Fridges.add(
+      RefrigeratorModel()
     );
 
     for(int i = numOfFridge! - 2; i > -1; i--)
-      fridges[i + 1] = fridges[i];
+      Fridges[i + 1] = Fridges[i];
 
-    fridges[0] = Refrigerator(
+    Fridges[0] = RefrigeratorModel(
       id: ids![0],
       level: fridgeResponses![0]['layer_count'],
       label: fridgeResponses[0]['model_label'],
     );
-
     return true;
   }
 }

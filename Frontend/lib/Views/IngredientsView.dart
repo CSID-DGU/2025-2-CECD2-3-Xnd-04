@@ -9,7 +9,7 @@ import 'IngredientsInfoView.dart';
 
 class IngredientsView extends StatefulWidget {
   // 냉장고 객체 자체 변경 x
-  final Refrigerator refrigerator;
+  final RefrigeratorModel refrigerator;
   const IngredientsView({Key? key, required this.refrigerator}) : super(key: key);
 
   @override
@@ -18,7 +18,7 @@ class IngredientsView extends StatefulWidget {
 
 class IngredientsPage extends State<IngredientsView> {
   late ScrollController _scrollController;
-  final Refrigerator refrigerator;
+  final RefrigeratorModel refrigerator;
 
   IngredientsPage({required this.refrigerator}){
     super.initState();
@@ -37,6 +37,9 @@ class IngredientsPage extends State<IngredientsView> {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
+    int sum = 0;
+    List<int> startPoint = [0];
+
     // 변동성있는 냉장고의 전체 사이즈를 구하는 알고리즘(20 더한건 모든 층에서 전부 20만큼 오버플로우 나서 더한거임)
     double getRefrigeratorSize(){
       double size = 20 + 0.05 * screenHeight * refrigerator.level!;
@@ -48,6 +51,11 @@ class IngredientsPage extends State<IngredientsView> {
             (refrigerator.getNumOfIngredientsFloor(floor: floor) * 0.25).ceil();
       }
       return size;
+    }
+
+    for (int i = 1; i < refrigerator.level!; i++){
+      sum += refrigerator.getNumOfIngredientsFloor(floor: i);
+      startPoint.add(sum);
     }
 
     return Scaffold(
@@ -142,17 +150,21 @@ class IngredientsPage extends State<IngredientsView> {
                                       ),
                                       child: FilledButton(
                                         onPressed: () async {
-                                          pages[6] = IngredientsInfoView(ingredient: refrigerator.ingredientStorage![floor - 1][index]);
-                                          Navigator.of(context).pushNamed('/' + pages[6].toString());
+                                          pages[7] = FridgeIngredientsInfoView(ingredient: refrigerator.ingredients![index + startPoint[floor - 1]]);
+                                          Navigator.of(context).pushNamed('/' + pages[7].toString());
                                         },
                                         style: FilledButton.styleFrom(
-                                          backgroundColor: Colors.primaries[Random().nextInt(Colors.primaries.length)],
+                                          backgroundColor: Colors.white,
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(20)
                                           ),
                                           padding: EdgeInsets.zero,
                                         ),
-                                        child: Text('식재료 ${index + 1}', style: TextStyle(fontSize:screenHeight * 0.01)),
+                                        // 식재료 이미지
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(20),
+                                          child: Image.network(refrigerator.ingredients![index + startPoint[floor - 1]].imgUrl!, fit: BoxFit.cover),
+                                        )
                                       )
                                     ),
                                   ),

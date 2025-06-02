@@ -5,7 +5,7 @@ import 'package:network_info_plus/network_info_plus.dart';
 import 'package:Frontend/Services/loadFridgeService.dart';
 
 // 모든 서비스는 함수로 관리함. 클래스 만들기 ㄱㅊ
-Future<bool> createFridgeToServer({required Refrigerator refrigerator}) async {
+Future<bool> createFridgeToServer({required RefrigeratorModel refrigerator}) async {
   final dio = Dio();
   final String? ip = await NetworkInfo().getWifiIP();
 

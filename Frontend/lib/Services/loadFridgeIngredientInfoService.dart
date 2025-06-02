@@ -4,10 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:Frontend/Services/authService.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 
-/// 레시피 로드 여부 반환 in getRecipeInfo
-bool fridgeIngredientLoaded = false;
-
-Future<Response?> requestFridgeIngredientInfo(Refrigerator refrigerator) async{
+Future<Response?> requestFridgeIngredientInfo(RefrigeratorModel refrigerator) async{
   final dio = Dio();
   final String? ip = await NetworkInfo().getWifiIP();
 
@@ -32,10 +29,23 @@ Future<Response?> requestFridgeIngredientInfo(Refrigerator refrigerator) async{
   }
 }
 
-Future<bool> getFridgeIngredientInfoFromServer(Refrigerator refrigerator) async {
+/// 서버로부터 받은 응답을 통해 냉장고 객체에 식재료 정보 저장!! -> HomeView, NavBar[1]
+Future<bool> loadFridgeIngredientsInfo(RefrigeratorModel refrigerator, int idx) async {
   Response<dynamic>? response = await requestFridgeIngredientInfo(refrigerator);
-  print(response!.data);
 
-  fridgeIngredientLoaded = true;
+  if (response == null) return false;
+
+  List<dynamic> ingredientsInfo = response!.data['ingredients'];
+  List<FridgeIngredientModel> ingredients = [];
+
+  for (int i = 0; i < ingredientsInfo.length; i++){
+    ingredients.add(FridgeIngredientModel()
+        .toIngredient(response, i)
+        .toFridgeIngredient(response, i));
+  }
+
+  refrigerator.setIngredientStorage(ingredients);
+  refrigerator.toMainFridgeIngredientsInfo(idx);
+
   return true;
 }

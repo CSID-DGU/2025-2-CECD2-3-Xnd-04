@@ -5,34 +5,66 @@ import 'package:dio/dio.dart';
 class IngredientModel implements IngredientAbstract {
   int? _id;
   String? _ingredientName;
-  String? _img;
-  DateTime? _storedAt;
-  DateTime? _storableDue;
-  bool? _inCart;
+  String? _imgUrl;
 
-  IngredientModel({int? id, String? ingredientName, bool? inCart}){
+  IngredientModel({int? id, String? ingredientName, String? imgUrl}){
     this._id = id;
     this._ingredientName = ingredientName;
-    this._inCart = inCart;
+    this._imgUrl = imgUrl;
   }
 
   @override
   int? get id => _id;
   String? get ingredientName => _ingredientName;
-  String? get img => _img;
-  DateTime? get storedAt => _storedAt;
-  DateTime? get storableDue => _storableDue;
-  bool? get inCart => _inCart;
+  String? get imgUrl => _imgUrl;
 
+  @override
   IngredientModel toIngredient(Response ingredientResponse, int idx){
     List<dynamic> data = ingredientResponse!.data['ingredients'];
     this._id = data[idx]['id'];
-    this._ingredientName = data[idx]['name'];
-    this._inCart = data[idx]['in_cart'];
+    this._ingredientName = data[idx]['ingredient_name'];
+    this._imgUrl = data[idx]['ingredient_pic'];
+    return this;
+  }
+}
+
+class FridgeIngredientModel extends IngredientModel implements FridgeIngredientAbstract{
+  int? _layer;
+  String? _stored_at;
+  String? _storable_due;
+
+  FridgeIngredientModel({int? id,
+    String? ingredientName,
+    String? imgUrl,
+    int? layer,
+    String? stored_at,
+    String? storable_due}) : super(id : id, ingredientName : ingredientName, imgUrl: imgUrl)
+  {
+    this._layer = layer;
+    this._stored_at = stored_at;
+    this._storable_due = storable_due;
+  }
+
+  @override
+  int? get layer => _layer;
+  String? get stored_at => _stored_at;
+  String? get storable_due => _storable_due;
+
+  @override
+  FridgeIngredientModel toIngredient(Response ingredientResponse, int idx){
+    List<dynamic> data = ingredientResponse!.data['ingredients'];
+    this._id = data[idx]['id'];
+    this._ingredientName = data[idx]['ingredient_name'];
+    this._imgUrl = data[idx]['ingredient_pic'];
     return this;
   }
 
-  IngredientModel setIngredientDetailed(Response ingredientDetailedResponse, int idx){
+  @override
+  FridgeIngredientModel toFridgeIngredient(Response fridgeIngredientResponse, int idx){
+    List<dynamic> data = fridgeIngredientResponse!.data['ingredients'];
+    this._layer = data[idx]['layer'];
+    this._stored_at = data[idx]['stored_at'];
+    this._storable_due = data[idx]['storable_due'];
     return this;
   }
 }
