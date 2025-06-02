@@ -32,8 +32,9 @@ class MyApp extends StatelessWidget {
         '/CartView' : (context) => pages[4],
         '/HomeView' : (context) => pages[5],
         '/IngredientsInfoView' : (context) => pages[6],
-        '/AlertView' : (context) => pages[7],
-        '/SettingView' : (context) => pages[8],
+        '/FridgeIngredientsInfoView' : (context) => pages[7],
+        '/AlertView' : (context) => pages[8],
+        '/SettingView' : (context) => pages[9],
       }
     );
   }

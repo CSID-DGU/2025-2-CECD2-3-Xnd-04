@@ -4,15 +4,15 @@ import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:flutter/material.dart';
 
 int? numOfFridge;
-List<dynamic> fridges = [];
+List<RefrigeratorModel> Fridges = [];
 
-class Refrigerator implements RefrigeratorAbstract{
+class RefrigeratorModel implements RefrigeratorAbstract{
   int? _id;
   int? _level;
   String? _label;
-  List<List<dynamic>>? _ingredientStorage;            // 층수에 들어온 순서대로 식재료를 인덱스에 저장, 층수별로 식재료가 없는 인덱스는 null값
+  List<FridgeIngredientModel>? _ingredients;            // 층수에 들어온 순서대로 식재료를 인덱스에 저장, 층수별로 식재료가 없는 인덱스는 null값
 
-  Refrigerator({int? id, int? level, String? label}){
+  RefrigeratorModel({int? id, int? level, String? label}){
     this._id = id;
     this._level = level;
     this._label = label;
@@ -22,7 +22,7 @@ class Refrigerator implements RefrigeratorAbstract{
   int? get id => _id;
   int? get level => _level;
   String? get label => _label;
-  List<List<dynamic>>? get ingredientStorage => _ingredientStorage;
+  List<FridgeIngredientModel>? get ingredients => _ingredients;
 
   @override
   void modify({int? level, String? label}){
@@ -40,21 +40,36 @@ class Refrigerator implements RefrigeratorAbstract{
     mapRefrigerator['model_label'] = _label;
     return mapRefrigerator;
   }
-
+  /// 전역변수로 저장된 냉장고의 데이터 로드하기!
   @override
-  void setIngredientStorage(){
-    this._ingredientStorage = List.generate(
-        level!,
-        (i) => List.generate(17, (i) => null),
-        growable: false
-    );
-    for(int i = 0; i < level!; i++)
-      _ingredientStorage![i][16] = 0;
-    // 남은 인덱스는 현재 있는 식재료의 수로 처리함
+  RefrigeratorModel setFridge(int index){
+    this._id = Fridges[index].id;
+    this._level = Fridges[index].level;
+    this._label = Fridges[index].label;
+    this._ingredients = Fridges[index].ingredients;
+    return this;
+  }
+
+  /// 냉장고 전역변수로 냉장고의 식재료 정보 전달
+  @override
+  void toMainFridgeIngredientsInfo(int index){
+    Fridges[index]._ingredients = this._ingredients;
+  }
+
+  // 냉장고의 식재료 저장소를 세팅
+  @override
+  void setIngredientStorage(List<FridgeIngredientModel> ingredients){
+    this._ingredients = ingredients;
   }
 
   @override
   int getNumOfIngredientsFloor({required int floor}){
-    return _ingredientStorage![floor - 1][16];
+    int count = 0;
+    if (this._ingredients != null) {
+      for (int i = 0; i < this._ingredients!.length; i++)
+        if (this._ingredients![i]!.layer == floor)
+          count += 1;
+    }
+    return count;
   }
 }

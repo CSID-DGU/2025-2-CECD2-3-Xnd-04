@@ -9,6 +9,12 @@ abstract class RecipeAbstract{
   List<dynamic> get descriptions;
   String? get imgUrl;
 
+  /// 전역변수에 레시피의 ID, 이름, 이미지 URL의 정보를 저장, return : RecipeModel(this)
+  dynamic setRecipe(int idx);
+  /// 전역변수에 레시피에 사용되는 식재료와 상세정보를 저장, return : RecipeModel(this)
+  dynamic setDetailRecipe(int idx);
 }
 
-abstract class RecipesAbstract{}
+abstract class RecipesAbstract{
+
+}

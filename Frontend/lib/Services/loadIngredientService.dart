@@ -7,9 +7,6 @@ import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:Frontend/Models/RecipeModel.dart';
 import '../Models/IngredientModel.dart';
 
-/// 레시피 URL로 요청 보낼 시 오는 정보 에서 id, 이름, url만 선별하여 저장
-List<dynamic>? recipeDetailUrlResponseResults;
-
 /// 레시피, 즐겨찾기 페이지의 버튼 클릭 시 얻어야 할 정보 요청
 // 특정 레시피!! 에 대한 식재료 정보를 로드
 Future<Response?> requestIngredient(RecipeModel recipe) async{
@@ -46,7 +43,7 @@ Future<Response?> requestIngredient(RecipeModel recipe) async{
 Future<int> getIngredientInfoFromServer(RecipeModel recipe) async {
   Response<dynamic>? response = await requestIngredient(recipe);
   try {
-    List<List<dynamic>?>? li = RecipeInfo;
+    List<List<dynamic>?>? li = Recipes;
     List<dynamic> Ingredients = [];
     List<dynamic> Descriptions = [];
     
@@ -60,9 +57,6 @@ Future<int> getIngredientInfoFromServer(RecipeModel recipe) async {
     // 식재료 추가
     for (int iidx = 0; iidx < len; iidx++)
       Ingredients.add(IngredientModel().toIngredient(response, iidx));
-
-    // for (int iidx = 0; iidx < len; iidx++)
-    //   Descriptions.add('');
 
     // 일치하는 레시피 찾기
     for (int idx = 0; idx < 10; idx++){
