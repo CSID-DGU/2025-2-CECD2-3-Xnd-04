@@ -22,7 +22,7 @@ def import_recipes():
         else:
             print("기존 데이터를 유지합니다. 새 데이터가 추가됩니다.")
 
-    file_path = r"/Users/jinmyeonghun/Desktop/4-1/CapstoneDesign/Backend/recipe_dataset.csv"  # 엑셀 파일 컬럼 테이블 컬럼과 일치하는 부분만 남겨두기
+    file_path = "RecipeDataset.csv"  # 엑셀 파일 컬럼 테이블 컬럼과 일치하는 부분만 남겨두기
 
     try:
         with open(file_path, 'r', encoding='utf-8-sig') as file:  # BOM 제거를 위한 utf-8-sig 사용
