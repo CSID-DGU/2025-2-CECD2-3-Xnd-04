@@ -1,0 +1,120 @@
+<!-- fcm_token.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FCM 토큰 받기</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        button { padding: 15px; margin: 10px; width: 100%; font-size: 16px; }
+        .token { word-break: break-all; background: #f0f0f0; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>📱 FCM 토큰 받기</h1>
+    <button onclick="getToken()">토큰 받기</button>
+    <div id="result" class="token">여기에 토큰이 표시됩니다</div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js';
+        import { getMessaging, getToken } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDBJ70D3x5xmmA_doiKsQMD0mkj2C3OUeE",
+            authDomain: "food-notification-af4dd.firebaseapp.com",
+            projectId: "food-notification-af4dd",
+            storageBucket: "food-notification-af4dd.firebasestorage.app",
+            messagingSenderId: "260905646650",
+            appId: "1:260905646650:web:ac1c902f9659fa8a8d5303",
+            measurementId: "G-N9KV1KLT9S"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const messaging = getMessaging(app);
+
+        window.getToken = async () => {
+            try {
+                console.log('FCM 토큰 받기 시작...');
+
+                // 1. 브라우저 지원 확인
+                if (!('Notification' in window)) {
+                    alert('이 브라우저는 알림을 지원하지 않습니다');
+                    document.getElementById('result').textContent = '브라우저가 알림을 지원하지 않음';
+                    return;
+                }
+
+                if (!('serviceWorker' in navigator)) {
+                    alert('이 브라우저는 Service Worker를 지원하지 않습니다');
+                    document.getElementById('result').textContent = 'Service Worker 미지원';
+                    return;
+                }
+
+                // 2. Service Worker 등록 및 활성화 대기
+                console.log('Service Worker 등록 중...');
+                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                console.log('Service Worker 등록 완료:', registration);
+
+                // Service Worker가 활성화될 때까지 대기
+                if (registration.installing) {
+                    console.log('Service Worker 설치 중...');
+                    await new Promise((resolve) => {
+                        registration.installing.addEventListener('statechange', () => {
+                            if (registration.installing.state === 'installed') {
+                                resolve();
+                            }
+                        });
+                    });
+                }
+
+                if (registration.waiting) {
+                    console.log('Service Worker 대기 중...');
+                    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                }
+
+                if (registration.active) {
+                    console.log('Service Worker 활성화됨');
+                } else {
+                    console.log('Service Worker 활성화 대기...');
+                    await new Promise((resolve) => {
+                        navigator.serviceWorker.addEventListener('controllerchange', resolve);
+                    });
+                }
+
+                // 3. 알림 권한 요청
+                console.log('알림 권한 요청...');
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    alert('알림 권한을 허용해주세요!');
+                    return;
+                }
+                console.log('알림 권한 허용됨');
+
+                // 4. 잠시 대기 (Service Worker 완전 준비)
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // 5. FCM 토큰 받기
+                console.log('FCM 토큰 생성 중...');
+                const token = await getToken(messaging, {
+                    vapidKey: 'BE-gUivy9Vspx0l8cWaJrEmqmMboFEv9sz04g_OdPOuBjvDBrlgLJ7UTo09zJkeF-3zk8GxSg-gaByJwZlb9vv4',
+                    serviceWorkerRegistration: registration  // 등록된 Service Worker 명시적 전달
+                });
+
+                if (token) {
+                    document.getElementById('result').textContent = token;
+                    console.log('FCM Token:', token);
+                    alert('토큰을 받았습니다!');
+                } else {
+                    alert('토큰을 받을 수 없습니다.');
+                    document.getElementById('result').textContent = '토큰 생성 실패';
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('에러: ' + error.message);
+                document.getElementById('result').textContent = '에러: ' + error.message;
+            }
+        };
+    </script>
+</body>
+</html>
