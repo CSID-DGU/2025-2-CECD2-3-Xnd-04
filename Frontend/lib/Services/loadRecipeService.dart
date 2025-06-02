@@ -5,9 +5,6 @@ import 'package:dio/dio.dart';
 import 'package:Frontend/Services/authService.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 
-/// 레시피 URL로 요청 보낼 시 오는 정보 에서 id, 이름, url만 선별하여 저장
-List<dynamic>? recipeUrlResponseResults;
-
 /// 레시피 로드 여부 반환 in getRecipeInfo
 bool recipeLoaded = false;
 
@@ -50,14 +47,16 @@ Future<List<List<dynamic>?>?> getRecipeInfoFromServer() async {
   List<dynamic> recipe_image_urls = [];
 
   List<List<dynamic>?> li = [recipe_id, food_names, recipe_image_urls];
+
+  List<dynamic>? recipeResponse;
   // 일단 응답이 있는 상황에선 이미지나 이름이 누락됬을지라도 추가하는 방향으로
   if (response != null) {
     print('레시피 로드를 진행합니다...');
-    recipeUrlResponseResults = response.data['results'];
+    recipeResponse = response.data['results'];
     for (int i = 0; i < 10; i++) {
-      li[0]!.add(recipeUrlResponseResults![i]['recipe_id']);
-      li[1]!.add(recipeUrlResponseResults![i]['food_name']);
-      li[2]!.add(recipeUrlResponseResults![i]['recipe_image']);
+      li[0]!.add(recipeResponse![i]['recipe_id']);
+      li[1]!.add(recipeResponse[i]['food_name']);
+      li[2]!.add(recipeResponse[i]['recipe_image']);
     }
     recipeLoaded = true;
   }

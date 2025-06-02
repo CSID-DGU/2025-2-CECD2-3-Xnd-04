@@ -20,7 +20,8 @@ class FridgeDetailView(APIView):
             serializer = FridgeIngredientsSerializer(ingredients, many=True)
 
             return Response({
-                "ingredients": serializer.data
+                "ingredients": serializer.data,
+                "fridge_id":fridge_id
             }, status=status.HTTP_200_OK)
         
         except Fridge.DoesNotExist:
