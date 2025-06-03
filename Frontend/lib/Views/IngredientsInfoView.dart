@@ -5,15 +5,27 @@ import 'package:flutter_colorful_tab/flutter_colorful_tab.dart';
 
 class IngredientsInfoView extends StatelessWidget{
   IngredientModel? _ingredient;
+  /// DB의 냉장고에 식재료 정보가 있는가??
+  Map<String, dynamic>? _inform;
 
-  IngredientsInfoView({Key? key, required ingredient}) : super(key : key){
+  IngredientsInfoView({Key? key, required IngredientModel ingredient, Map<String, dynamic>? inform}) : super(key : key){
     this._ingredient = ingredient;
+    this._inform = inform;
+  }
+
+  /// 유통기한 구하기
+  int getDueDate(){
+    DateTime now = DateTime.now();
+    DateTime dueDateParsed = DateTime.parse(this._inform!['storable_due'].substring(0, 10));
+    return dueDateParsed.difference(now).inDays + 1;
   }
 
   Widget build(BuildContext context){
 
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
+
+    int dueDate = (_inform != null) ? getDueDate() : -1;
 
     Container recipeInfoDescription(String rName, String rDesc){
       return Container(
@@ -50,7 +62,7 @@ class IngredientsInfoView extends StatelessWidget{
               ),
               Container(
                 height: screenHeight * 0.02,
-                color: Colors.cyanAccent,
+                color: Colors.white,
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: Icon(Icons.aspect_ratio, size: screenWidth * 0.03,)
@@ -102,6 +114,12 @@ class IngredientsInfoView extends StatelessWidget{
                         color: Colors.grey[400],
                         borderRadius: BorderRadius.circular(20)
                       ),
+                      child: (_inform != null) ? Align(
+                          alignment: Alignment.center,
+                          child: (dueDate < 0) ?
+                            Text('폐기', style: TextStyle(fontWeight: FontWeight.bold)):
+                            Text(dueDate.toString() + '일', style: TextStyle(fontWeight: FontWeight.bold))
+                          ) : null
                     )
                   )
                 ),
@@ -113,7 +131,7 @@ class IngredientsInfoView extends StatelessWidget{
               padding: EdgeInsets.all(20),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                child: Image.network(this._ingredient!.imgUrl!, fit: BoxFit.cover),
+                child: (_inform != null) ? Image.network(_inform!['ingredient_pic'], fit: BoxFit.cover) : null
               )
             ),
             Container(
@@ -135,12 +153,9 @@ class IngredientsInfoView extends StatelessWidget{
                     width: screenWidth * 0.75 - 100,
                     child: Align(
                       alignment: Alignment.centerRight,
-                      child: Text('미입고 상품',
-                        style: TextStyle(
-                          fontSize: screenWidth * 0.05,
-                          fontWeight: FontWeight.bold,
-                        )
-                      )
+                      child: (_inform != null) ?
+                        Text(_inform!['stored_at'].substring(0, 10), style: TextStyle(fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold)) :
+                        Text('미입고 상품', style: TextStyle(fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold))
                     )
                   )
                 ],
@@ -165,11 +180,9 @@ class IngredientsInfoView extends StatelessWidget{
                     width: screenWidth * 0.75 - 100,
                     child: Align(
                         alignment: Alignment.centerRight,
-                        child: Text('미입고 상품', style: TextStyle(
-                          fontSize: screenWidth * 0.05,
-                          fontWeight: FontWeight.bold,
-                        )
-                      )
+                        child: (_inform != null) ?
+                        Text(_inform!['storable_due'].substring(0, 10), style: TextStyle(fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold)) :
+                        Text('미입고 상품', style: TextStyle(fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold))
                     )
                   )
                 ],
@@ -227,15 +240,19 @@ class FridgeIngredientsInfoView extends StatelessWidget{
     this._ingredient = ingredient;
   }
 
+  /// 유통기한 구하기
+  int getDueDate(){
+    DateTime now = DateTime.now();
+    DateTime dueDateParsed = DateTime.parse(this._ingredient!.storable_due!.substring(0, 10));
+    return dueDateParsed.difference(now).inDays + 1;
+  }
+
   Widget build(BuildContext context){
 
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
-    String now = DateTime.timestamp().toString();
-
-    int dueDate = int.parse(this._ingredient!.storable_due!.substring(8, 10))
-        - int.parse(now.substring(8, 10));
+    int dueDate = getDueDate();
 
     Container recipeInfoDescription(String rName, String rDesc){
       return Container(
@@ -272,7 +289,7 @@ class FridgeIngredientsInfoView extends StatelessWidget{
               ),
               Container(
                   height: screenHeight * 0.02,
-                  color: Colors.cyanAccent,
+                  color: Colors.white,
                   child: Align(
                       alignment: Alignment.centerRight,
                       child: Icon(Icons.aspect_ratio, size: screenWidth * 0.03,)

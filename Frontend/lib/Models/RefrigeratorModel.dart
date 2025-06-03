@@ -42,7 +42,7 @@ class RefrigeratorModel implements RefrigeratorAbstract{
   }
   /// 전역변수로 저장된 냉장고의 데이터 로드하기!
   @override
-  RefrigeratorModel setFridge(int index){
+  RefrigeratorModel getFridge(int index){
     this._id = Fridges[index].id;
     this._level = Fridges[index].level;
     this._label = Fridges[index].label;

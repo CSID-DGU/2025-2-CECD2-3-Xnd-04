@@ -49,3 +49,19 @@ Future<bool> loadFridgeIngredientsInfo(RefrigeratorModel refrigerator, int idx) 
 
   return true;
 }
+
+/// 냉장고 식재료 ID를 구하는 과정
+Future<int> getFIID(RefrigeratorModel refrigerator, IngredientModel ingredient) async {
+  Response<dynamic>? response = await requestFridgeIngredientInfo(refrigerator);
+
+  if (response == null) return -1;
+
+  List<dynamic> ingredientsInfo = response.data['ingredients'];
+
+  for(int i = 0; i < ingredientsInfo.length; i++){
+    if(ingredientsInfo[i]['ingredient_name'] == ingredient.ingredientName)
+      return ingredientsInfo[i]['id'];
+  }
+
+  return 0;
+}

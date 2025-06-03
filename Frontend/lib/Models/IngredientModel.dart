@@ -6,17 +6,23 @@ class IngredientModel implements IngredientAbstract {
   int? _id;
   String? _ingredientName;
   String? _imgUrl;
+  bool? _inFridge;
+  bool? _inCart;
 
-  IngredientModel({int? id, String? ingredientName, String? imgUrl}){
+  IngredientModel({int? id, String? ingredientName, String? imgUrl, bool? inFridge, bool? inCart}){
     this._id = id;
     this._ingredientName = ingredientName;
     this._imgUrl = imgUrl;
+    this._inFridge = inFridge;
+    this._inCart = inCart;
   }
 
   @override
   int? get id => _id;
   String? get ingredientName => _ingredientName;
   String? get imgUrl => _imgUrl;
+  bool? get inFridge => _inFridge;
+  bool? get inCart => _inCart;
 
   @override
   IngredientModel toIngredient(Response ingredientResponse, int idx){
@@ -24,6 +30,8 @@ class IngredientModel implements IngredientAbstract {
     this._id = data[idx]['id'];
     this._ingredientName = data[idx]['name'];
     // this._imgUrl = data[idx]['ingredient_pic'];
+    this._inFridge = data[idx]['in_fridge'];
+    this._inCart = data[idx]['in_cart'];
     return this;
   }
 }

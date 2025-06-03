@@ -2,10 +2,11 @@ import 'package:Frontend/Models/IngredientModel.dart';
 import 'package:Frontend/Models/RecipeModel.dart';
 import 'package:Frontend/Views/IngredientsInfoView.dart';
 import 'package:flutter/material.dart';
-import '../Services/loadFridgeIngredientInfoService.dart';
+import '../Services/loadRViewIngredientInfoService.dart';
 import '../Views/MainFrameView.dart';
-import 'package:Frontend/Services/loadIngredientService.dart';
-
+import 'package:Frontend/Models/RefrigeratorModel.dart';
+import 'package:Frontend/Services/loadFridgeIngredientInfoService.dart';
+import 'package:Frontend/Services/loadRViewIngredientInfoService.dart';
 class RecipeDialog extends Dialog{
   RecipeModel? recipe;
 
@@ -109,7 +110,23 @@ class RecipeDialog extends Dialog{
                       height: screenHeight * 0.015,
                       child: ElevatedButton(
                         onPressed: () async {
-                          pages[6] = IngredientsInfoView(ingredient: ingredient);
+                          Map<String, dynamic>? ingredientInfo;
+
+                          // 식재료가 냉장고에 있는 경우
+
+                          if (ingredient.inFridge == true){
+                            int fiid = 0;
+                            int fridgeIndex = 0;
+                            while(fiid == 0 && fridgeIndex < numOfFridge!){
+                              fiid = await getFIID(RefrigeratorModel().getFridge(fridgeIndex), ingredient);
+                              fridgeIndex += 1;
+                            }
+                            fridgeIndex -= 1;
+                            ingredientInfo = await loadRecipeModalIngredientsInfo(RefrigeratorModel().getFridge(fridgeIndex).id!, fiid);
+                          }
+
+
+                          pages[6] = IngredientsInfoView(ingredient: ingredient, inform: ingredientInfo);
                           // 식재료 소개 페이지로 이동
                           Navigator.of(context).pushNamed('/' + pages[6].toString());
                         },
