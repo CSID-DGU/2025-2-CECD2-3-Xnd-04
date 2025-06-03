@@ -21,7 +21,7 @@ List<Widget> pages = [
   const FavoritesView(),
   const CartView(),
   const HomeView(),
-  IngredientsInfoView(ingredient: IngredientModel()),
+  IngredientsInfoView(ingredient: IngredientModel(), inform: {}),
   FridgeIngredientsInfoView(ingredient: FridgeIngredientModel()),
   const AlertView(),
   const SettingView(),

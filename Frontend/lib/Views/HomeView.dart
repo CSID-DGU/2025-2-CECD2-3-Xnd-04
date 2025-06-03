@@ -194,7 +194,7 @@ class HomePage extends State<HomeView> {
   void getFridges(){
     fridgeStorage.clear();
     for(int i = 0; i < numOfFridge!; i++)
-      fridgeStorage.add(RefrigeratorModel().setFridge(i));
+      fridgeStorage.add(RefrigeratorModel().getFridge(i));
   }
 
   HomePage(){

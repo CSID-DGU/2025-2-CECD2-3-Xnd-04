@@ -4,6 +4,8 @@ abstract class IngredientAbstract{
   int? get id;
   String? get ingredientName;
   String? get imgUrl;
+  bool? get inFridge;
+  bool? get inCart;
 
   dynamic toIngredient(Response ingredientResponse, int idx);
 }
