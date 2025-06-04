@@ -9,19 +9,32 @@ class RecipeModel implements RecipeAbstract{
   int? _id;
   String? _recipeName;
   String? _imgUrl;
+  bool? _isSaved;
   List<dynamic> _ingredients = [];
   List<dynamic> _descriptions = [];             // 조리 순서 하드코딩
 
-  RecipeModel({int? id, String? recipeName, String? imgUrl}){
+  RecipeModel({int? id, String? recipeName, String? imgUrl, bool? isSaved}){
     this._id = id;
     this._recipeName = recipeName;
     this._imgUrl = imgUrl;
+    this._isSaved = isSaved;
+  }
+
+  // 복사 생성자
+  factory RecipeModel.from(RecipeModel other) {
+    return RecipeModel(
+      id: other.id,
+      recipeName: other.recipeName,
+      imgUrl: other.imgUrl,
+      isSaved: other.isSaved,
+    );
   }
 
   @override
   int? get id => _id;
   String? get recipeName => _recipeName;
   String? get imgUrl => _imgUrl;
+  bool? get isSaved => _isSaved;
   List<dynamic> get ingredients => _ingredients;
   List<dynamic> get descriptions => _descriptions;
 
@@ -31,6 +44,7 @@ class RecipeModel implements RecipeAbstract{
     this._id = Recipes![0]![idx];
     this._recipeName = Recipes![1]![idx];
     this._imgUrl = Recipes![2]![idx];
+    this._isSaved = Recipes![3]![idx];
     return this;
   }
   /// 전역변수의 레시피의 사용되는 식재료와 상세정보를 객체화
@@ -46,13 +60,11 @@ class RecipeDetailModel extends RecipeModel implements RecipeDetailAbstract{
   String? _servingSize;
   String? _cookingTime;
   String? _difficulty;
-  bool? _isSaved;
 
   @override
   String? get servingSize => _servingSize;
   String? get cookingTime => _cookingTime;
   String? get difficulty => _difficulty;
-  bool? get isSaved => _isSaved;
 
   RecipeDetailModel({int? id,
     String? recipeName,
@@ -65,7 +77,6 @@ class RecipeDetailModel extends RecipeModel implements RecipeDetailAbstract{
     this._servingSize = servingSize;
     this._cookingTime = cookingTime;
     this._difficulty = difficulty;
-    this._isSaved = isSaved;
   }
 
   @override
@@ -77,12 +88,10 @@ class RecipeDetailModel extends RecipeModel implements RecipeDetailAbstract{
     this._servingSize = data[idx]['serving_size'];
     this._cookingTime = data[idx]['cooking_time'];
     this._difficulty = data[idx]['cooking_level'];
-    this._isSaved = data[idx]['is_saved'];
 
     return this;
   }
 }
-
 
 class RecipesModel implements RecipesAbstract{
   List<RecipeModel>? _recipes;

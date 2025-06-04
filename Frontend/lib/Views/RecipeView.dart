@@ -5,6 +5,8 @@ import '../Models/IngredientModel.dart';
 import 'package:Frontend/MordalViews/RecipeMordal.dart';
 import 'package:Frontend/Services/loadRecipeService.dart';
 
+import '../Services/createFridgeService.dart';
+import '../Services/createSavedRecipeService.dart';
 import '../Services/loadIngredientService.dart';
 import '../Services/loadRecipeQueryService.dart';
 
@@ -31,22 +33,33 @@ class RecipePage extends State<RecipeView> {
     recipeStorage = RecipesModel(recipes);
   }
 
+  void updateRecipeSaved({required RecipeModel recipe}){
+    for(int i = 0; i < Recipes![0]!.length; i++){
+      if(recipe.id == Recipes![0]![i]){
+        Recipes![3]![i] = !Recipes![3]![i];
+        break;
+      }
+    }
+  }
+
   RecipePage(){
     super.initState();
     getListedRecipes();
     _scrollController = ScrollController();
   }
 
+
+
   @override
   void dispose() {
     super.dispose();
     _scrollController.dispose();
   }
-
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
+
 
     return Scaffold(
       // 냉장고 선택 페이지 UI
@@ -161,6 +174,7 @@ class RecipePage extends State<RecipeView> {
                                               )
                                             ),
                                           ),
+                                          // 하트 UI 정중앙에 배치
                                           Flexible(
                                             flex: 1,
                                             fit: FlexFit.tight,
@@ -169,6 +183,23 @@ class RecipePage extends State<RecipeView> {
                                                 color: Colors.white,
                                                 borderRadius: BorderRadius.circular(30),
                                               ),
+                                              padding: EdgeInsets.only(top: 20),
+                                              child: Align(
+                                                alignment: Alignment.topCenter,
+                                                child: GestureDetector(
+                                                  onTap: () async {
+                                                    await createSavedRecipe(recipe : recipe);
+                                                    setState((){
+                                                        updateRecipeSaved(recipe: recipe);
+                                                        getListedRecipes();
+                                                      }
+                                                    );
+                                                  },
+                                                  child: (recipe.isSaved!) ?
+                                                  Image.asset('assets/hearts/filledheart.png', height: 20, width: 20) :
+                                                  Image.asset('assets/hearts/blankheart.png', height: 20, width: 20)
+                                                )
+                                              )
                                             ),
                                           ),
                                         ]
@@ -213,13 +244,13 @@ class RecipePage extends State<RecipeView> {
                 ),
             prefixIcon: IconButton(
               icon: Icon(Icons.search, color: Colors.grey[700]),
-              onPressed: () {
+              onPressed: () async {
                 _searchController.clear();
-                setState(() async {
+                Recipes = await getRecipeQueryInfoFromServer(query:_searchQuery);
+                setState(() {
                   // 레시피 뷰에서 어디로 쏠건지...
                   for(int i = 0; i < Recipes!.length; i++)
                     Recipes![i]!.clear();
-                  Recipes = await getRecipeQueryInfoFromServer(query:_searchQuery);
                   getListedRecipes();
                 });
               },
