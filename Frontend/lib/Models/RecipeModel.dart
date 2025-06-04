@@ -50,8 +50,8 @@ class RecipeModel implements RecipeAbstract{
   /// 전역변수의 레시피의 사용되는 식재료와 상세정보를 객체화
   @override
   RecipeModel getDetailRecipe(int idx){
-    this._ingredients = Recipes![3]![idx];
-    this._descriptions = Recipes![4]![idx];
+    this._ingredients = Recipes![4]![idx];
+    this._descriptions = Recipes![5]![idx];
     return this;
   }
 }
