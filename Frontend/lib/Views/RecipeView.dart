@@ -26,7 +26,7 @@ class RecipePage extends State<RecipeView> {
   void getListedRecipes(){
     List<RecipeModel> recipes = [];
     for(int i = 0; i < 10; i++)
-      recipes.add(RecipeModel().setRecipe(i));
+      recipes.add(RecipeModel().getRecipe(i));
     recipeStorage = RecipesModel(recipes);
   }
 
@@ -104,7 +104,7 @@ class RecipePage extends State<RecipeView> {
                                       onPressed: (){
                                         setState(() async {
                                           int recipeIdx = await getIngredientInfoFromServer(recipe);
-                                          recipe.setDetailRecipe(recipeIdx);
+                                          recipe.getDetailRecipe(recipeIdx);
                                           // 이 부분에 모달 창
                                           RecipeDialog recipeWindow = RecipeDialog(recipe: recipe);
                                           showDialog(

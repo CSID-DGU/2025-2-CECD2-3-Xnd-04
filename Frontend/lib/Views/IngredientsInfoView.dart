@@ -3,14 +3,18 @@ import 'package:Frontend/Models/IngredientModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:flutter_colorful_tab/flutter_colorful_tab.dart';
 
+import '../Models/RecipeModel.dart';
+
 class IngredientsInfoView extends StatelessWidget{
   IngredientModel? _ingredient;
   /// DB의 냉장고에 식재료 정보가 있는가??
   Map<String, dynamic>? _inform;
+  List<RecipeDetailModel>? _recipeDetails;
 
-  IngredientsInfoView({Key? key, required IngredientModel ingredient, Map<String, dynamic>? inform}) : super(key : key){
+  IngredientsInfoView({Key? key, required List<RecipeDetailModel> recipedetails, required IngredientModel ingredient, Map<String, dynamic>? inform}) : super(key : key){
     this._ingredient = ingredient;
     this._inform = inform;
+    this._recipeDetails = recipedetails;
   }
 
   /// 유통기한 구하기
@@ -24,10 +28,10 @@ class IngredientsInfoView extends StatelessWidget{
 
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-
     int dueDate = (_inform != null) ? getDueDate() : -1;
+    List<MaterialColor> tabbarColor = [Colors.red, Colors.blue, Colors.yellow];
 
-    Container recipeInfoDescription(String rName, String rDesc){
+    Container recipeInfoDescription(RecipeDetailModel recipedetail){
       return Container(
           padding: EdgeInsets.fromLTRB(10, 0, 10, 10),
           child: Column(
@@ -37,19 +41,19 @@ class IngredientsInfoView extends StatelessWidget{
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
                   Container(
-                    width: (screenWidth - 80) * 0.5,
-                    height: screenHeight * 0.04,
+                    width: (screenWidth - 80) * 0.8,
+                    height: screenHeight * 0.06,
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: Text(rName, style: TextStyle(fontSize: screenWidth * 0.04))
+                      child: Text(recipedetail.recipeName!, style: TextStyle(fontSize: screenWidth * 0.04, fontWeight: FontWeight.bold))
                     )
                   ),
                   Container(
-                    width: (screenWidth - 80) * 0.5,
-                    height: screenHeight * 0.04,
+                    width: (screenWidth - 80) * 0.2,
+                    height: screenHeight * 0.06,
                     child: Align(
                         alignment: Alignment.centerRight,
-                        child: Icon(Icons.star_border, size: screenWidth * 0.04,)
+                        child: Icon(Icons.star_border, size: screenWidth * 0.04)
                     )
                   )
                 ],
@@ -71,7 +75,26 @@ class IngredientsInfoView extends StatelessWidget{
               Container(
                 height: screenHeight * 0.38 - 152,
                 width: screenWidth - 80,
-                child: Text(rDesc, style: TextStyle(fontSize: screenWidth * 0.03, fontWeight: FontWeight.bold), textAlign: TextAlign.left,)
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('1. 양 : ${recipedetail.servingSize}',
+                        style: TextStyle(fontSize: screenWidth * 0.03))
+                    ),
+                    Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('2. 조리 시간 : ${recipedetail.cookingTime}',
+                          style: TextStyle(fontSize: screenWidth * 0.03))
+                    ),
+                    Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('3. 난이도 : ${recipedetail.difficulty}',
+                          style: TextStyle(fontSize: screenWidth * 0.03))
+                    )
+                  ]
+                )
               )
             ],
           )
@@ -129,9 +152,13 @@ class IngredientsInfoView extends StatelessWidget{
               width: screenWidth * 0.6,
               height: screenHeight * 0.25,
               padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(30)
+              ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                child: (_inform != null) ? Image.network(_inform!['ingredient_pic'], fit: BoxFit.cover) : null
+                child: (_inform != null) ? Image.network(_inform!['ingredient_pic'], fit: BoxFit.fill) : null
               )
             ),
             Container(
@@ -192,7 +219,7 @@ class IngredientsInfoView extends StatelessWidget{
               height: screenHeight * 0.44 - 85,
               width: screenWidth - 60,
               child: DefaultTabController(
-                length: 3,
+                length: this._recipeDetails!.length,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
@@ -201,9 +228,17 @@ class IngredientsInfoView extends StatelessWidget{
                       topPadding: 0,
                       alignment: TabAxisAlignment.start,
                       tabs: [
-                        TabItem(color: Colors.red, title: Text('소고기 미역국', style: TextStyle(fontSize: screenWidth * 0.03),)),
-                        TabItem(color: Colors.blue, title: Text('스테이크', style: TextStyle(fontSize: screenWidth * 0.03),)),
-                        TabItem(color: Colors.yellow, title: Text('카레', style: TextStyle(fontSize: screenWidth * 0.03),)),
+                        for (int i = 0; i < this._recipeDetails!.length; i++)
+                          TabItem(
+                              color: tabbarColor[i],
+                              title: Text('${i + 1}번 레시피',
+                                style: TextStyle(
+                                    fontSize: screenWidth * 0.03,
+                                    color: Colors.orange,
+                                    fontWeight: FontWeight.bold
+                                )
+                              )
+                          )
                       ]
                     ),
                     Container(
@@ -216,9 +251,8 @@ class IngredientsInfoView extends StatelessWidget{
                       child: TabBarView(
                         children: <Widget>
                         [
-                          recipeInfoDescription('소고기 미역국', '소고기 미역국 레시피 입니다.'),
-                          recipeInfoDescription('스테이크', '스테이크 레시피 입니다.'),
-                          recipeInfoDescription('카레', '카레 레시피 입니다.'),
+                          for (int i = 0; i < this._recipeDetails!.length; i++)
+                            recipeInfoDescription(this._recipeDetails![i])
                         ]
                       )
                     )
@@ -235,9 +269,11 @@ class IngredientsInfoView extends StatelessWidget{
 
 class FridgeIngredientsInfoView extends StatelessWidget{
   FridgeIngredientModel? _ingredient;
+  List<RecipeDetailModel>? _recipeDetails;
 
-  FridgeIngredientsInfoView({Key? key, required ingredient}) : super(key : key){
+  FridgeIngredientsInfoView({Key? key, required List<RecipeDetailModel> recipedetails, required ingredient}) : super(key : key){
     this._ingredient = ingredient;
+    this._recipeDetails = recipedetails;
   }
 
   /// 유통기한 구하기
@@ -251,10 +287,10 @@ class FridgeIngredientsInfoView extends StatelessWidget{
 
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-
     int dueDate = getDueDate();
+    List<MaterialColor> tabbarColor = [Colors.red, Colors.blue, Colors.yellow];
 
-    Container recipeInfoDescription(String rName, String rDesc){
+    Container recipeInfoDescription(RecipeDetailModel recipedetail){
       return Container(
           padding: EdgeInsets.fromLTRB(10, 0, 10, 10),
           child: Column(
@@ -264,19 +300,19 @@ class FridgeIngredientsInfoView extends StatelessWidget{
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
                   Container(
-                      width: (screenWidth - 80) * 0.5,
-                      height: screenHeight * 0.04,
+                      width: (screenWidth - 80) * 0.8,
+                      height: screenHeight * 0.06,
                       child: Align(
                           alignment: Alignment.centerLeft,
-                          child: Text(rName, style: TextStyle(fontSize: screenWidth * 0.04))
+                          child: Text(recipedetail.recipeName!, style: TextStyle(fontSize: screenWidth * 0.04, fontWeight: FontWeight.bold))
                       )
                   ),
                   Container(
-                      width: (screenWidth - 80) * 0.5,
-                      height: screenHeight * 0.04,
+                      width: (screenWidth - 80) * 0.2,
+                      height: screenHeight * 0.06,
                       child: Align(
                           alignment: Alignment.centerRight,
-                          child: Icon(Icons.star_border, size: screenWidth * 0.04,)
+                          child: Icon(Icons.star_border, size: screenWidth * 0.04)
                       )
                   )
                 ],
@@ -298,7 +334,24 @@ class FridgeIngredientsInfoView extends StatelessWidget{
               Container(
                   height: screenHeight * 0.38 - 152,
                   width: screenWidth - 80,
-                  child: Text(rDesc, style: TextStyle(fontSize: screenWidth * 0.03, fontWeight: FontWeight.bold), textAlign: TextAlign.left,)
+                  // child: Text(rDesc, style: TextStyle(fontSize: screenWidth * 0.03, fontWeight: FontWeight.bold), textAlign: TextAlign.left,)
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: <Widget>[
+                        Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text('1. 양 : ${recipedetail.servingSize}', style: TextStyle(fontSize: screenWidth * 0.03))
+                        ),
+                        Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text('2. 조리 시간 : ${recipedetail.cookingTime}', style: TextStyle(fontSize: screenWidth * 0.03))
+                        ),
+                        Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text('3. 난이도 : ${recipedetail.difficulty}', style: TextStyle(fontSize: screenWidth * 0.03))
+                        )
+                      ]
+                  )
               )
             ],
           )
@@ -425,7 +478,7 @@ class FridgeIngredientsInfoView extends StatelessWidget{
                       height: screenHeight * 0.44 - 85,
                       width: screenWidth - 60,
                       child: DefaultTabController(
-                          length: 3,
+                          length: this._recipeDetails!.length,
                           child: Column(
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: <Widget>[
@@ -434,9 +487,17 @@ class FridgeIngredientsInfoView extends StatelessWidget{
                                     topPadding: 0,
                                     alignment: TabAxisAlignment.start,
                                     tabs: [
-                                      TabItem(color: Colors.red, title: Text('소고기 미역국', style: TextStyle(fontSize: screenWidth * 0.03),)),
-                                      TabItem(color: Colors.blue, title: Text('스테이크', style: TextStyle(fontSize: screenWidth * 0.03),)),
-                                      TabItem(color: Colors.yellow, title: Text('카레', style: TextStyle(fontSize: screenWidth * 0.03),)),
+                                      for (int i = 0; i < this._recipeDetails!.length; i++)
+                                        TabItem(
+                                            color: tabbarColor[i],
+                                            title: Text('${i + 1}번 레시피',
+                                                style: TextStyle(
+                                                  fontSize: screenWidth * 0.03,
+                                                  color: Colors.orange,
+                                                  fontWeight: FontWeight.bold
+                                                )
+                                            )
+                                        )
                                     ]
                                 ),
                                 Container(
@@ -449,9 +510,8 @@ class FridgeIngredientsInfoView extends StatelessWidget{
                                     child: TabBarView(
                                         children: <Widget>
                                         [
-                                          recipeInfoDescription('소고기 미역국', '소고기 미역국 레시피 입니다.'),
-                                          recipeInfoDescription('스테이크', '스테이크 레시피 입니다.'),
-                                          recipeInfoDescription('카레', '카레 레시피 입니다.'),
+                                          for (int i = 0; i < this._recipeDetails!.length; i++)
+                                            recipeInfoDescription(this._recipeDetails![i])
                                         ]
                                     )
                                 )

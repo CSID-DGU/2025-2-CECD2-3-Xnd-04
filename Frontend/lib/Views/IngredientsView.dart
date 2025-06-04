@@ -1,9 +1,11 @@
+import 'package:Frontend/Models/RecipeModel.dart';
 import 'package:flutter/material.dart';
 import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 import 'dart:math';
 
 import '../Models/IngredientModel.dart';
+import '../Services/loadDetailRecipeService.dart';
 import '../Services/loadFridgeIngredientInfoService.dart';
 import 'IngredientsInfoView.dart';
 
@@ -150,7 +152,13 @@ class IngredientsPage extends State<IngredientsView> {
                                       ),
                                       child: FilledButton(
                                         onPressed: () async {
-                                          pages[7] = FridgeIngredientsInfoView(ingredient: refrigerator.ingredients![index + startPoint[floor - 1]]);
+                                          List<RecipeDetailModel>? recipedetails = await getRecipeDetailInfoFromServer(
+                                              refrigerator.ingredients![index + startPoint[floor - 1]]
+                                          );
+                                          pages[7] = FridgeIngredientsInfoView(
+                                              recipedetails : recipedetails!,
+                                              ingredient: refrigerator.ingredients![index + startPoint[floor - 1]]
+                                          );
                                           Navigator.of(context).pushNamed('/' + pages[7].toString());
                                         },
                                         style: FilledButton.styleFrom(
@@ -167,7 +175,7 @@ class IngredientsPage extends State<IngredientsView> {
                                         )
                                       )
                                     ),
-                                  ),
+                                ),
                             ), // 식재료 컨테이너
                             Container(
                                 margin : EdgeInsets.fromLTRB(20, 0, 20, 0),
