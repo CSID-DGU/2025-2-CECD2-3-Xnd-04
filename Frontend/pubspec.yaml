@@ -38,4 +38,6 @@ flutter:
     - assets/refrigerators/R1.png
     - assets/refrigerators/R2.png
     - assets/refrigerators/R3.png
+    - assets/hearts/blankheart.png
+    - assets/hearts/filledheart.png
     - .env

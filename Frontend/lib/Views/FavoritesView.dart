@@ -6,6 +6,7 @@ import '../Models/IngredientModel.dart';
 import '../Models/RecipeModel.dart';
 import 'package:Frontend/MordalViews/RecipeMordal.dart';
 
+import '../Services/createSavedRecipeService.dart';
 import '../Services/loadIngredientService.dart';
 import '../Services/loadRecipeQueryService.dart';
 import '../Services/loadRecipeService.dart';
@@ -30,6 +31,15 @@ class FavoritesPage extends State<FavoritesView> {
     for(int i = 0; i < Recipes![0]!.length; i++)
       recipes.add(RecipeModel().getRecipe(i));
     recipeStorage = RecipesModel(recipes);
+  }
+
+  void updateRecipeSaved({required RecipeModel recipe}){
+    for(int i = 0; i < Recipes![0]!.length; i++){
+      if(recipe.id == Recipes![0]![i]){
+        Recipes![3]![i] = !Recipes![3]![i];
+        break;
+      }
+    }
   }
 
   FavoritesPage(){
@@ -220,10 +230,27 @@ class FavoritesPage extends State<FavoritesView> {
                                                   flex: 1,
                                                   fit: FlexFit.tight,
                                                   child: Container(
+                                                    padding: EdgeInsets.only(top: 20),
                                                     decoration: BoxDecoration(
                                                       color: Colors.white,
                                                       borderRadius: BorderRadius.circular(30),
                                                     ),
+                                                    child: Align(
+                                                        alignment: Alignment.topCenter,
+                                                        child: GestureDetector(
+                                                            onTap: () async {
+                                                              await createSavedRecipe(recipe : recipe);
+                                                              setState((){
+                                                                updateRecipeSaved(recipe: recipe);
+                                                                getListedRecipes();
+                                                              }
+                                                              );
+                                                            },
+                                                            child: (recipe.isSaved!) ?
+                                                            Image.asset('assets/hearts/filledheart.png', height: 20, width: 20) :
+                                                            Image.asset('assets/hearts/blankheart.png', height: 20, width: 20)
+                                                        )
+                                                    )
                                                   ),
                                                 ),
                                               ]
