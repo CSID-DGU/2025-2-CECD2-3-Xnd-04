@@ -42,7 +42,7 @@ class IngredientsInfoView extends StatelessWidget{
                 children: <Widget>[
                   Container(
                     width: (screenWidth - 80) * 0.8,
-                    height: screenHeight * 0.06,
+                    height: screenHeight * 0.05,
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(recipedetail.recipeName!, style: TextStyle(fontSize: screenWidth * 0.04, fontWeight: FontWeight.bold))
@@ -50,7 +50,7 @@ class IngredientsInfoView extends StatelessWidget{
                   ),
                   Container(
                     width: (screenWidth - 80) * 0.2,
-                    height: screenHeight * 0.06,
+                    height: screenHeight * 0.05,
                     child: Align(
                         alignment: Alignment.centerRight,
                         child: Icon(Icons.star_border, size: screenWidth * 0.04)
@@ -242,7 +242,7 @@ class IngredientsInfoView extends StatelessWidget{
                       ]
                     ),
                     Container(
-                      height: screenHeight * 0.44 - 140,
+                      height: screenHeight * 0.44 - 133,
                       width : screenWidth - 60,
                       decoration: BoxDecoration(
                         color: Colors.grey[100],
@@ -301,7 +301,7 @@ class FridgeIngredientsInfoView extends StatelessWidget{
                 children: <Widget>[
                   Container(
                       width: (screenWidth - 80) * 0.8,
-                      height: screenHeight * 0.06,
+                      height: screenHeight * 0.05,
                       child: Align(
                           alignment: Alignment.centerLeft,
                           child: Text(recipedetail.recipeName!, style: TextStyle(fontSize: screenWidth * 0.04, fontWeight: FontWeight.bold))
@@ -309,7 +309,7 @@ class FridgeIngredientsInfoView extends StatelessWidget{
                   ),
                   Container(
                       width: (screenWidth - 80) * 0.2,
-                      height: screenHeight * 0.06,
+                      height: screenHeight * 0.05,
                       child: Align(
                           alignment: Alignment.centerRight,
                           child: Icon(Icons.star_border, size: screenWidth * 0.04)
@@ -501,7 +501,7 @@ class FridgeIngredientsInfoView extends StatelessWidget{
                                     ]
                                 ),
                                 Container(
-                                    height: screenHeight * 0.44 - 140,
+                                    height: screenHeight * 0.44 - 133,
                                     width : screenWidth - 60,
                                     decoration: BoxDecoration(
                                         color: Colors.grey[100],

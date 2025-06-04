@@ -204,8 +204,13 @@ class RecipePage extends State<RecipeView> {
           style: TextStyle(color: Colors.black, fontSize: screenHeight * 0.02),
           textAlignVertical: TextAlignVertical.center,
           decoration: InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(vertical:10),
             hintText: (_searchQuery.isEmpty) ? '레시피 검색' : null,
-            hintStyle: TextStyle(color: Colors.grey[700], fontSize: screenHeight * 0.015, fontWeight: FontWeight.bold),
+            hintStyle: TextStyle(color: Colors.grey[700],
+                fontSize: screenHeight * 0.015,
+                fontWeight: FontWeight.bold,
+                ),
             prefixIcon: IconButton(
               icon: Icon(Icons.search, color: Colors.grey[700]),
               onPressed: () {
