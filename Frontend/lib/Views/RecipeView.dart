@@ -246,11 +246,11 @@ class RecipePage extends State<RecipeView> {
               icon: Icon(Icons.search, color: Colors.grey[700]),
               onPressed: () async {
                 _searchController.clear();
+                for(int i = 0; i < Recipes!.length; i++)
+                  Recipes![i]!.clear();
                 Recipes = await getRecipeQueryInfoFromServer(query:_searchQuery);
                 setState(() {
                   // 레시피 뷰에서 어디로 쏠건지...
-                  for(int i = 0; i < Recipes!.length; i++)
-                    Recipes![i]!.clear();
                   getListedRecipes();
                 });
               },
