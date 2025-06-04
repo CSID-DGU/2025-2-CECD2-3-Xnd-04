@@ -6,6 +6,7 @@ import 'package:Frontend/MordalViews/RecipeMordal.dart';
 import 'package:Frontend/Services/loadRecipeService.dart';
 
 import '../Services/loadIngredientService.dart';
+import '../Services/loadRecipeQueryService.dart';
 
 class RecipeView extends StatefulWidget {
   const RecipeView({Key? key}) : super(key: key);
@@ -25,7 +26,7 @@ class RecipePage extends State<RecipeView> {
   /// 레시피 끌어오기
   void getListedRecipes(){
     List<RecipeModel> recipes = [];
-    for(int i = 0; i < 10; i++)
+    for(int i = 0; i < Recipes![0]!.length; i++)
       recipes.add(RecipeModel().getRecipe(i));
     recipeStorage = RecipesModel(recipes);
   }
@@ -209,8 +210,12 @@ class RecipePage extends State<RecipeView> {
               icon: Icon(Icons.search, color: Colors.grey[700]),
               onPressed: () {
                 _searchController.clear();
-                setState(() {
+                setState(() async {
                   // 레시피 뷰에서 어디로 쏠건지...
+                  for(int i = 0; i < Recipes!.length; i++)
+                    Recipes![i]!.clear();
+                  Recipes = await getRecipeQueryInfoFromServer(query:_searchQuery);
+                  getListedRecipes();
                 });
               },
             ),
