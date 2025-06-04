@@ -2,7 +2,7 @@ import 'package:Frontend/Abstracts/RecipeAbstract.dart';
 import 'package:Frontend/Models/IngredientModel.dart';
 import 'package:dio/dio.dart';
 
-/// 화면에 띄워주는 10개의 레시피만 한정해서 저장
+/// 화면에 띄워주는 count개의 레시피만 한정해서 저장
 List<List<dynamic>?>? Recipes;
 
 class RecipeModel implements RecipeAbstract{

@@ -27,6 +27,8 @@ List<Widget> pages = [
   const SettingView(),
 ];
 
+bool recipeFirstLoading = true;
+
 class mainAppBar extends StatelessWidget{
   String? _name;
 
@@ -170,15 +172,11 @@ class MainBottomBar extends State<MainBottomView> {
       }
       // 레시피 로드
       else if (index == 2 || index == 3){
-        if (recipeLoaded) {
-          print('레시피가 이미 로드되었습니다.');
-          Navigator.of(context).pushNamed('/' + pages[index].toString());
-        }
-        else {
+        if (recipeFirstLoading) {
           Recipes = await getRecipeInfoFromServer();
-          if (recipeLoaded)
-            Navigator.of(context).pushNamed('/' + pages[index].toString());
+          recipeFirstLoading = false;
         }
+        Navigator.of(context).pushNamed('/' + pages[index].toString());
       }
       else
         Navigator.of(context).pushNamed('/' + pages[index].toString());
