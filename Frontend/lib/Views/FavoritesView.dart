@@ -26,7 +26,7 @@ class FavoritesPage extends State<FavoritesView> {
   void getListedRecipes(){
     List<RecipeModel> recipes = [];
     for(int i = 0; i < 10; i++)
-      recipes.add(RecipeModel().setRecipe(i));
+      recipes.add(RecipeModel().getRecipe(i));
     recipeStorage = RecipesModel(recipes);
   }
 
@@ -152,7 +152,7 @@ class FavoritesPage extends State<FavoritesView> {
                                           onPressed: () {
                                             setState(() async {
                                               int recipeIdx = await getIngredientInfoFromServer(recipe);
-                                              recipe.setDetailRecipe(recipeIdx);
+                                              recipe.getDetailRecipe(recipeIdx);
                                               // 이 부분에 모달 창
                                               RecipeDialog recipedialog = RecipeDialog(recipe: recipe);
                                               showDialog(

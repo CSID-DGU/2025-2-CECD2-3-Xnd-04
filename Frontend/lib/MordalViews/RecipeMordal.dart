@@ -2,6 +2,7 @@ import 'package:Frontend/Models/IngredientModel.dart';
 import 'package:Frontend/Models/RecipeModel.dart';
 import 'package:Frontend/Views/IngredientsInfoView.dart';
 import 'package:flutter/material.dart';
+import '../Services/loadDetailRecipeService.dart';
 import '../Services/loadRViewIngredientInfoService.dart';
 import '../Views/MainFrameView.dart';
 import 'package:Frontend/Models/RefrigeratorModel.dart';
@@ -110,7 +111,7 @@ class RecipeDialog extends Dialog{
                       height: screenHeight * 0.015,
                       child: ElevatedButton(
                         onPressed: () async {
-                          Map<String, dynamic>? ingredientInfo;
+                          Map<String, dynamic>? ingredientDetailInfo;
 
                           // 식재료가 냉장고에 있는 경우
 
@@ -122,11 +123,17 @@ class RecipeDialog extends Dialog{
                               fridgeIndex += 1;
                             }
                             fridgeIndex -= 1;
-                            ingredientInfo = await loadRecipeModalIngredientsInfo(RefrigeratorModel().getFridge(fridgeIndex).id!, fiid);
+                            ingredientDetailInfo = await loadRecipeModalIngredientsInfo(
+                                RefrigeratorModel().getFridge(fridgeIndex).id!, fiid
+                            );
                           }
 
-
-                          pages[6] = IngredientsInfoView(ingredient: ingredient, inform: ingredientInfo);
+                          List<RecipeDetailModel>? recipedetails = await getRecipeDetailInfoFromServer(ingredient);
+                          pages[6] = IngredientsInfoView(
+                              recipedetails : recipedetails!,
+                              ingredient: ingredient,
+                              inform: ingredientDetailInfo
+                          );
                           // 식재료 소개 페이지로 이동
                           Navigator.of(context).pushNamed('/' + pages[6].toString());
                         },
