@@ -47,6 +47,11 @@ class SavedRecipesView(APIView):
             paginated_recipes = recipes[start:end]
 
             serializer = RecipeSerializer(paginated_recipes,many = True)
+
+            # is_saved 필드 수정
+            for data in serializer.data:
+                data['is_saved'] = True
+
             return Response(serializer.data,status=status.HTTP_200_OK)
         
         except Exception as e:

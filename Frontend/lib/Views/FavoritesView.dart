@@ -23,28 +23,19 @@ class FavoritesPage extends State<FavoritesView> {
   TextEditingController _searchController = TextEditingController();
   late ScrollController _scrollController;
 
-  RecipesModel? recipeStorage;
+  RecipesModel? savedRecipeStorage;
 
   /// 레시피 끌어오기
-  void getListedRecipes(){
-    List<RecipeModel> recipes = [];
-    for(int i = 0; i < Recipes![0]!.length; i++)
-      recipes.add(RecipeModel().getRecipe(i));
-    recipeStorage = RecipesModel(recipes);
-  }
-
-  void updateRecipeSaved({required RecipeModel recipe}){
-    for(int i = 0; i < Recipes![0]!.length; i++){
-      if(recipe.id == Recipes![0]![i]){
-        Recipes![3]![i] = !Recipes![3]![i];
-        break;
-      }
-    }
+  void getListedSavedRecipes(){
+    List<RecipeModel> savedrecipes = [];
+    for(int i = 0; i < SavedRecipes![0]!.length; i++)
+      savedrecipes.add(RecipeModel().getSavedRecipe(i));
+    savedRecipeStorage = RecipesModel(savedrecipes);
   }
 
   FavoritesPage(){
     super.initState();
-    getListedRecipes();
+    getListedSavedRecipes();
     _scrollController = ScrollController();
   }
 
@@ -57,6 +48,11 @@ class FavoritesPage extends State<FavoritesView> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
+
+    if(!nav3Processed){
+      getListedSavedRecipes();
+      nav3Processed = true;
+    }
 
     return Scaffold(
       // 냉장고 선택 페이지 UI
@@ -95,12 +91,12 @@ class FavoritesPage extends State<FavoritesView> {
                         icon: Icon(Icons.search, color: Colors.grey[700]),
                         onPressed: () async {
                           _searchController.clear();
-                          for(int i = 0; i < Recipes!.length; i++)
-                            Recipes![i]!.clear();
-                          Recipes = await getRecipeQueryInfoFromServer(query:_searchQuery);
+                          for(int i = 0; i < SavedRecipes!.length; i++)
+                            SavedRecipes![i]!.clear();
+                          SavedRecipes = await getSavedRecipeQueryInfoFromServer(query:_searchQuery);
                           setState(() {
                             // 레시피 뷰에서 어디로 쏠건지...
-                            getListedRecipes();
+                            getListedSavedRecipes();
                           });
                         },
                       ),
@@ -134,7 +130,7 @@ class FavoritesPage extends State<FavoritesView> {
                           controller: _scrollController,
                           children: <Widget>[
                             // 실제론 DB에서 랜덤으로 추천돌려서 레시피로 띄워줌
-                            for(RecipeModel recipe in recipeStorage!.recipes!)
+                            for(RecipeModel savedrecipe in savedRecipeStorage!.recipes!)
                               Container(
                                   margin: EdgeInsets.all(20),
                                   height: screenHeight * 0.18,
@@ -155,7 +151,7 @@ class FavoritesPage extends State<FavoritesView> {
                                         ),
                                         child: ClipRRect(
                                           borderRadius: BorderRadius.circular(30),
-                                          child: Image.network(recipe.imgUrl!, fit: BoxFit.cover),
+                                          child: Image.network(savedrecipe.imgUrl!, fit: BoxFit.cover),
                                         )
                                       ),
                                       // 레시피 설명
@@ -169,10 +165,10 @@ class FavoritesPage extends State<FavoritesView> {
                                         child: FilledButton(
                                           onPressed: () {
                                             setState(() async {
-                                              int recipeIdx = await getIngredientInfoFromServer(recipe);
-                                              recipe.getDetailRecipe(recipeIdx);
+                                              int recipeIdx = await getIngredientInfoFromServer(savedrecipe, true);
+                                              savedrecipe.getDetailSavedRecipe(recipeIdx);
                                               // 이 부분에 모달 창
-                                              RecipeDialog recipedialog = RecipeDialog(recipe: recipe);
+                                              RecipeDialog recipedialog = RecipeDialog(recipe: savedrecipe);
                                               showDialog(
                                                   context: context,
                                                   builder: (context) => recipedialog.recipeDialog(context)
@@ -206,7 +202,7 @@ class FavoritesPage extends State<FavoritesView> {
                                                               children: <Widget>[
                                                                 SizedBox(width: 15),
                                                                 Flexible(
-                                                                  child: Text(recipe.recipeName!,
+                                                                  child: Text(savedrecipe.recipeName!,
                                                                     style: TextStyle(
                                                                       color: Colors.black,
                                                                       fontWeight: FontWeight.bold,
@@ -239,16 +235,19 @@ class FavoritesPage extends State<FavoritesView> {
                                                         alignment: Alignment.topCenter,
                                                         child: GestureDetector(
                                                             onTap: () async {
-                                                              await createSavedRecipe(recipe : recipe);
+                                                              await createSavedRecipe(recipe : savedrecipe);
                                                               setState((){
-                                                                updateRecipeSaved(recipe: recipe);
-                                                                getListedRecipes();
-                                                              }
-                                                              );
+                                                                deleteSavedRecipe(savedrecipe : savedrecipe);
+                                                                for (int i = 0; i < Recipes![0]!.length; i++) {
+                                                                  if (Recipes![0]![i] == savedrecipe.id) {
+                                                                    Recipes![3]![i] = false;
+                                                                    break;
+                                                                  }
+                                                                }
+                                                                getListedSavedRecipes();
+                                                              });
                                                             },
-                                                            child: (recipe.isSaved!) ?
-                                                            Image.asset('assets/hearts/filledheart.png', height: 20, width: 20) :
-                                                            Image.asset('assets/hearts/blankheart.png', height: 20, width: 20)
+                                                            child: Image.asset('assets/hearts/filledheart.png', height: 20, width: 20)
                                                         )
                                                     )
                                                   ),
