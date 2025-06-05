@@ -1,4 +1,5 @@
 import 'package:Frontend/Models/RecipeModel.dart';
+import 'package:Frontend/Services/loadSavedRecipeService.dart';
 import 'package:flutter/material.dart';
 import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
@@ -33,14 +34,50 @@ class IngredientsPage extends State<IngredientsView> {
     _scrollController.dispose();
   }
 
+  int getDueDate(FridgeIngredientModel ingredient){
+    DateTime now = DateTime.now();
+    DateTime dueDateParsed = DateTime.parse(ingredient.storable_due!.substring(0, 10));
+    return dueDateParsed.difference(now).inDays + 1;
+  }
+
+  Border getColoredBorder(FridgeIngredientModel ingredient){
+    int dueDate = getDueDate(ingredient);
+
+    if (dueDate < 0){
+      return Border.all(
+        color: Colors.black,
+        style: BorderStyle.solid,
+        width: 5
+      );
+    }
+    else if (dueDate == 1){
+      return Border.all(
+        color: Colors.red,
+        style: BorderStyle.solid,
+        width: 5
+      );
+    }
+    else if (dueDate == 2){
+      return Border.all(
+          color: Colors.orange,
+          style: BorderStyle.solid,
+          width: 5
+      );
+    }
+    else{
+      return Border.all(
+          color: Colors.green,
+          style: BorderStyle.solid,
+          width: 5
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-
-    int sum = 0;
-    List<int> startPoint = [0];
 
     // 변동성있는 냉장고의 전체 사이즈를 구하는 알고리즘(20 더한건 모든 층에서 전부 20만큼 오버플로우 나서 더한거임)
     double getRefrigeratorSize(){
@@ -54,6 +91,9 @@ class IngredientsPage extends State<IngredientsView> {
       }
       return size;
     }
+
+    int sum = 0;
+    List<int> startPoint = [0];
 
     for (int i = 1; i < refrigerator.level!; i++){
       sum += refrigerator.getNumOfIngredientsFloor(floor: i);
@@ -148,7 +188,8 @@ class IngredientsPage extends State<IngredientsView> {
                                     itemCount: refrigerator.getNumOfIngredientsFloor(floor: floor),
                                     itemBuilder: (context, index) => Container(
                                       decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(20)
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: getColoredBorder(refrigerator.ingredients![index + startPoint[floor - 1]])
                                       ),
                                       child: FilledButton(
                                         onPressed: () async {
