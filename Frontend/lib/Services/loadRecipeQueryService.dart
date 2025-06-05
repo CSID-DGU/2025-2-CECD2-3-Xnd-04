@@ -29,9 +29,38 @@ Future<Response?> requestRecipeQuery({required String query}) async {
   }
 }
 
+/// query : included in xndapp_recipes.recipeName
+Future<Response?> requestRecipeKeyword({required String keyword}) async {
+  final dio = Dio();
+  final String? ip = await NetworkInfo().getWifiIP();
+  // 해시태그 정규화
+  keyword = keyword.replaceFirst('#', '');
+
+  final String recipeURL = (ip!.startsWith('10.0.2')) ?
+  'http://10.0.2.2:8000/api/recipes/?keyword=${keyword}' :
+  'http://' + HOST! + APIURLS['loadRecipe']! + '?keyword=${keyword}';
+  try {
+    final response = await dio.get(
+      recipeURL, // 👉 백엔드 API 주소
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer ' + responsedAccessToken!,
+          'Content-Type': 'application/json',
+        },
+      ),
+    );
+    return response;
+  }
+  catch(e){
+    print('에러 로그 레시피 요청 응답 실패: ${e}');
+    return null;
+  }
+}
+
 ///Recipes = await getRecipeQueryInfoFromServer();
 Future<List<List<dynamic>?>?> getRecipeQueryInfoFromServer({required String query}) async {
-  Response<dynamic>? response = await requestRecipeQuery(query:query);
+  query = query.trimLeft();
+  Response<dynamic>? response = (query[0] == '#') ? await requestRecipeKeyword(keyword: query): await requestRecipeQuery(query:query);
   // 띄워줄 레시피의 수는 최대 10개
   int count = (response!.data['count'] < 10) ? response.data['count'] : 10;
 
@@ -57,7 +86,7 @@ Future<List<List<dynamic>?>?> getRecipeQueryInfoFromServer({required String quer
   return li;
 }
 
-///Recipes = await getSavedRecipeQueryInfoFromServer();
+///Recipes = await getSavedRecipeQueryInfoFromServer(); 즐겨찾기는 키워드 기반 검색 적용 X
 Future<List<List<dynamic>?>?> getSavedRecipeQueryInfoFromServer({required String query}) async {
   Response<dynamic>? response = await requestRecipeQuery(query:query);
   // 띄워줄 레시피의 수는 최대 10개
