@@ -40,10 +40,10 @@ Future<Response?> requestIngredient(RecipeModel recipe) async{
 
 ///ID 기반 탐색, 레시피 이름이 적힌 버튼을 클릭하면 레시피의 id값을 활용해서 그곳에 저장된 식재료를 로드,
 ///한 번 로드된 레시피는 이후에 다시 로드되지 않음
-Future<int> getIngredientInfoFromServer(RecipeModel recipe) async {
+Future<int> getIngredientInfoFromServer(RecipeModel recipe, bool fromFavoritePage) async {
   Response<dynamic>? response = await requestIngredient(recipe);
   try {
-    List<List<dynamic>?>? li = Recipes;
+    List<List<dynamic>?>? li = (fromFavoritePage) ? SavedRecipes : Recipes;
     List<dynamic> Ingredients = [];
     List<dynamic> Descriptions = [];
     

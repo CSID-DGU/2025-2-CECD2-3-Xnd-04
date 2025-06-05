@@ -14,6 +14,9 @@ abstract class RecipeAbstract{
   dynamic getRecipe(int idx);
   /// 전역변수에 레시피에 사용되는 식재료와 상세정보를 저장, return : RecipeModel(this)
   dynamic getDetailRecipe(int idx);
+
+  dynamic getSavedRecipe(int idx);
+  dynamic getDetailSavedRecipe(int idx);
 }
 
 abstract class RecipeDetailAbstract extends RecipeAbstract{

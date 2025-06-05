@@ -41,16 +41,16 @@ Future<List<List<dynamic>?>?> getRecipeInfoFromServer() async {
 
   List<List<dynamic>?> li = [recipe_id, food_names, recipe_image_urls, is_saved];
 
-  List<dynamic>? recipeResponse;
+  List<dynamic>? results;
   // 일단 응답이 있는 상황에선 이미지나 이름이 누락됬을지라도 추가하는 방향으로
   if (response != null) {
     print('레시피 로드를 진행합니다...');
-    recipeResponse = response.data['results'];
-    for (int i = 0; i < recipeResponse!.length; i++) {
-      li[0]!.add(recipeResponse[i]['recipe_id']);
-      li[1]!.add(recipeResponse[i]['food_name']);
-      li[2]!.add(recipeResponse[i]['recipe_image']);
-      li[3]!.add(recipeResponse[i]['is_saved']);
+    results = response.data['results'];
+    for (int i = 0; i < results!.length; i++) {
+      li[0]!.add(results[i]['recipe_id']);
+      li[1]!.add(results[i]['food_name']);
+      li[2]!.add(results[i]['recipe_image']);
+      li[3]!.add(results[i]['is_saved']);
     }
   }
   return li;
