@@ -93,13 +93,13 @@ class FavoritesPage extends State<FavoritesView> {
                       hintStyle: TextStyle(color: Colors.grey[700], fontSize: screenHeight * 0.015, fontWeight: FontWeight.bold),
                       prefixIcon: IconButton(
                         icon: Icon(Icons.search, color: Colors.grey[700]),
-                        onPressed: () {
+                        onPressed: () async {
                           _searchController.clear();
-                          setState(() async {
+                          for(int i = 0; i < Recipes!.length; i++)
+                            Recipes![i]!.clear();
+                          Recipes = await getRecipeQueryInfoFromServer(query:_searchQuery);
+                          setState(() {
                             // 레시피 뷰에서 어디로 쏠건지...
-                            for(int i = 0; i < Recipes!.length; i++)
-                              Recipes![i]!.clear();
-                            Recipes = await getRecipeQueryInfoFromServer(query:_searchQuery);
                             getListedRecipes();
                           });
                         },
