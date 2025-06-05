@@ -43,7 +43,7 @@ class IngredientsPage extends State<IngredientsView> {
   Border getColoredBorder(FridgeIngredientModel ingredient){
     int dueDate = getDueDate(ingredient);
 
-    if (dueDate < 0){
+    if (dueDate <= 0){
       return Border.all(
         color: Colors.black,
         style: BorderStyle.solid,
