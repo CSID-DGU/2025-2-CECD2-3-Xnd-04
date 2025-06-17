@@ -30,6 +30,7 @@ class KakaoLogin implements SocialLogin {
       }
 
       isTokenResponsed = await sendKakaoAccessToken(token.accessToken);
+      print("카카오 액세스 토큰: ${token.accessToken}");
       print('토큰 생성 완료');
       return isTokenResponsed;
 
