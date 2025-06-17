@@ -35,7 +35,7 @@ Future<bool> loadFridgeIngredientsInfo(RefrigeratorModel refrigerator, int idx) 
 
   if (response == null) return false;
 
-  List<dynamic> ingredientsInfo = response!.data['ingredients'];
+  List<dynamic> ingredientsInfo = response.data['ingredients'];
   List<FridgeIngredientModel> ingredients = [];
 
   for (int i = 0; i < ingredientsInfo.length; i++){
