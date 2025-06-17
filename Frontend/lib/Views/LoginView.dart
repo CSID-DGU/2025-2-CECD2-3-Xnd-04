@@ -3,6 +3,8 @@ import 'package:Frontend/Abstracts/kakaoLogin.dart';
 import 'package:Frontend/Models/LoginModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:Frontend/Services/loadFridgeService.dart';
+import 'package:Frontend/Services/fcm_service.dart';
+
 
 /* 남은 Task
 1. 자동 로그인 시, 로그인을 스킵하는 기능 추가(데이터베이스에서 따와야됨)
@@ -48,6 +50,11 @@ class LoginPage extends State<LoginView>{
                 onPressed: () async {
                   // 로그인 시, 로그인 여부 확인하고 냉장고의 수를 체크하여 냉장고 수에 따라 다른 화면으로 이동
                   await loginViewModel.login();
+
+                  // 🔥 FCM 기기 등록 (로그인 성공 후)
+                  if (loginViewModel.isLogined) {
+                    await FCMService.instance.registerDeviceToServer();
+                  }
 
                   bool fridgeNonZero = await getFridgesInfo();
 
