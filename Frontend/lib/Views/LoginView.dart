@@ -6,6 +6,8 @@ import 'package:Frontend/Services/loadFridgeService.dart';
 import 'package:Frontend/Services/fcm_service.dart';
 
 
+import '../PushService/fcmService.dart';
+
 /* 남은 Task
 1. 자동 로그인 시, 로그인을 스킵하는 기능 추가(데이터베이스에서 따와야됨)
 */
@@ -57,6 +59,9 @@ class LoginPage extends State<LoginView>{
                   }
 
                   bool fridgeNonZero = await getFridgesInfo();
+
+                  if (loginViewModel.isLogined)
+                    await FCMService.instance.registerDeviceToServer();
 
                   (fridgeNonZero) ?
                   Navigator.push(context, MaterialPageRoute(builder: (i) => pages[5])):

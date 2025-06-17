@@ -5,6 +5,8 @@ import '../Models/IngredientModel.dart';
 import 'package:Frontend/MordalViews/RecipeMordal.dart';
 import 'package:Frontend/Services/loadRecipeService.dart';
 
+import '../Services/createFridgeService.dart';
+import '../Services/createSavedRecipeService.dart';
 import '../Services/loadIngredientService.dart';
 import '../Services/loadRecipeQueryService.dart';
 
@@ -23,12 +25,21 @@ class RecipePage extends State<RecipeView> {
   /// 페이지를 새로 로드할때마다 레시피 저장소를 받아오는 클래스 내 변수
   RecipesModel? recipeStorage;
 
-  /// 레시피 끌어오기
+  /// 프론트 전역 레시피 끌어오기
   void getListedRecipes(){
     List<RecipeModel> recipes = [];
     for(int i = 0; i < Recipes![0]!.length; i++)
       recipes.add(RecipeModel().getRecipe(i));
     recipeStorage = RecipesModel(recipes);
+  }
+  /// 프론트 전역 레시피 업데이트
+  void updateRecipeSaved({required RecipeModel recipe}){
+    for(int i = 0; i < Recipes![0]!.length; i++){
+      if(recipe.id == Recipes![0]![i]){
+        Recipes![3]![i] = !Recipes![3]![i];
+        break;
+      }
+    }
   }
 
   RecipePage(){
@@ -37,16 +48,22 @@ class RecipePage extends State<RecipeView> {
     _scrollController = ScrollController();
   }
 
+
+
   @override
   void dispose() {
     super.dispose();
     _scrollController.dispose();
   }
-
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
+
+    if(!nav2Processed){
+      getListedRecipes();
+      nav2Processed = true;
+    }
 
     return Scaffold(
       // 냉장고 선택 페이지 UI
@@ -104,7 +121,7 @@ class RecipePage extends State<RecipeView> {
                                     child: FilledButton(
                                       onPressed: (){
                                         setState(() async {
-                                          int recipeIdx = await getIngredientInfoFromServer(recipe);
+                                          int recipeIdx = await getIngredientInfoFromServer(recipe, false);
                                           recipe.getDetailRecipe(recipeIdx);
                                           // 이 부분에 모달 창
                                           RecipeDialog recipeWindow = RecipeDialog(recipe: recipe);
@@ -161,6 +178,7 @@ class RecipePage extends State<RecipeView> {
                                               )
                                             ),
                                           ),
+                                          // 하트 UI 정중앙에 배치
                                           Flexible(
                                             flex: 1,
                                             fit: FlexFit.tight,
@@ -169,6 +187,29 @@ class RecipePage extends State<RecipeView> {
                                                 color: Colors.white,
                                                 borderRadius: BorderRadius.circular(30),
                                               ),
+                                              padding: EdgeInsets.only(top: 20),
+                                              child: Align(
+                                                alignment: Alignment.topCenter,
+                                                child: GestureDetector(
+                                                  onTap: () async {
+                                                    await createSavedRecipe(recipe : recipe);
+                                                    setState((){
+                                                        updateRecipeSaved(recipe: recipe);
+                                                        // 1. 클릭했을 때 true가 되는 경우
+                                                        if (!recipe.isSaved!)
+                                                          addSavedRecipe(recipeStorage!.recipes!.indexOf(recipe));
+                                                        // 2. 클릭했을 때 false가 되는 경우
+                                                        else
+                                                          deleteSavedRecipe(savedrecipe:recipe);
+                                                        getListedRecipes();
+                                                      }
+                                                    );
+                                                  },
+                                                  child: (recipe.isSaved!) ?
+                                                  Image.asset('assets/hearts/filledheart.png', height: 20, width: 20) :
+                                                  Image.asset('assets/hearts/blankheart.png', height: 20, width: 20)
+                                                )
+                                              )
                                             ),
                                           ),
                                         ]
@@ -213,13 +254,13 @@ class RecipePage extends State<RecipeView> {
                 ),
             prefixIcon: IconButton(
               icon: Icon(Icons.search, color: Colors.grey[700]),
-              onPressed: () {
+              onPressed: () async {
                 _searchController.clear();
-                setState(() async {
+                for(int i = 0; i < Recipes!.length; i++)
+                  Recipes![i]!.clear();
+                Recipes = await getRecipeQueryInfoFromServer(query:_searchQuery);
+                setState(() {
                   // 레시피 뷰에서 어디로 쏠건지...
-                  for(int i = 0; i < Recipes!.length; i++)
-                    Recipes![i]!.clear();
-                  Recipes = await getRecipeQueryInfoFromServer(query:_searchQuery);
                   getListedRecipes();
                 });
               },

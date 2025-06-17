@@ -20,7 +20,6 @@ final APIURLS = {
   'loadCart' : 'api/cart/',
   'addCart' : 'api/cart/add/',
   'savedRecipe' : 'api/savedRecipe/',
-  'addSavedRecipe' : 'api/savedRecipe/add/'
 };
 
 Future<bool> sendKakaoAccessToken(String accessToken) async {

@@ -135,11 +135,15 @@ class RecipeDialog extends Dialog{
                               inform: ingredientDetailInfo
                           );
                           // 식재료 소개 페이지로 이동
-                          print(ingredient.ingredientName);
                           Navigator.of(context).pushNamed('/' + pages[6].toString());
                         },
                         style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.fromLTRB(5, 0, 5, 0)
+                            padding: EdgeInsets.fromLTRB(5, 0, 5, 0),
+                            // (0, 255, 212, 1)
+                            backgroundColor:
+                              (ingredient.inFridge == true) ?
+                              Color.fromRGBO(255, 183, 77, 1) :
+                              Color.fromRGBO(255, 183, 77, 0.5)
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.start,

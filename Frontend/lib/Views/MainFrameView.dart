@@ -12,6 +12,8 @@ import 'package:Frontend/Models/RecipeModel.dart';
 import 'package:Frontend/Models/IngredientModel.dart';
 import 'package:Frontend/Services/loadRecipeService.dart';
 
+import '../Services/loadSavedRecipeService.dart';
+
 RefrigeratorModel nullProtectRefrigerator = (Fridges!.length != 0) ? Fridges![0] : RefrigeratorModel();
 
 List<Widget> pages = [
@@ -28,6 +30,11 @@ List<Widget> pages = [
 ];
 
 bool recipeFirstLoading = true;
+bool savedRecipeFirstLoading = true;
+
+/// 네비게이션 처리 여부에 따라 build에서 함수를 실행시킬 지 말 지 결정
+bool nav2Processed = true;
+bool nav3Processed = true;
 
 class mainAppBar extends StatelessWidget{
   String? _name;
@@ -171,12 +178,21 @@ class MainBottomBar extends State<MainBottomView> {
         Navigator.of(context).pushNamed('/' + pages[1].toString());
       }
       // 레시피 로드
-      else if (index == 2 || index == 3){
+      else if (index == 2){
         if (recipeFirstLoading) {
           Recipes = await getRecipeInfoFromServer();
           recipeFirstLoading = false;
         }
-        Navigator.of(context).pushNamed('/' + pages[index].toString());
+        nav2Processed = false;
+        Navigator.of(context).pushNamed('/' + pages[2].toString());
+      }
+      else if (index == 3){
+        if (savedRecipeFirstLoading) {
+          SavedRecipes = await getSavedRecipesFromServer();
+          savedRecipeFirstLoading = false;
+        }
+        nav3Processed = false;
+        Navigator.of(context).pushNamed('/' + pages[3].toString());
       }
       else
         Navigator.of(context).pushNamed('/' + pages[index].toString());

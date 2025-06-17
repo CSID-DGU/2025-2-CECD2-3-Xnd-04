@@ -66,7 +66,7 @@ class IngredientsInfoView extends StatelessWidget{
               ),
               Container(
                 height: screenHeight * 0.02,
-                color: Colors.white,
+                color: Colors.grey[100],
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: Icon(Icons.aspect_ratio, size: screenWidth * 0.03,)
@@ -325,7 +325,7 @@ class FridgeIngredientsInfoView extends StatelessWidget{
               ),
               Container(
                   height: screenHeight * 0.02,
-                  color: Colors.white,
+                  color: Colors.grey[100],
                   child: Align(
                       alignment: Alignment.centerRight,
                       child: Icon(Icons.aspect_ratio, size: screenWidth * 0.03,)
