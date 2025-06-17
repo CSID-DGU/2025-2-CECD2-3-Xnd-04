@@ -87,6 +87,13 @@ class RecipeView(APIView):
         # 시리얼라이징
         serializer = RecipeSerializer(paginated_recipes, many=True)
 
+        # 유저
+        user = request.user.user_id
+        # isSaved 필드 검사 후 값 추가
+        for data in serializer.data:
+            if SavedRecipes.objects.filter(user=user, recipe_id=data['recipe_id']).exists():
+                data['is_saved'] = True
+
         return Response({
             'count': total_count,
             'page': page,

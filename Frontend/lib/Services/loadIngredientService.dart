@@ -40,10 +40,10 @@ Future<Response?> requestIngredient(RecipeModel recipe) async{
 
 ///ID 기반 탐색, 레시피 이름이 적힌 버튼을 클릭하면 레시피의 id값을 활용해서 그곳에 저장된 식재료를 로드,
 ///한 번 로드된 레시피는 이후에 다시 로드되지 않음
-Future<int> getIngredientInfoFromServer(RecipeModel recipe) async {
+Future<int> getIngredientInfoFromServer(RecipeModel recipe, bool fromFavoritePage) async {
   Response<dynamic>? response = await requestIngredient(recipe);
   try {
-    List<List<dynamic>?>? li = Recipes;
+    List<List<dynamic>?>? li = (fromFavoritePage) ? SavedRecipes : Recipes;
     List<dynamic> Ingredients = [];
     List<dynamic> Descriptions = [];
     
@@ -59,24 +59,23 @@ Future<int> getIngredientInfoFromServer(RecipeModel recipe) async {
       Ingredients.add(IngredientModel().toIngredient(response, iidx));
 
     // 일치하는 레시피 찾기
-    for (int idx = 0; idx < 10; idx++){
-      if(li![0]![idx] == recipe.id) {
+    for (int idx = 0; idx < li![0]!.length; idx++){
+      if(li[0]![idx] == recipe.id) {
         recipeIdx = idx;
         break;
       }
     }
-
-    if (li!.length < 4) {
+    // 레시피 상세 정보 초기화 && 추가
+    if (li.length < 5) {
       li.add([]);
       li.add([]);
       for (int idx = 0; idx < 10; idx++) {
-        li[3]!.add(null);
         li[4]!.add(null);
+        li[5]!.add(null);
       }
     }
-
-    li[3]![recipeIdx] = Ingredients;
-    li[4]![recipeIdx] = Descriptions;
+    li[4]![recipeIdx] = Ingredients;
+    li[5]![recipeIdx] = Descriptions;
 
     return recipeIdx;
   }

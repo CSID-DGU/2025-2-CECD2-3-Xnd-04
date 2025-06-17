@@ -3,16 +3,16 @@ import 'package:Frontend/Views/LoginView.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
-import 'package:Frontend/Services/fcm_service.dart';
-
+import 'package:Frontend/PushService/fcmService.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // 추가
+  WidgetsFlutterBinding.ensureInitialized();
 
   await dotenv.load(fileName: '.env');
   final kakaoAppKey = dotenv.env['KAKAO_APP_KEY'];
   KakaoSdk.init(nativeAppKey: kakaoAppKey);
 
+  // FCM 초기화
   await FCMService.initialize();
 
   runApp(const MyApp());
