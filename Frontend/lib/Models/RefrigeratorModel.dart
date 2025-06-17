@@ -4,6 +4,7 @@ import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:flutter/material.dart';
 
 int? numOfFridge;
+/// 냉장고 저장 전역변수
 List<RefrigeratorModel> Fridges = [];
 
 class RefrigeratorModel implements RefrigeratorAbstract{
