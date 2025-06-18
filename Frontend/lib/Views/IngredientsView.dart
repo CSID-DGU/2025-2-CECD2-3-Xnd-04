@@ -37,7 +37,7 @@ class IngredientsPage extends State<IngredientsView> {
   int getDueDate(FridgeIngredientModel ingredient){
     DateTime now = DateTime.now();
     DateTime dueDateParsed = DateTime.parse(ingredient.storable_due!.substring(0, 10));
-    return dueDateParsed.difference(now).inDays;
+    return dueDateParsed.difference(now).inDays + 1;
   }
 
   Border getColoredBorder(FridgeIngredientModel ingredient){

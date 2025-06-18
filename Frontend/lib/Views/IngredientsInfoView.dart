@@ -21,7 +21,7 @@ class IngredientsInfoView extends StatelessWidget{
   int getDueDate(){
     DateTime now = DateTime.now();
     DateTime dueDateParsed = DateTime.parse(this._inform!['storable_due'].substring(0, 10));
-    return dueDateParsed.difference(now).inDays;
+    return dueDateParsed.difference(now).inDays + 1;
   }
 
   Widget build(BuildContext context){
@@ -280,7 +280,7 @@ class FridgeIngredientsInfoView extends StatelessWidget{
   int getDueDate(){
     DateTime now = DateTime.now();
     DateTime dueDateParsed = DateTime.parse(this._ingredient!.storable_due!.substring(0, 10));
-    return dueDateParsed.difference(now).inDays;
+    return dueDateParsed.difference(now).inDays + 1;
   }
 
   Widget build(BuildContext context){
