@@ -24,7 +24,8 @@ class FridgeIngredients(models.Model):
         # layer값 검사
         if self.fridge and self.layer > self.fridge.layer_count:
             raise ValueError(f"layer 값은 fridge.layers({self.fridge.layer_count})보다 작아야 합니다.")
-        
+
+        super().save(*args, **kwargs)
         # 보관 가능 날짜 DB저장
         if self.stored_at and self.foodStorageLife and self.foodStorageLife.storage_life:
             self.storable_due = self.stored_at + timedelta(days=self.foodStorageLife.storage_life)

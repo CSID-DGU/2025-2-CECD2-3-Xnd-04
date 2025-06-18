@@ -37,7 +37,7 @@ class IngredientsPage extends State<IngredientsView> {
   int getDueDate(FridgeIngredientModel ingredient){
     DateTime now = DateTime.now();
     DateTime dueDateParsed = DateTime.parse(ingredient.storable_due!.substring(0, 10));
-    return dueDateParsed.difference(now).inDays + 1;
+    return dueDateParsed.difference(now).inDays;
   }
 
   Border getColoredBorder(FridgeIngredientModel ingredient){
@@ -234,10 +234,6 @@ bool updateButtonClicked = false;
                                         child: ClipRRect(
                                           borderRadius: BorderRadius.circular(20),
                                           child: Image.network(refrigerator.ingredients![index + startPoint[floor - 1]].imgUrl!, fit: BoxFit.cover,),
-                                          // child: Opacity(
-                                          //   opacity: 0.5,
-                                          //   child: Image.network(refrigerator.ingredients![index + startPoint[floor - 1]].imgUrl!, fit: BoxFit.cover)
-                                          // )
                                         )
                                       )
                                     ),

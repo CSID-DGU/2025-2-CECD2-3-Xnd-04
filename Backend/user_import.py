@@ -95,7 +95,7 @@ def import_fridge_ingredients():
 
                 try:
 
-                    fridge = Fridge.objects.get(pk=5)  # 여기에 각자 냉장고 아이디 넣으시면 됩니다
+                    fridge = Fridge.objects.get(pk=1)  # 여기에 각자 냉장고 아이디 넣으시면 됩니다
 
                     food_storage_life = None
                     if fridge_ingredient_data.get('foodStorageLife_id'):

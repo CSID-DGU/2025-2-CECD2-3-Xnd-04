@@ -21,14 +21,14 @@ class IngredientsInfoView extends StatelessWidget{
   int getDueDate(){
     DateTime now = DateTime.now();
     DateTime dueDateParsed = DateTime.parse(this._inform!['storable_due'].substring(0, 10));
-    return dueDateParsed.difference(now).inDays + 1;
+    return dueDateParsed.difference(now).inDays;
   }
 
   Widget build(BuildContext context){
 
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-    int dueDate = (_inform != null) ? getDueDate() : -1;
+    int dueDate = (_inform != null) ? getDueDate(): -1;
     List<MaterialColor> tabbarColor = [Colors.red, Colors.blue, Colors.yellow];
 
     Container recipeInfoDescription(RecipeDetailModel recipedetail){
@@ -280,7 +280,7 @@ class FridgeIngredientsInfoView extends StatelessWidget{
   int getDueDate(){
     DateTime now = DateTime.now();
     DateTime dueDateParsed = DateTime.parse(this._ingredient!.storable_due!.substring(0, 10));
-    return dueDateParsed.difference(now).inDays + 1;
+    return dueDateParsed.difference(now).inDays;
   }
 
   Widget build(BuildContext context){
