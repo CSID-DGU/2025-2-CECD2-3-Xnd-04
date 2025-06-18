@@ -1,17 +1,17 @@
 # tasks.py
-# Celery 백그라운드 작업 + 실제 푸시 전송
-
 from celery import shared_task
 from django.utils import timezone
 from XndApp.Models.notification import PushNotification
-from fcm_services import send_push_notification
-
-
-# 예약된 시간에 푸시 알림 전송
+from fcm_services import send_push_notification, initialize_firebase
 
 @shared_task
 def schedule_push_notification(notification_id):
     print(f"=== 태스크 실행됨! notification_id: {notification_id} ===")
+
+    # Firebase 초기화 확인
+    if not initialize_firebase():
+        print("[ERROR] Firebase 초기화 실패로 태스크 종료")
+        return False
 
     try:
         notification = PushNotification.objects.get(id=notification_id)
@@ -41,3 +41,4 @@ def schedule_push_notification(notification_id):
         return False
     except Exception as e:
         print(f"[ERROR] 알림 전송 중 오류: {e}")
+        return False

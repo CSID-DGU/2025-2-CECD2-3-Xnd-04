@@ -1,9 +1,11 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:Frontend/Services/authService.dart';
+import 'dart:io';
 
 class FCMService {
   static FCMService? _instance;
@@ -11,6 +13,10 @@ class FCMService {
   FCMService._();
 
   String? _currentToken;
+
+  // 로컬 알림 플러그인
+  final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
 
   // FCM 초기화 (main.dart에서 한 번만 호출)
   static Future<void> initialize() async {
@@ -20,6 +26,9 @@ class FCMService {
 
   // FCM 설정
   Future<void> _setupFCM() async {
+    // 로컬 알림 초기화
+    await _initializeLocalNotifications();
+
     // 권한 요청
     NotificationSettings settings = await FirebaseMessaging.instance.requestPermission(
       alert: true,
@@ -29,6 +38,11 @@ class FCMService {
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
       print('✅ 알림 권한 허용됨');
+
+      // Android 알림 채널 생성
+      if (Platform.isAndroid) {
+        await _createNotificationChannel();
+      }
 
       // 토큰 받기
       _currentToken = await FirebaseMessaging.instance.getToken();
@@ -40,26 +54,95 @@ class FCMService {
       FirebaseMessaging.instance.onTokenRefresh.listen((String token) {
         print("🔄 Token refreshed: $token");
         _currentToken = token;
-        // 토큰이 갱신되면 자동으로 서버에 업데이트
         registerDeviceToServer();
       });
 
-      // 포그라운드 메시지 처리
+      // 포그라운드 메시지 처리 (실제 알림 표시)
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         print('📱 포그라운드 메시지: ${message.notification?.title}');
         print('📱 메시지 내용: ${message.notification?.body}');
-        // 여기서 앱 내 알림 UI 표시 가능
+
+        // 포그라운드에서도 알림 표시
+        _showLocalNotification(message);
       });
 
       // 백그라운드에서 앱을 탭해서 열었을 때
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
         print('📱 백그라운드에서 앱 열림: ${message.notification?.title}');
-        // 여기서 특정 화면으로 이동 가능
       });
 
     } else {
       print('❌ 알림 권한 거부됨');
     }
+  }
+
+  // 로컬 알림 초기화
+  Future<void> _initializeLocalNotifications() async {
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const DarwinInitializationSettings iosSettings =
+        DarwinInitializationSettings(
+          requestAlertPermission: true,
+          requestBadgePermission: true,
+          requestSoundPermission: true,
+        );
+
+    const InitializationSettings initSettings = InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+    );
+
+    await _localNotifications.initialize(initSettings);
+  }
+
+  // Android 알림 채널 생성
+  Future<void> _createNotificationChannel() async {
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'food_notification_channel', // 채널 ID
+      '식품 알림', // 채널 이름
+      description: '식품 유통기한 알림을 받습니다', // 채널 설명
+      importance: Importance.high,
+      playSound: true,
+    );
+
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+
+    print('✅ 알림 채널 생성 완료');
+  }
+
+  // 로컬 알림 표시
+  Future<void> _showLocalNotification(RemoteMessage message) async {
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'food_notification_channel',
+      '식품 알림',
+      channelDescription: '식품 유통기한 알림을 받습니다',
+      importance: Importance.high,
+      priority: Priority.high,
+      showWhen: true,
+    );
+
+    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const NotificationDetails details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _localNotifications.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      message.notification?.title ?? '알림',
+      message.notification?.body ?? '',
+      details,
+    );
+
+    print('🔔 로컬 알림 표시 완료');
   }
 
   // 서버에 기기 등록 (로그인 후 호출)
