@@ -73,7 +73,7 @@ class IngredientsPage extends State<IngredientsView> {
     }
   }
 
-
+bool updateButtonClicked = false;
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -163,8 +163,29 @@ class IngredientsPage extends State<IngredientsView> {
                                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: screenHeight * 0.01),
                                       textAlign: TextAlign.center,)
                                   ),
+                                  (floor == refrigerator.level) ?
                                   Container(
-                                    width: (screenWidth - 100) * 0.6,
+                                    width: (screenWidth - 100) * 0.85,
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: GestureDetector(
+                                        onTap: () async {
+                                          updateButtonClicked = true;
+                                          int index = 0;
+                                          for(;index < Fridges.length; index++)
+                                            if (Fridges[index].id == refrigerator.id)
+                                              break;
+                                          await loadFridgeIngredientsInfo(refrigerator, index);
+                                          setState(() {
+                                            updateButtonClicked = false;
+                                          });
+                                        },
+                                        child: Icon(Icons.update, size: 20),
+                                      )
+                                    )
+                                  ) :
+                                  Container(
+                                    width: (screenWidth - 100) * 0.85,
                                   )
                                 ],
                               )
@@ -212,7 +233,11 @@ class IngredientsPage extends State<IngredientsView> {
                                         // 식재료 이미지
                                         child: ClipRRect(
                                           borderRadius: BorderRadius.circular(20),
-                                          child: Image.network(refrigerator.ingredients![index + startPoint[floor - 1]].imgUrl!, fit: BoxFit.cover),
+                                          child: Image.network(refrigerator.ingredients![index + startPoint[floor - 1]].imgUrl!, fit: BoxFit.cover,),
+                                          // child: Opacity(
+                                          //   opacity: 0.5,
+                                          //   child: Image.network(refrigerator.ingredients![index + startPoint[floor - 1]].imgUrl!, fit: BoxFit.cover)
+                                          // )
                                         )
                                       )
                                     ),
