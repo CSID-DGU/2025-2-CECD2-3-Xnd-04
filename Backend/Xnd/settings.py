@@ -179,4 +179,4 @@ YOLO_MODEL_PATH = YOLO_MODEL_DIR / YOLO_MODEL_FILENAME
 
 # 미디어 파일 경로 (이미지 저장소)
 MEDIA_ROOT = BASE_DIR / "media"
-MEDIA_URL = '/media'
+MEDIA_URL = '/media/'

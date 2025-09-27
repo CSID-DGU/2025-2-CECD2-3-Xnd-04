@@ -20,7 +20,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('XndApp.urls')),
     path('firebase-messaging-sw.js', serve_sw, name='firebase-sw'),  # Service Worker 서빙
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+#if settings.DEBUG:
+    # 정적 파일 서빙
+ #   urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    # 미디어 파일 서빙 (새로 추가한 로직)
+  #  urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
