@@ -10,7 +10,7 @@ from XndApp.Views.CartViews import CartListView, CartManageView
 from XndApp.Views.savedRecipesViews import SavedRecipesView,SavedRecipeDetailView
 from XndApp.Views.NotificationViews import RegisterDeviceView, DeviceManageView, NotificationView, NotificationDetailView, IngredientNotificationView
 from XndApp.Views.fcmViews import fcm_test_view
-#from XndApp.Views.cv_views
+from XndApp.Views.cv_views import handle_detection_post
 
 urlpatterns = [
     # 로그인 및 인증
@@ -49,6 +49,6 @@ urlpatterns = [
     path('fcm-test/', fcm_test_view, name='fcm_test'), # 테스트용 웹 FCM 발급 (추후 프론트로 수정)
 
     # CV 연동
-    path
+    path('api/detection/upload/', handle_detection_post, name='cv_detection_upload'),
 
 ]
