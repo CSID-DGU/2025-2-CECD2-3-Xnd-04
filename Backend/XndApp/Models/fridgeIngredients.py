@@ -7,11 +7,17 @@ from datetime import timedelta
 from XndApp.Models.ingredients import Ingredient
 
 class FridgeIngredients(models.Model):
+
+    STATUS_CHOICES = [
+        ('inbound', '입고'),
+        ('outbound', '출고'),
+        ('in_use', '사용중'),
+    ]
+
     fridge = models.ForeignKey(Fridge,on_delete=models.CASCADE)
     stored_at = models.DateTimeField(auto_now_add=True)
     layer = models.IntegerField(
         validators=[MinValueValidator(0)],  #0 이상
-        
         help_text="냉장고 내의 재료의 위치(단수)"
         )
     # category = models.ForeignKey(Category,on_delete=models.CASCADE)
@@ -19,6 +25,13 @@ class FridgeIngredients(models.Model):
     storable_due = models.DateTimeField(null=True)
     ingredient_name = models.CharField(max_length=100)
     ingredient_pic = models.CharField(max_length=255)
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='inbound',
+        help_text = "식재료 상태 (입고/출고/사용중)"
+    )
 
     def save(self, *args, **kwargs):
         # layer값 검사

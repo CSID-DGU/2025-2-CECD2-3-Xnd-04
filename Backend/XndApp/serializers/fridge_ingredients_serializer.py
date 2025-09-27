@@ -12,6 +12,6 @@ class FridgeIngredientsSerializer(serializers.ModelSerializer):
             'layer',
             'stored_at',
             'storable_due',
-            'ingredient_pic'
-
+            'ingredient_pic',
+            'status'
         ]
