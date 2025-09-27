@@ -21,3 +21,6 @@ urlpatterns = [
     path('', include('XndApp.urls')),
     path('firebase-messaging-sw.js', serve_sw, name='firebase-sw'),  # Service Worker 서빙
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
