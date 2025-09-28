@@ -9,3 +9,6 @@ __pycache__/
 
 RecipeDataset.csv
 FridgeIngredients.csv
+
+vision-api-key.json
+/Backend/auth/vision-api-key.json

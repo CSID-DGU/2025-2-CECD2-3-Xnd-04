@@ -177,6 +177,9 @@ YOLO_MODEL_DIR = BASE_DIR / "models"
 YOLO_MODEL_FILENAME = "yolov8n.pt"
 YOLO_MODEL_PATH = YOLO_MODEL_DIR / YOLO_MODEL_FILENAME
 
+# Google Cloud Vision API 인증 경로 추가
+GOOGLE_APPLICATION_CREDENTIALS = BASE_DIR / "auth" / "vision_api_key.json"
+
 # 미디어 파일 경로 (이미지 저장소)
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = '/media/'
