@@ -10,7 +10,8 @@ from XndApp.Views.CartViews import CartListView, CartManageView
 from XndApp.Views.savedRecipesViews import SavedRecipesView,SavedRecipeDetailView
 from XndApp.Views.NotificationViews import RegisterDeviceView, DeviceManageView, NotificationView, NotificationDetailView, IngredientNotificationView
 from XndApp.Views.fcmViews import fcm_test_view
-from XndApp.Views.cv_views import handle_detection_post
+from XndApp.Views.cv_views import handle_detection_post, run_yolo_test
+
 
 urlpatterns = [
     # 로그인 및 인증
@@ -50,5 +51,5 @@ urlpatterns = [
 
     # CV 연동
     path('api/detection/upload/', handle_detection_post, name='cv_detection_upload'),
-
+    path('api/detection/test/', run_yolo_test, name='cv_pipeline_test') ### 테스트용
 ]

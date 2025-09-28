@@ -4,10 +4,11 @@
 
 import os
 import numpy as np
-import cv
+import cv, cv2
 from django.conf import settings
 from datetime import date
 from typing import Dict, List, Any  # Type Hinting을 위해 추가
+from XndApp.apps import SrmappConfig
 
 # 1. 메인 파이프라인 함수
 def process_image_pipeline(user_id: int, image_path: str) -> Dict[str, Any]:
@@ -35,14 +36,67 @@ def process_image_pipeline(user_id: int, image_path: str) -> Dict[str, Any]:
 
 # 2. ② YOLO 모델 적용 (객체 탐지)
 def run_yolo_detection(image_path: str) -> Dict[str, Any]:
-    # TODO: settings.YOLO_MODEL_PATH를 사용하여 모델 로드 및 실행 코드 구현
+    model = SrmappConfig.yolo_model
 
-    # 더미 결과 (구현 후 실제 코드로 대체)
-    return {
-        'category_name': '우유',
-        'confidence': 0.95,
-        'bounding_box': [100, 150, 400, 500],  # [xmin, ymin, xmax, ymax]
-    }
+    if model is None:   # 모델 로드 실패시
+        return {
+            'category_name' : 'ERROR (loading yolo)',
+            'confidence': 0.0,
+            'bounding_box' : [0,0,0,0]
+        }
+
+    try:
+        results = model.predict(source=image_path, conf=0.25 ,iou=0.5, verbose=True)
+
+        if not results or not results[0].boxes: #탐지된 객체가 없거나 결과가 비어있을 경우
+            return {
+                'category_name' : 'NOT_DETECTED',
+                'confidence' : 0.0,
+                'bounding_box' : [0,0,0,0],
+            }
+
+        box = results[0].boxes[0]
+        xmin, ymin, xmax, ymax = map(int, box.xyxy[0].tolist())
+        confidence = float(box.conf[0])
+        class_index = int(box.cls[0])
+        category_name = model.names[class_index]
+        
+        ## YOLO 결과 시각화 및 저장
+        # 1. 원본 이미지 로드 (OpenCV 사용)
+        img_array = np.fromfile(image_path, np.uint8)
+        image_cv = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+
+        # 2. 바운딩 박스(BB) 그리기
+        cv2.rectangle(image_cv, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
+
+        # 3. 탐지된 클래스 이름 표시
+        text = f"{category_name}: {confidence:.2f}"
+        cv2.putText(image_cv, text, (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+
+        # 4. 시각화 결과 저장 경로 설정
+        base_name = os.path.splitext(os.path.basename(image_path))[0]
+        output_filename = f"{base_name}_yolo_checked.jpg"
+        output_path = settings.MEDIA_ROOT / 'stored_images' / output_filename
+
+        # 5. 이미지 파일로 저장 (한글 경로 문제 방지를 위해 imencode 후 tofile 사용)
+        is_success, buffer = cv2.imencode(".jpg", image_cv)
+        if is_success:
+            buffer.tofile(output_path)
+            print(f"✅ YOLO visualization saved to: {output_path}")
+
+        return {
+            'category_name' : category_name,
+            'confidence' : confidence,
+            'bounding_box' : [xmin, ymin, xmax, ymax],
+        }
+
+    except Exception as e:
+        print(f"YOLO detection error: {e}")
+        return {
+            'category_name' : 'ERROR',
+            'confidence' : 0.0,
+            'bounding_box' : [0,0,0,0],
+        }
 
 # 3. ③ OCR 모델 적용 (이미지 크롭 및 텍스트 인식)
 def run_ocr(image_path: str, yolo_result: Dict[str, Any]) -> Dict[str, str]:

@@ -173,8 +173,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ## CV 파이프라인 경로 설정
 # YOLO 모델 저장소 경로
-YOLO_MODEL_DIR = BASE_DIR/ "models"
-YOLO_MODEL_FILENAME = config("YOLO_MODEL_FILENAME", default="yolo_default.pt")
+YOLO_MODEL_DIR = BASE_DIR / "models"
+YOLO_MODEL_FILENAME = "yolov8n.pt"
 YOLO_MODEL_PATH = YOLO_MODEL_DIR / YOLO_MODEL_FILENAME
 
 # 미디어 파일 경로 (이미지 저장소)
