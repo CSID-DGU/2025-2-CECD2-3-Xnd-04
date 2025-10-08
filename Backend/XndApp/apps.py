@@ -3,26 +3,25 @@
 import os
 from django.apps import AppConfig
 from django.conf import settings
-# 💡 YOLO 라이브러리 임포트 (설치 확인 필수: pip install ultralytics)
 from ultralytics import YOLO
+from gensim.models import Word2Vec
 
-# 💡 이 기존 클래스에 모델 로드 로직을 추가합니다.
+
 class SrmappConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'XndApp'
 
-    # 1. 💡 전역 변수 선언: 모델 객체를 저장할 공간
     yolo_model = None
+    word_embedding_model = None  # Word2Vec 모델 변수 추가
 
-    def ready(self):
-        # 2. 💡 모델 로드 로직 구현
-        # 서버 시작 시 (runserver)에만 실행되도록 체크
+    def ready(self): # 서버 시작 시 AI 모델 실행
         if os.environ.get('RUN_MAIN', None) == 'true':
+
+            # YOLO 모델 로드
             try:
                 model_path = settings.YOLO_MODEL_PATH
 
                 if os.path.exists(model_path):
-                    # 모델 로드 후, 클래스 변수에 저장
                     SrmappConfig.yolo_model = YOLO(str(model_path))
                     print("✅ YOLO Model Loaded Successfully.")
                 else:
@@ -32,3 +31,20 @@ class SrmappConfig(AppConfig):
                 print("❌ Ultralytics library not installed. Cannot load YOLO.")
             except Exception as e:
                 print(f"❌ Error loading YOLO model: {e}")
+
+            # Word2Vec 모델 로드
+            try:
+                embedding_path = settings.WORD_EMBEDDING_PATH
+
+                if os.path.exists(embedding_path):
+                    SrmappConfig.word_embedding_model = Word2Vec.load(str(embedding_path))
+                    print("✅ Word Embedding Model Loaded Successfully.")
+                else:
+                    print(f"⚠️ Word Embedding Model not found at: {embedding_path}. Running without embedding.")
+
+            except ImportError:
+                # gensim 라이브러리가 설치되지 않은 경우
+                print("❌ Gensim library not installed. Cannot load Word2Vec.")
+            except Exception as e:
+                # 모델 파일 자체가 손상되었거나 로드에 실패한 경우
+                print(f"❌ Error loading Word Embedding model: {e}")
