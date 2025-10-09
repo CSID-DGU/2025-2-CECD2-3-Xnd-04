@@ -380,6 +380,7 @@ def integrate_results(base_data: Dict[str, Any], yolo_result: Dict[str, Any], oc
                       ocr_raw_output: Dict[str, Any]) -> Dict[str, Any]:
 
     yolo_category = yolo_result.get('category_name', '식재료 미확인')  # YOLO로 인식한 식재료명
+    yolo_confidence = yolo_result.get('confidence', 0.0)
     determined_ingredient_name = yolo_category
 
     raw_ocr_text = ocr_info.get('raw_ocr_text', '')  # OCR로 인식한 모든 텍스트
@@ -394,16 +395,16 @@ def integrate_results(base_data: Dict[str, Any], yolo_result: Dict[str, Any], oc
     type_conf = ocr_info.get('date_type_confidence', 0.0)  # 유통기한 유형 신뢰도
     extracted_date = ocr_info.get('extracted_date')  # 유통기한 표기 형태 통일
 
+    YOLO_CONFIDENCE_THRESHOLD = 0.7 # YOLO 신뢰도 임계값
     PRODUCT_SIMILARITY_THRESHOLD = 0.65  # 제품명 추출 최종 임계값 (유사도 기반)
 
     # 최종 식재료명 선정 (우선순위: OCR 고유사도 > YOLO 탐지 > 저유사도 YOLO 초기값)
-    if product_similarity_score >= PRODUCT_SIMILARITY_THRESHOLD:  # OCR 인식 유사도가 임계값 이상일 때
+    if product_similarity_score >= PRODUCT_SIMILARITY_THRESHOLD: # OCR 유사도가 높을때
         determined_ingredient_name = final_product_name
-    elif yolo_category not in ['FALLBACK_MODE',
-                               '식재료 미확인'] and product_similarity_score >= 0.3:  # OCR 유사도가 중간, YOLO 탐지 결과가 있을 때
+    elif yolo_category not in ['FALLBACK_MODE', '식재료 미확인'] and yolo_confidence >= YOLO_CONFIDENCE_THRESHOLD: # YOLO 결과를 신뢰할 수 있을 때
         determined_ingredient_name = yolo_category
-    else:  # YOLO, OCR 모두 인식 결과가 없거나 유사도가 낮을 때
-        pass  # YOLO 초기값 유지
+    else: # 그 외의 경우 (식재료 미확인)
+        determined_ingredient_name = '식재료 미확인'
 
     # 유통기한 최종
     RECOGNITION_THRESHOLD = 0.85  # 유통기한 인식 신뢰도 임계값
