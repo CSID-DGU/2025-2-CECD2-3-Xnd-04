@@ -3,9 +3,12 @@ __pycache__/
 
 .env
 .venv
-
+venv_312/
 */local_settings.py
 .idea/
 
 RecipeDataset.csv
 FridgeIngredients.csv
+
+vision_api_key.json
+/auth/vision_api_key.json

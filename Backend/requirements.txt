@@ -1,4 +1,4 @@
-asgiref==3.8.1
+﻿asgiref==3.8.1
 celery==5.5.3
 certifi==2025.4.26
 charset-normalizer==3.4.2
@@ -18,3 +18,19 @@ requests==2.32.3
 sqlparse==0.5.3
 tzdata==2025.2
 urllib3==2.4.0
+
+# Word Embedding
+gensim==4.3.3
+numpy==1.26.4
+scipy==1.13.1
+smart-open==7.3.1
+
+# Deep Learning (YOLO)
+torch
+torchvision
+ultralytics  # YOLOv8 사용 시
+
+# 이미지 및 OCR 처리
+Pillow
+opencv-python
+google-cloud-vision
