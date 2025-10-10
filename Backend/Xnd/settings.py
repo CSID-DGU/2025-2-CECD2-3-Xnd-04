@@ -86,6 +86,10 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default='3306'),
+        'OPTIONS' : {
+            'charset': 'utf8mb4',
+            'ssl' : False,
+        }
     }
 }
 
@@ -171,3 +175,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # FireBase
 # FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'firebase-service-account.json')
 
+## CV 파이프라인 경로 설정
+# YOLO 모델 저장소 경로
+YOLO_MODEL_DIR = BASE_DIR / "models"
+YOLO_MODEL_FILENAME = "yolov8n.pt"
+YOLO_MODEL_PATH = YOLO_MODEL_DIR / YOLO_MODEL_FILENAME
+# Word Embedding 모델 저장소 경로
+WORD_EMBEDDING_DIR = BASE_DIR / "models"
+WORD_EMBEDDING_FILENAME = "food_embedding.model"
+WORD_EMBEDDING_PATH = WORD_EMBEDDING_DIR / WORD_EMBEDDING_FILENAME
+
+# Google Cloud Vision API 인증 경로 추가
+GOOGLE_APPLICATION_CREDENTIALS = BASE_DIR / "auth" / "vision_api_key.json"
+
+# 미디어 파일 경로 (이미지 저장소)
+MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = '/media/'

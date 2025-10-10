@@ -11,7 +11,6 @@ from django.utils import timezone
 
 # 냉장고 List View
 class FridgeViews(APIView):
-    # permission_classes = [AllowAny] #테스트용
 
     ## 냉장고 List
     def get(self, request):
