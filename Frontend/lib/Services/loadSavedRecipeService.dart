@@ -40,15 +40,17 @@ Future<List<List<dynamic>?>?> getSavedRecipesFromServer() async {
 
   data = response.data;
 
-  print('저장된 레시피 로드를 진행합니다...');
-  for(int i = 0; i < data!.length; i++){
-    li[0].add(data[i]['recipe_id']);
-    li[1].add(data[i]['food_name']);
-    li[2].add(data[i]['recipe_image']);
-    li[3].add(data[i]['is_saved']);
-  }
+  if (data != null) {
+    print('저장된 레시피 로드를 진행합니다...');
+    for(int i = 0; i < data.length; i++){
+      li[0].add(data[i]['recipe_id']);
+      li[1].add(data[i]['food_name']);
+      li[2].add(data[i]['recipe_image']);
+      li[3].add(data[i]['is_saved']);
+    }
 
-  print('객체 ${li}');
+    print('객체 ${li}');
+  }
 
   return li;
 }

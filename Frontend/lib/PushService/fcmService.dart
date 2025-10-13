@@ -152,9 +152,16 @@ class FCMService {
       return;
     }
 
-    if (responsedAccessToken == null) {
-      print('❌ 인증 토큰이 없음');
-      return;
+    // 저장된 토큰 불러오기
+    String? accessToken = responsedAccessToken;
+    if (accessToken == null) {
+      final tokens = await getSavedTokens();
+      accessToken = tokens['access_token'];
+      if (accessToken == null) {
+        print('❌ 저장된 인증 토큰이 없음');
+        return;
+      }
+      responsedAccessToken = accessToken;
     }
 
     try {
@@ -163,13 +170,13 @@ class FCMService {
 
       final String deviceURL = (ip!.startsWith('10.0.2')) ?
       'http://10.0.2.2:8000/api/devices/register/' :
-      'http://' + HOST! + '/api/devices/register/';
+      'http://$HOST/api/devices/register/';
 
       final response = await dio.post(
         deviceURL,
         options: Options(
           headers: {
-            'Authorization': 'Bearer ' + responsedAccessToken!,
+            'Authorization': 'Bearer $accessToken',
             'Content-Type': 'application/json',
           },
         ),
@@ -189,6 +196,11 @@ class FCMService {
       }
     } catch (e) {
       print("❌ 서버 연결 오류: $e");
+
+      // 401 에러 처리 (토큰 만료)
+      if (e is DioException && e.response?.statusCode == 401) {
+        await handle401Error();
+      }
     }
   }
 

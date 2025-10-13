@@ -13,12 +13,24 @@ Future<bool> createFridgeToServer({required RefrigeratorModel refrigerator}) asy
   'http://10.0.2.2:8000/api/fridge/create/' :
   'http://' + HOST! + APIURLS['createFridge']!;
   try {
+    // 저장된 토큰 불러오기
+    String? accessToken = responsedAccessToken;
+    if (accessToken == null) {
+      final tokens = await getSavedTokens();
+      accessToken = tokens['access_token'];
+      if (accessToken == null) {
+        print('❌ 저장된 토큰이 없습니다. 다시 로그인해주세요.');
+        return false;
+      }
+      responsedAccessToken = accessToken;
+    }
+
     final response = await dio.post(
       fridgeCreateURL, // 👉 백엔드 API 주소
       data: refrigerator.toMap(),
       options: Options(
         headers: {
-          'Authorization': 'Bearer ' + responsedAccessToken!,
+          'Authorization': 'Bearer $accessToken',
           'Content-Type': 'application/json',
         },
       ),
@@ -28,7 +40,13 @@ Future<bool> createFridgeToServer({required RefrigeratorModel refrigerator}) asy
     return true;
   }
   catch(e){
-    print('에러 로그 : ${e}');
+    print('에러 로그 : $e');
+
+    // 401 에러 처리 (토큰 만료)
+    if (e is DioException && e.response?.statusCode == 401) {
+      await handle401Error();
+    }
+
     return false;
   }
 }

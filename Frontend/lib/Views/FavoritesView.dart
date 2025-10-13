@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:Frontend/Abstracts/kakaoLogin.dart';
 import 'package:Frontend/Models/LoginModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
+import 'package:Frontend/Widgets/CommonAppBar.dart';
 import '../Models/IngredientModel.dart';
 import '../Models/RecipeModel.dart';
 import 'package:Frontend/MordalViews/RecipeMordal.dart';
@@ -56,14 +57,13 @@ class FavoritesPage extends State<FavoritesView> {
 
     return Scaffold(
       // 냉장고 선택 페이지 UI
-      appBar: basicBar(),
+      appBar: const CommonAppBar(title: 'Xnd'),
       backgroundColor: Colors.white,
       bottomNavigationBar: const MainBottomView(),
       body: Center(
           child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
-                mainAppBar(name:'   Xnd'),
                 Container(
                   height: screenHeight * 0.04,
                   margin: EdgeInsets.fromLTRB(20, screenHeight * 0.01, 20, screenHeight * 0.01),
@@ -119,8 +119,7 @@ class FavoritesPage extends State<FavoritesView> {
                     },
                   ),
                 ),
-                Container(
-                  height: screenHeight * 0.78,
+                Expanded(
                   child: Scrollbar(
                       controller: _scrollController,
                       thumbVisibility: true,

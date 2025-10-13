@@ -1,6 +1,7 @@
 import 'package:Frontend/Models/RecipeModel.dart';
 import 'package:flutter/material.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
+import 'package:Frontend/Widgets/CommonAppBar.dart';
 import '../Models/IngredientModel.dart';
 import 'package:Frontend/MordalViews/RecipeMordal.dart';
 import 'package:Frontend/Services/loadRecipeService.dart';
@@ -67,16 +68,13 @@ class RecipePage extends State<RecipeView> {
 
     return Scaffold(
       // 냉장고 선택 페이지 UI
-        appBar: basicBar(),
+        appBar: const CommonAppBar(title: 'Xnd'),
         backgroundColor: Colors.white,
         bottomNavigationBar: const MainBottomView(),
-        body: SingleChildScrollView(
-            child: Column(
+        body: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  mainAppBar(name:'   Xnd'),
-                  Container(
-                    height: screenHeight * 0.83,
+                  Expanded(
                     child: Scrollbar(
                       controller: _scrollController,
                       thumbVisibility: true,
@@ -222,10 +220,9 @@ class RecipePage extends State<RecipeView> {
                         ]
                       )
                     ),
-                  ),
+                  )
                 ]
-            )
-        ),
+            ),
       bottomSheet: Container(
         height: screenHeight * 0.04,
         margin: EdgeInsets.fromLTRB(20, screenHeight * 0.01, 20, screenHeight * 0.01),
