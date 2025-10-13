@@ -4,6 +4,7 @@ import 'package:Frontend/Views/IngredientsView.dart';
 import 'package:Frontend/Views/RecipeView.dart';
 import 'package:Frontend/Views/FavoritesView.dart';
 import 'package:Frontend/Views/CartView.dart';
+import 'package:Frontend/Views/AccountBookView.dart';
 import 'package:Frontend/Views/IngredientsInfoView.dart';
 import 'package:Frontend/Views/AlertView.dart';
 import 'package:Frontend/Views/SettingView.dart';
@@ -27,6 +28,7 @@ List<Widget> pages = [
   FridgeIngredientsInfoView(recipedetails : [RecipeDetailModel()], ingredient: FridgeIngredientModel()),
   const AlertView(),
   const SettingView(),
+  const AccountBookView(),
 ];
 
 bool recipeFirstLoading = true;
@@ -36,104 +38,8 @@ bool savedRecipeFirstLoading = true;
 bool nav2Processed = true;
 bool nav3Processed = true;
 
-class mainAppBar extends StatelessWidget{
-  String? _name;
-
-  mainAppBar({Key? key, required name}) : super(key: key){
-    this._name = name;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: <Widget>[
-        Container(
-          height : screenHeight * 0.04,
-          color: Colors.white,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              Container(
-                margin: EdgeInsets.fromLTRB(10, 0, 0, 0),
-                width : screenWidth * 0.25,
-                child: Text(this._name.toString(),
-                    style: const TextStyle(fontSize: 20, color: Colors.black, fontWeight: FontWeight.bold)),
-              ),
-              SizedBox(width: screenWidth * 0.5),
-              Container(
-                width: screenWidth * 0.1,
-                child: FilledButton(
-                  onPressed: () {
-                    Navigator.of(context).pushNamed('/' + pages[7].toString());
-                  },
-                  child: Image.asset('assets/images/alert.png', width: screenWidth * 0.05, height: screenWidth * 0.05, fit: BoxFit.cover),
-                  style: FilledButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    backgroundColor: Colors.white,
-                  ),
-                ),
-              ),
-              Container(
-                width: screenWidth * 0.1,
-                child: FilledButton(
-                  onPressed: () {
-                    Navigator.of(context).pushNamed('/' + pages[8].toString());
-                  },
-                  child: Image.asset('assets/images/setting.png', width: screenWidth * 0.05, height: screenWidth * 0.05, fit: BoxFit.cover),
-                  style: FilledButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    backgroundColor: Colors.white,
-                  ),
-                ),
-              )
-            ],
-          ),
-        ),
-        Container(
-          color: Colors.grey[700],
-          child: Divider(height: 1)
-        ),
-      ]
-    );
-  }
-}
-
-class backBar extends StatelessWidget{
-  backBar({Key? key}) : super(key: key){}
-
-  Widget build(BuildContext context){
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
-    return Container(
-      width: screenWidth,
-      height: screenHeight * 0.04,
-      color: Colors.white,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          SizedBox(width: 10),
-          IconButton(
-            icon: Icon(Icons.keyboard_backspace, color: Colors.grey[700], size: 25),
-            onPressed: (){
-              Navigator.of(context).pop();
-            },
-          )
-        ]
-      )
-    );
-  }
-}
-
-AppBar basicBar(){
-  return AppBar(
-    backgroundColor: Colors.white,
-    toolbarHeight: 0,
-  );
-}
+/// 현재 선택된 하단 네비게이션 인덱스 (전역)
+int currentBottomNavIndex = 0;
 
 class MainBottomView extends StatefulWidget {
 
@@ -147,56 +53,62 @@ class MainBottomView extends StatefulWidget {
 
 class MainBottomBar extends State<MainBottomView> {
   // 네비게이션 바는 냉장고가 하나라도 추가되어야 활성화
-  void onItemTapped(int index){
-    setState(() async {
-      if (Fridges!.length == 0){
-        await Future.delayed(Duration.zero);
-        if (index != 0) {
-          showDialog(
-              context: context,
-              builder: (context) =>
-                  AlertDialog(
-                    title: Text('경고'),
-                    content: Text('+ 버튼을 눌러 냉장고를 추가해 주세요'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: Text('확 인'),
-                      ),
-                    ],
-                  )
-          );
-        }
-        else {
-          isPlusButtonClicked = false;
-          Navigator.of(context).pushNamed('/' + pages[0].toString());
-        }
-      }
-      else if (index == 0)
-        Navigator.of(context).pushNamed('/' + pages[5].toString());
-      else if (index == 1){
-        Navigator.of(context).pushNamed('/' + pages[1].toString());
-      }
-      // 레시피 로드
-      else if (index == 2){
-        if (recipeFirstLoading) {
-          Recipes = await getRecipeInfoFromServer();
-          recipeFirstLoading = false;
-        }
-        nav2Processed = false;
-        Navigator.of(context).pushNamed('/' + pages[2].toString());
-      }
-      else if (index == 3){
-        if (savedRecipeFirstLoading) {
-          SavedRecipes = await getSavedRecipesFromServer();
-          savedRecipeFirstLoading = false;
-        }
-        nav3Processed = false;
-        Navigator.of(context).pushNamed('/' + pages[3].toString());
-      }
-      else
-        Navigator.of(context).pushNamed('/' + pages[index].toString());
+  void onItemTapped(int index) async {
+    // 냉장고가 없으면 경고 표시 (IngredientsView만)
+    if (Fridges!.length == 0 && index == 0){
+      await Future.delayed(Duration.zero);
+      showDialog(
+          context: context,
+          builder: (context) =>
+              AlertDialog(
+                title: Text('경고'),
+                content: Text('+ 버튼을 눌러 냉장고를 추가해 주세요'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text('확 인'),
+                  ),
+                ],
+              )
+      );
+      return;
+    }
+
+    // 현재 인덱스 업데이트 (전역 변수)
+    setState(() {
+      currentBottomNavIndex = index;
     });
+
+    // 0: IngredientsView
+    if (index == 0){
+      Navigator.of(context).pushNamed('/' + pages[1].toString());
+    }
+    // 1: RecipeView
+    else if (index == 1){
+      if (recipeFirstLoading) {
+        Recipes = await getRecipeInfoFromServer();
+        recipeFirstLoading = false;
+      }
+      nav2Processed = false;
+      Navigator.of(context).pushNamed('/' + pages[2].toString());
+    }
+    // 2: AccountBookView
+    else if (index == 2){
+      Navigator.of(context).pushNamed('/' + pages[10].toString());
+    }
+    // 3: CartView
+    else if (index == 3){
+      Navigator.of(context).pushNamed('/' + pages[4].toString());
+    }
+    // 4: FavoritesView
+    else if (index == 4){
+      if (savedRecipeFirstLoading) {
+        SavedRecipes = await getSavedRecipesFromServer();
+        savedRecipeFirstLoading = false;
+      }
+      nav3Processed = false;
+      Navigator.of(context).pushNamed('/' + pages[3].toString());
+    }
   }
 
   @override
@@ -204,42 +116,38 @@ class MainBottomBar extends State<MainBottomView> {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
-    return SafeArea(
-      child: Container(
-        height: screenHeight * 0.08,
-        width: screenWidth,
-        color: Colors.orangeAccent,
-        child: BottomNavigationBar(
-          onTap: onItemTapped,
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: const Color(0xFFFFFFFF),
-          selectedItemColor: Colors.black,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'home',
-            ),
-            BottomNavigationBarItem(
-              icon: ImageIcon(AssetImage('assets/images/menu.png')),
-              label: 'refrigerator',
-            ),
-            BottomNavigationBarItem(
-              icon: ImageIcon(AssetImage('assets/images/recipe.png')),
-              label: 'recipe',
-            ),
-            BottomNavigationBarItem(
-              icon: ImageIcon(AssetImage('assets/images/favorits.png')),
-              label: 'favorits',
-            ),
-            BottomNavigationBarItem(
-              icon: ImageIcon(AssetImage('assets/images/cart.png')),
-              label: 'cart',
-            ),
-          ],
-        )
-      )
+    return BottomNavigationBar(
+      currentIndex: currentBottomNavIndex,
+      onTap: onItemTapped,
+      showSelectedLabels: false,
+      showUnselectedLabels: false,
+      type: BottomNavigationBarType.fixed,
+      backgroundColor: const Color(0xFFFFFFFF),
+      selectedItemColor: const Color(0xFF2196F3),
+      unselectedItemColor: Colors.grey,
+      elevation: 8,
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home),
+          label: 'ingredients',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.search),
+          label: 'recipe',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person_outline),
+          label: 'accountbook',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.local_mall),
+          label: 'cart',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.star),
+          label: 'favorites',
+        ),
+      ],
     );
   }
 }

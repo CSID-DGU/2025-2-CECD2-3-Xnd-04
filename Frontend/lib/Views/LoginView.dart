@@ -3,8 +3,7 @@ import 'package:Frontend/Abstracts/kakaoLogin.dart';
 import 'package:Frontend/Models/LoginModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:Frontend/Services/loadFridgeService.dart';
-
-
+import 'package:Frontend/Services/authService.dart';
 
 import '../PushService/fcmService.dart';
 
@@ -20,19 +19,98 @@ class LoginView extends StatefulWidget {
 }
 
 class LoginPage extends State<LoginView>{
+  final loginViewModel = LoginModel(KakaoLogin());
+  bool _isChecking = true; // 자동 로그인 체크 중
+
   @override
   void initState(){
     super.initState();
+    _checkAutoLogin(); // 자동 로그인 체크
   }
-  final loginViewModel = LoginModel(KakaoLogin());
+
+  // 자동 로그인 확인
+  Future<void> _checkAutoLogin() async {
+    try {
+      bool loggedIn = await isLoggedIn();
+
+      if (loggedIn) {
+        // 저장된 토큰 가져오기
+        Map<String, String?> tokens = await getSavedTokens();
+        if (tokens['access_token'] != null) {
+          responsedAccessToken = tokens['access_token'];
+          loginViewModel.isLogined = true;
+
+          // FCM 기기 등록
+          try {
+            await FCMService.instance.registerDeviceToServer();
+          } catch (e) {
+            print('FCM 등록 실패: $e');
+          }
+
+          // 냉장고 정보 확인
+          bool fridgeNonZero = false;
+          try {
+            fridgeNonZero = await getFridgesInfo();
+          } catch (e) {
+            print('냉장고 정보 로드 실패: $e');
+            // 냉장고 정보 로드 실패 시 토큰이 만료되었을 수 있으므로 로그아웃
+            await clearTokens();
+            if (mounted) {
+              setState(() {
+                _isChecking = false;
+              });
+            }
+            return;
+          }
+
+          if (mounted) {
+            // 냉장고 유무에 따라 페이지 이동
+            if (fridgeNonZero) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (i) => pages[1]), // IngredientsView
+              );
+            } else {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (i) => pages[0]), // InitialHomeView
+              );
+            }
+          }
+          return;
+        }
+      }
+    } catch (e) {
+      print('자동 로그인 체크 실패: $e');
+    }
+
+    // 자동 로그인 실패 시 로그인 화면 표시
+    if (mounted) {
+      setState(() {
+        _isChecking = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
+    // 자동 로그인 체크 중일 때 로딩 화면 표시
+    if (_isChecking) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF2196F3),
+        body: Center(
+          child: CircularProgressIndicator(
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
-      appBar: basicBar(),
+      // appBar: basicBar(),
       backgroundColor: const Color(0xFF2196F3), // 파란색 배경
       body: Center(
         child: Column(
@@ -67,19 +145,44 @@ class LoginPage extends State<LoginView>{
                   // 로그인 시, 로그인 여부 확인하고 냉장고의 수를 체크하여 냉장고 수에 따라 다른 화면으로 이동
                   await loginViewModel.login();
 
-                  // 🔥 FCM 기기 등록 (로그인 성공 후)
-                  if (loginViewModel.isLogined) {
-                    await FCMService.instance.registerDeviceToServer();
+                  // 로그인 실패 시 리턴
+                  if (!loginViewModel.isLogined) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('로그인에 실패했습니다. 다시 시도해주세요.')),
+                      );
+                    }
+                    return;
                   }
 
-                  bool fridgeNonZero = await getFridgesInfo();
-
-                  if (loginViewModel.isLogined)
+                  // 🔥 FCM 기기 등록 (로그인 성공 후)
+                  try {
                     await FCMService.instance.registerDeviceToServer();
+                  } catch (e) {
+                    print('FCM 등록 실패: $e');
+                  }
 
-                  (fridgeNonZero) ?
-                  Navigator.push(context, MaterialPageRoute(builder: (i) => pages[5])):
-                  Navigator.push(context, MaterialPageRoute(builder: (i) => pages[0]));
+                  // 냉장고 정보 가져오기
+                  bool fridgeNonZero = false;
+                  try {
+                    fridgeNonZero = await getFridgesInfo();
+                  } catch (e) {
+                    print('냉장고 정보 로드 실패: $e');
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('냉장고 정보를 불러오는데 실패했습니다.')),
+                      );
+                    }
+                    return;
+                  }
+
+                  if (context.mounted) {
+                    if (fridgeNonZero) {
+                      Navigator.push(context, MaterialPageRoute(builder: (i) => pages[1])); // IngredientsView
+                    } else {
+                      Navigator.push(context, MaterialPageRoute(builder: (i) => pages[0])); // InitialHomeView
+                    }
+                  }
                 },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
