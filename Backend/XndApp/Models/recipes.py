@@ -13,7 +13,7 @@ class Recipes(models.Model):
     steps = models.TextField(help_text="요리 순서(내용)")
     serving_size = models.CharField(max_length=50,help_text="N인분")
     cooking_time = models.CharField(max_length=50,help_text="~분 이내")
-
+    tags = models.ManyToManyField('Tags', blank=True, related_name='tags')
     COOKING_LEVEL_CHOICES = [
         ('anyone', '아무나'),
         ('beginner', '초급'),
