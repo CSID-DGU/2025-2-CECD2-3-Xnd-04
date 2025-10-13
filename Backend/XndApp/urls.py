@@ -10,6 +10,7 @@ from XndApp.Views.CartViews import CartListView, CartManageView
 from XndApp.Views.savedRecipesViews import SavedRecipesView,SavedRecipeDetailView
 from XndApp.Views.NotificationViews import RegisterDeviceView, DeviceManageView, NotificationView, NotificationDetailView, IngredientNotificationView
 from XndApp.Views.fcmViews import fcm_test_view
+from XndApp.Views.cv_views import handle_detection_post, run_yolo_test
 
 
 urlpatterns = [
@@ -20,8 +21,9 @@ urlpatterns = [
     # 냉장고
     path('api/fridge/create/',FridgeViews.as_view(),name='create_fridge'), # 냉장고 생성
     path('api/fridge/',FridgeViews.as_view(),name='fridges'), # 냉장고 정보 조회
-    path('api/fridge/<int:fridge_id>/',FridgeDetailView.as_view(),name='fridgeDetails'), # 냉장고 내부 조회
+    path('api/fridge/<int:fridge_id>/',FridgeDetailView.as_view(),name='fridgeDetails'), # 냉장고 내부 조회(GET), 냉장고에 식재료 등록(POST)
     path('api/fridge/<int:fridge_id>/ingredients/<int:ingredient_id>/', IngredientView.as_view()), # 냉장고 속 재료 하나 선택했을 때 정보 조회
+
 
     # 검색
     path('api/recipes/', RecipeView.as_view(), name='recipe-list'),  # 레시피 목록 조회 ?query ?keyword ?ingredient
@@ -48,4 +50,7 @@ urlpatterns = [
     # 푸시 테스트
     path('fcm-test/', fcm_test_view, name='fcm_test'), # 테스트용 웹 FCM 발급 (추후 프론트로 수정)
 
+    # CV 연동
+    path('api/detection/upload/', handle_detection_post, name='cv_detection_upload'),
+    path('api/detection/test/', run_yolo_test, name='cv_pipeline_test') ### 테스트용
 ]
