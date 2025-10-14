@@ -44,7 +44,7 @@ class AlertPage extends State<AlertView> {
             Navigator.of(context).pushReplacementNamed('/' + pages[1].toString());
           } else if (index == 1) {
             currentBottomNavIndex = 1;
-            Navigator.of(context).pushReplacementNamed('/' + pages[2].toString());
+            Navigator.of(context).pushReplacementNamed('/' + pages[11].toString());
           } else if (index == 2) {
             currentBottomNavIndex = 2;
             Navigator.of(context).pushReplacementNamed('/' + pages[10].toString());

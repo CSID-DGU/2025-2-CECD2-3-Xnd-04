@@ -8,6 +8,7 @@ import 'package:Frontend/Views/AccountBookView.dart';
 import 'package:Frontend/Views/IngredientsInfoView.dart';
 import 'package:Frontend/Views/AlertView.dart';
 import 'package:Frontend/Views/SettingView.dart';
+import 'package:Frontend/Views/SearchView.dart';
 import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:Frontend/Models/RecipeModel.dart';
 import 'package:Frontend/Models/IngredientModel.dart';
@@ -15,7 +16,7 @@ import 'package:Frontend/Services/loadRecipeService.dart';
 
 import '../Services/loadSavedRecipeService.dart';
 
-RefrigeratorModel nullProtectRefrigerator = (Fridges!.length != 0) ? Fridges![0] : RefrigeratorModel();
+RefrigeratorModel nullProtectRefrigerator = (Fridges.isNotEmpty) ? Fridges[0] : RefrigeratorModel();
 
 List<Widget> pages = [
   const InitialHomeView(),
@@ -29,6 +30,7 @@ List<Widget> pages = [
   const AlertView(),
   const SettingView(),
   const AccountBookView(),
+  const SearchView(),
 ];
 
 bool recipeFirstLoading = true;
@@ -55,7 +57,7 @@ class MainBottomBar extends State<MainBottomView> {
   // 네비게이션 바는 냉장고가 하나라도 추가되어야 활성화
   void onItemTapped(int index) async {
     // 냉장고가 없으면 경고 표시 (IngredientsView만)
-    if (Fridges!.length == 0 && index == 0){
+    if (Fridges.isEmpty && index == 0){
       await Future.delayed(Duration.zero);
       showDialog(
           context: context,
@@ -83,14 +85,9 @@ class MainBottomBar extends State<MainBottomView> {
     if (index == 0){
       Navigator.of(context).pushNamed('/' + pages[1].toString());
     }
-    // 1: RecipeView
+    // 1: SearchView (검색 페이지)
     else if (index == 1){
-      if (recipeFirstLoading) {
-        Recipes = await getRecipeInfoFromServer();
-        recipeFirstLoading = false;
-      }
-      nav2Processed = false;
-      Navigator.of(context).pushNamed('/' + pages[2].toString());
+      Navigator.of(context).pushNamed('/' + pages[11].toString());
     }
     // 2: AccountBookView
     else if (index == 2){

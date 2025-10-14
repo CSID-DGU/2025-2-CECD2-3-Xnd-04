@@ -54,6 +54,8 @@ class MyApp extends StatelessWidget {
         '/SettingView' : (context) => pages[9],
         //가계부 뷰
         '/AccountBookView' : (context) => pages[10],
+        //검색 뷰
+        '/SearchView' : (context) => pages[11],
       }
     );
   }
