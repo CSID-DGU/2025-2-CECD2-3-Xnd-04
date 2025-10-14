@@ -28,6 +28,7 @@ class RecipePage extends State<RecipeView> {
 
   /// 프론트 전역 레시피 끌어오기
   void getListedRecipes(){
+    if (Recipes == null || Recipes![0] == null) return;
     List<RecipeModel> recipes = [];
     for(int i = 0; i < Recipes![0]!.length; i++)
       recipes.add(RecipeModel().getRecipe(i));
@@ -35,6 +36,7 @@ class RecipePage extends State<RecipeView> {
   }
   /// 프론트 전역 레시피 업데이트
   void updateRecipeSaved({required RecipeModel recipe}){
+    if (Recipes == null || Recipes![0] == null || Recipes![3] == null) return;
     for(int i = 0; i < Recipes![0]!.length; i++){
       if(recipe.id == Recipes![0]![i]){
         Recipes![3]![i] = !Recipes![3]![i];
@@ -253,8 +255,11 @@ class RecipePage extends State<RecipeView> {
               icon: Icon(Icons.search, color: Colors.grey[700]),
               onPressed: () async {
                 _searchController.clear();
-                for(int i = 0; i < Recipes!.length; i++)
-                  Recipes![i]!.clear();
+                if (Recipes != null) {
+                  for(int i = 0; i < Recipes!.length; i++) {
+                    if (Recipes![i] != null) Recipes![i]!.clear();
+                  }
+                }
                 Recipes = await getRecipeQueryInfoFromServer(query:_searchQuery);
                 setState(() {
                   // 레시피 뷰에서 어디로 쏠건지...
