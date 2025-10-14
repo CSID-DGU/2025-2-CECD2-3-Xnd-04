@@ -3,6 +3,7 @@ import 'package:Frontend/Services/loadSavedRecipeService.dart';
 import 'package:flutter/material.dart';
 import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
+import 'package:Frontend/Widgets/CommonAppBar.dart';
 import 'dart:math';
 
 import '../Models/IngredientModel.dart';
@@ -102,7 +103,7 @@ bool updateButtonClicked = false;
 
     return Scaffold(
       // 냉장고 선택 페이지 UI
-        appBar: basicBar(),
+        appBar: const CommonAppBar(title: 'Xnd'),
         backgroundColor: Colors.white,
         bottomNavigationBar: const MainBottomView(),
         body: Scrollbar(
@@ -115,7 +116,6 @@ bool updateButtonClicked = false;
           child: ListView(
             controller: _scrollController,
             children: <Widget>[
-              mainAppBar(name:'${refrigerator.id}번 냉장고'),
               Container(
                 height : getRefrigeratorSize(),           //교체
                 margin : EdgeInsets.all(20),

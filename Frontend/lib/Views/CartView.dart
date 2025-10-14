@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:Frontend/Abstracts/kakaoLogin.dart';
 import 'package:Frontend/Models/LoginModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
+import 'package:Frontend/Widgets/CommonAppBar.dart';
 
 class CartView extends StatefulWidget {
   const CartView({Key? key}) : super(key: key);
@@ -24,14 +25,13 @@ class CartPage extends State<CartView> {
 
     return Scaffold(
       // 냉장고 선택 페이지 UI
-        appBar: basicBar(),
+        appBar: const CommonAppBar(title: 'Xnd'),
         backgroundColor: Colors.white,
         bottomNavigationBar: const MainBottomView(),
         body: Center(
             child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  mainAppBar(name:'   Xnd'),
                   Text('장바구니 뷰 입니다.', style: TextStyle(fontSize: 40))
                 ]
             )
