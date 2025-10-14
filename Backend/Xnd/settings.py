@@ -20,6 +20,10 @@ ALLOWED_HOSTS = ['*']
 SIMPLE_JWT = {
     "USER_ID_FIELD": "social_id",
     "USER_ID_CLAIM": "user_id",
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=7),  # 액세스 토큰 유효기간 7일
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),  # 리프레시 토큰 유효기간 30일
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
 }
 
 # Application definition
@@ -86,10 +90,6 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default='3306'),
-        'OPTIONS' : {
-            'charset': 'utf8mb4',
-            'ssl' : False,
-        }
     }
 }
 
