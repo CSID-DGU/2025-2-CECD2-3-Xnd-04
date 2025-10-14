@@ -14,8 +14,20 @@ class FridgeIngredients(models.Model):
         ('in_use', '사용중'),
     ]
 
+    STORAGE_LOCATION_CHOICES = [
+        ('fridge', '냉장실'),
+        ('freezer', '냉동실'),
+        ('external', '외부'),
+    ]
+
     fridge = models.ForeignKey(Fridge,on_delete=models.CASCADE)
     stored_at = models.DateTimeField(auto_now_add=True)
+    storage_location = models.CharField(
+        max_length=20,
+        choices=STORAGE_LOCATION_CHOICES,
+        default='fridge',
+        help_text="보관 위치 (냉장실/냉동실/외부)"
+    )
     layer = models.IntegerField(
         validators=[MinValueValidator(0)],  #0 이상
         help_text="냉장고 내의 재료의 위치(단수)"
@@ -32,6 +44,7 @@ class FridgeIngredients(models.Model):
         default='inbound',
         help_text = "식재료 상태 (입고/출고/사용중)"
     )
+
 
     # 식재료 인식 결과
     category_yolo = models.CharField(max_length=100, default='FALLBACK_MODE', help_text="YOLO 객체 탐지 카테고리")
