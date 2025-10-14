@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:Frontend/Models/IngredientModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
-import 'package:flutter_colorful_tab/flutter_colorful_tab.dart';
+import 'package:Frontend/Widgets/CommonAppBar.dart';
 
 import '../Models/RecipeModel.dart';
 
@@ -102,14 +102,13 @@ class IngredientsInfoView extends StatelessWidget{
     }
 
     return Scaffold(
-      appBar: basicBar(),
+      appBar: const CommonAppBar(title: 'Xnd'),
       backgroundColor: Colors.white,
       bottomNavigationBar: const MainBottomView(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            backBar(),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
@@ -223,21 +222,14 @@ class IngredientsInfoView extends StatelessWidget{
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
-                    ColorfulTabBar(
-                      indicatorHeight: 0.1,
-                      topPadding: 0,
-                      alignment: TabAxisAlignment.start,
+                    TabBar(
+                      indicatorColor: Colors.orange,
+                      labelColor: Colors.orange,
+                      unselectedLabelColor: Colors.grey,
                       tabs: [
                         for (int i = 0; i < this._recipeDetails!.length; i++)
-                          TabItem(
-                              color: tabbarColor[i],
-                              title: Text('${i + 1}번 레시피',
-                                style: TextStyle(
-                                    fontSize: screenWidth * 0.03,
-                                    color: Colors.orange,
-                                    fontWeight: FontWeight.bold
-                                )
-                              )
+                          Tab(
+                            text: '${i + 1}번 레시피',
                           )
                       ]
                     ),
@@ -359,14 +351,13 @@ class FridgeIngredientsInfoView extends StatelessWidget{
     }
 
     return Scaffold(
-        appBar: basicBar(),
+        appBar: const CommonAppBar(title: 'Xnd'),
         backgroundColor: Colors.white,
         bottomNavigationBar: const MainBottomView(),
         body: Center(
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  backBar(),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: <Widget>[
@@ -482,21 +473,14 @@ class FridgeIngredientsInfoView extends StatelessWidget{
                           child: Column(
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: <Widget>[
-                                ColorfulTabBar(
-                                    indicatorHeight: 0.1,
-                                    topPadding: 0,
-                                    alignment: TabAxisAlignment.start,
+                                TabBar(
+                                    indicatorColor: Colors.orange,
+                                    labelColor: Colors.orange,
+                                    unselectedLabelColor: Colors.grey,
                                     tabs: [
                                       for (int i = 0; i < this._recipeDetails!.length; i++)
-                                        TabItem(
-                                            color: tabbarColor[i],
-                                            title: Text('${i + 1}번 레시피',
-                                                style: TextStyle(
-                                                  fontSize: screenWidth * 0.03,
-                                                  color: Colors.orange,
-                                                  fontWeight: FontWeight.bold
-                                                )
-                                            )
+                                        Tab(
+                                          text: '${i + 1}번 레시피',
                                         )
                                     ]
                                 ),

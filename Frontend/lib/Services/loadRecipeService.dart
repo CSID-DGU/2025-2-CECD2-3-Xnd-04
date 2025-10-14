@@ -46,11 +46,13 @@ Future<List<List<dynamic>?>?> getRecipeInfoFromServer() async {
   if (response != null) {
     print('레시피 로드를 진행합니다...');
     results = response.data['results'];
-    for (int i = 0; i < results!.length; i++) {
-      li[0]!.add(results[i]['recipe_id']);
-      li[1]!.add(results[i]['food_name']);
-      li[2]!.add(results[i]['recipe_image']);
-      li[3]!.add(results[i]['is_saved']);
+    if (results != null) {
+      for (int i = 0; i < results.length; i++) {
+        li[0]!.add(results[i]['recipe_id']);
+        li[1]!.add(results[i]['food_name']);
+        li[2]!.add(results[i]['recipe_image']);
+        li[3]!.add(results[i]['is_saved']);
+      }
     }
   }
   return li;

@@ -1,6 +1,7 @@
 import 'package:Frontend/Models/RecipeModel.dart';
 import 'package:flutter/material.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
+import 'package:Frontend/Widgets/CommonAppBar.dart';
 import '../Models/IngredientModel.dart';
 import 'package:Frontend/MordalViews/RecipeMordal.dart';
 import 'package:Frontend/Services/loadRecipeService.dart';
@@ -27,6 +28,7 @@ class RecipePage extends State<RecipeView> {
 
   /// 프론트 전역 레시피 끌어오기
   void getListedRecipes(){
+    if (Recipes == null || Recipes![0] == null) return;
     List<RecipeModel> recipes = [];
     for(int i = 0; i < Recipes![0]!.length; i++)
       recipes.add(RecipeModel().getRecipe(i));
@@ -34,6 +36,7 @@ class RecipePage extends State<RecipeView> {
   }
   /// 프론트 전역 레시피 업데이트
   void updateRecipeSaved({required RecipeModel recipe}){
+    if (Recipes == null || Recipes![0] == null || Recipes![3] == null) return;
     for(int i = 0; i < Recipes![0]!.length; i++){
       if(recipe.id == Recipes![0]![i]){
         Recipes![3]![i] = !Recipes![3]![i];
@@ -67,16 +70,13 @@ class RecipePage extends State<RecipeView> {
 
     return Scaffold(
       // 냉장고 선택 페이지 UI
-        appBar: basicBar(),
+        appBar: const CommonAppBar(title: 'Xnd'),
         backgroundColor: Colors.white,
         bottomNavigationBar: const MainBottomView(),
-        body: SingleChildScrollView(
-            child: Column(
+        body: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  mainAppBar(name:'   Xnd'),
-                  Container(
-                    height: screenHeight * 0.83,
+                  Expanded(
                     child: Scrollbar(
                       controller: _scrollController,
                       thumbVisibility: true,
@@ -222,10 +222,9 @@ class RecipePage extends State<RecipeView> {
                         ]
                       )
                     ),
-                  ),
+                  )
                 ]
-            )
-        ),
+            ),
       bottomSheet: Container(
         height: screenHeight * 0.04,
         margin: EdgeInsets.fromLTRB(20, screenHeight * 0.01, 20, screenHeight * 0.01),
@@ -256,8 +255,11 @@ class RecipePage extends State<RecipeView> {
               icon: Icon(Icons.search, color: Colors.grey[700]),
               onPressed: () async {
                 _searchController.clear();
-                for(int i = 0; i < Recipes!.length; i++)
-                  Recipes![i]!.clear();
+                if (Recipes != null) {
+                  for(int i = 0; i < Recipes!.length; i++) {
+                    if (Recipes![i] != null) Recipes![i]!.clear();
+                  }
+                }
                 Recipes = await getRecipeQueryInfoFromServer(query:_searchQuery);
                 setState(() {
                   // 레시피 뷰에서 어디로 쏠건지...

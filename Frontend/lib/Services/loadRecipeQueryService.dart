@@ -76,11 +76,13 @@ Future<List<List<dynamic>?>?> getRecipeQueryInfoFromServer({required String quer
   if (response != null) {
     print('레시피 로드를 진행합니다... 쿼리레시피');
     recipeResponse = response.data['results'];
-    for (int i = 0; i < count; i++) {
-      li[0]!.add(recipeResponse![i]['recipe_id']);
-      li[1]!.add(recipeResponse[i]['food_name']);
-      li[2]!.add(recipeResponse[i]['recipe_image']);
-      li[3]!.add(recipeResponse[i]['is_saved']);
+    if (recipeResponse != null) {
+      for (int i = 0; i < count; i++) {
+        li[0]!.add(recipeResponse[i]['recipe_id']);
+        li[1]!.add(recipeResponse[i]['food_name']);
+        li[2]!.add(recipeResponse[i]['recipe_image']);
+        li[3]!.add(recipeResponse[i]['is_saved']);
+      }
     }
   }
   return li;
@@ -104,12 +106,14 @@ Future<List<List<dynamic>?>?> getSavedRecipeQueryInfoFromServer({required String
   if (response != null) {
     print('레시피 로드를 진행합니다... 쿼리레시피');
     recipeResponse = response.data['results'];
-    for (int i = 0; i < count; i++) {
-      if (recipeResponse![i]['is_saved']) {
-        li[0]!.add(recipeResponse[i]['recipe_id']);
-        li[1]!.add(recipeResponse[i]['food_name']);
-        li[2]!.add(recipeResponse[i]['recipe_image']);
-        li[3]!.add(recipeResponse[i]['is_saved']);
+    if (recipeResponse != null) {
+      for (int i = 0; i < count; i++) {
+        if (recipeResponse[i]['is_saved']) {
+          li[0]!.add(recipeResponse[i]['recipe_id']);
+          li[1]!.add(recipeResponse[i]['food_name']);
+          li[2]!.add(recipeResponse[i]['recipe_image']);
+          li[3]!.add(recipeResponse[i]['is_saved']);
+        }
       }
     }
   }

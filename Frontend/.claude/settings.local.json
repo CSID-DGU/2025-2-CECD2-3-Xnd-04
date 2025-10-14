@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter:*)",
+      "Read(//c/Users/HOME/AppData/Local/Android/sdk/platforms/android-34/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

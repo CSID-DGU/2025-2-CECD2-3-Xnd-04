@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+  import 'package:flutter/material.dart';
 import 'package:Frontend/Views/LoginView.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -32,16 +32,30 @@ class MyApp extends StatelessWidget {
       ),
       home: const LoginView(),
       routes: {
+        //초기 냉장고 추가 뷰
         '/InitialHomeView' : (context) => pages[0],
+        //냉장고 내부 뷰
         '/IngredientsView' : (context) => pages[1],
+        //레시피 뷰
         '/RecipeView' : (context) => pages[2],
+        //즐겨찾기 뷰
         '/FavoritesView' : (context) => pages[3],
+        //장바구니 뷰
         '/CartView' : (context) => pages[4],
+        //홈 뷰
         '/HomeView' : (context) => pages[5],
+        //식재료 정보 뷰
         '/IngredientsInfoView' : (context) => pages[6],
+        //냉장고 속 식재료 정보 뷰
         '/FridgeIngredientsInfoView' : (context) => pages[7],
+        //알림 뷰
         '/AlertView' : (context) => pages[8],
+        //설정 뷰
         '/SettingView' : (context) => pages[9],
+        //가계부 뷰
+        '/AccountBookView' : (context) => pages[10],
+        //검색 뷰
+        '/SearchView' : (context) => pages[11],
       }
     );
   }

@@ -18,7 +18,7 @@
 
                 <!-- "kakao${YOUR_NATIVE_APP_KEY}://oauth" 형식의 앱 실행 스킴 설정 -->
                 <!-- 카카오 로그인 Redirect URI -->
-                <data android:scheme="kakaoef3028b9dc536eb61cf3427ad87a804e" android:host="oauth"/>
+                <data android:scheme="kakaoa165f5c50bf1e96c74c76fc24ff2657e" android:host="oauth"/>
                 <!-- github 업로드 시, .env 파일로 따로 관리하기 -> native app key -->
                 <!-- URL : https://developers.kakao.com/console/app/1224657/config/appKey -->
             </intent-filter>

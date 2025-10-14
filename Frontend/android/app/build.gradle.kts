@@ -10,7 +10,8 @@ plugins {
 
 android {
     namespace = "com.example.Xnd"
-    compileSdk = flutter.compileSdkVersion
+    //flutter.compileSdkVersion -> 36으로 수정
+    compileSdk = 36
     ndkVersion = "29.0.13113456"
 
     compileOptions {
@@ -46,4 +47,5 @@ flutter {
 // 👇 dependencies 블록 추가
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.2.2")
+    implementation("com.kakao.sdk:v2-user:2.20.3") // ✅ 카카오 SDK 추가
 }
