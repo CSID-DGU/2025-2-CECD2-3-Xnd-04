@@ -12,7 +12,7 @@ from pathlib import Path
 
 ## YOLO 테스트
 TEST_IMAGE_DIR = settings.MEDIA_ROOT / 'uploads'
-TEST_IMAGE_FILENAME = 'test_milk.jpg' # 테스트 대상 사진 변경
+TEST_IMAGE_FILENAME = 'test_container.jpg' # 테스트 대상 사진 변경
 TEST_IMAGE_PATH = TEST_IMAGE_DIR / TEST_IMAGE_FILENAME
 
 @api_view(['GET'])  # GET 요청으로 실행할 수 있도록 설정
