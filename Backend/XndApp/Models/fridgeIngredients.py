@@ -35,7 +35,7 @@ class FridgeIngredients(models.Model):
     # category = models.ForeignKey(Category,on_delete=models.CASCADE)
     foodStorageLife = models.ForeignKey(FoodStorageLife,on_delete=models.SET_DEFAULT, default=100, null=True)
     storable_due = models.DateTimeField(null=True)
-    ingredient_name = models.CharField(max_length=100)
+    ingredient_name = models.CharField(max_length=100, null=True, blank=True)
     ingredient_pic = models.CharField(max_length=255)
 
     status = models.CharField(
@@ -48,7 +48,7 @@ class FridgeIngredients(models.Model):
 
     # 식재료 인식 결과
     category_yolo = models.CharField(max_length=100, default='FALLBACK_MODE', help_text="YOLO 객체 탐지 카테고리")
-    yolo_confidence = models.FloatField(default=0.0, help_text="YOLO 객체 인식 신뢰도 점수 (0.0~1.0)")
+    yolo_confidence = models.FloatField(default=0.0, null=True, help_text="YOLO 객체 인식 신뢰도 점수 (0.0~1.0)")
     product_name_ocr = models.CharField(max_length=100, null=True, blank=True, help_text="OCR Word2Vec 추출 식재료명")
     product_similarity_score = models.FloatField(default=0.0, help_text="Word2Vec '식재료' 앵커 워드 유사도 점수 (0.0~1.0)")
 
