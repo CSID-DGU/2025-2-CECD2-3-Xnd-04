@@ -112,8 +112,17 @@ class FridgeDetailView(APIView):
             'layer': layer_value,
             'ingredient_pic': f"uploaded_images/{filename}",  # DB에 저장할 상대 경로
             'foodStorageLife': food_storage_life_id,
+
+            'ingredient_name': pipeline_result.get('ingredient_name'),
+            'category_yolo': pipeline_result.get('category_yolo'),
+            'yolo_confidence': pipeline_result.get('yolo_confidence'),
+            'product_name_ocr': pipeline_result.get('product_name_ocr'),
+            'product_similarity_score': pipeline_result.get('product_similarity_score'),
+            'expiry_date': pipeline_result.get('extracted_date'),
+            'expiry_date_status': pipeline_result.get('expiry_date_status'),
+            'date_recognition_confidence': pipeline_result.get('date_recognition_confidence'),
+            'date_type_confidence': pipeline_result.get('date_type_confidence'),
         }
-        final_data.update(pipeline_result)  # 파이프라인 결과 병합
 
         # 5. Serializer 유효성 검사 및 저장
         serializer = FridgeIngredientsSerializer(data=final_data)

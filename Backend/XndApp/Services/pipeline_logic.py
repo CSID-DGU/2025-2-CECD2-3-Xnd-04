@@ -69,6 +69,8 @@ def run_yolo_detection(image_path: str) -> Dict[str, Any]:
         class_index = int(box.cls[0])
         category_name = model.names[class_index]
 
+        print(f"DEBUG: Extracted YOLO Confidence: {confidence}")
+
         ## - YOLO 결과 시각화 및 저장
         img_array = np.fromfile(image_path, np.uint8)
         image_cv = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
@@ -348,7 +350,7 @@ def extract_product_name(raw_text: str, yolo_category: str, all_word_blocks: Lis
                 valid_words.append(word)
 
     if not valid_words: # OCR에서 유효한 단어를 찾지 못한 경우
-        return {'name': 'OCR Txt Not Found', 'similarity': 0.0}
+        return {'name': None, 'similarity': 0.0}
 
     best_match = None     # 워드 임베딩 유사도 비교
     max_similarity = -1
@@ -372,15 +374,15 @@ def extract_product_name(raw_text: str, yolo_category: str, all_word_blocks: Lis
 
     else: # 유사도가 임계값을 넘지 못하거나 매칭되는 단어가 없는 경우
         print(
-            f"⚠️ Word Embedding failed (Similarity < {SIMILARITY_THRESHOLD}). Returning OCR Txt Not Found.")
-        return {'name': 'OCR Txt Not Found', 'similarity': 0.0}
+            f"⚠️ Word Embedding failed (Similarity < {SIMILARITY_THRESHOLD}). Returning None.")
+        return {'name': None, 'similarity': 0.0}
 
-# 5. 결과 통합 및 신뢰도 분기 처리
+    # 5. 결과 통합 및 신뢰도 분기 처리
 def integrate_results(base_data: Dict[str, Any], yolo_result: Dict[str, Any], ocr_info: Dict[str, Any],
                       ocr_raw_output: Dict[str, Any]) -> Dict[str, Any]:
 
     yolo_category = yolo_result.get('category_name', '식재료 미확인')  # YOLO로 인식한 식재료명
-    yolo_confidence = yolo_result.get('confidence', 0.0)
+    yolo_confidence = yolo_result.get('confidence', None)
     determined_ingredient_name = yolo_category
 
     raw_ocr_text = ocr_info.get('raw_ocr_text', '')  # OCR로 인식한 모든 텍스트
@@ -430,6 +432,8 @@ def integrate_results(base_data: Dict[str, Any], yolo_result: Dict[str, Any], oc
         'ingredient_name': determined_ingredient_name,          # 최종 결정된 식재료명
 
         'category_yolo': yolo_category,                         # YOLO 인식 결과
+        'yolo_confidence': yolo_confidence,                     # YOLO 인식 신뢰도
+
         'product_name_ocr': final_product_name,                 # OCR 인식 식재료명 (Word Embedding 결과)
         'product_similarity_score': product_similarity_score,   # OCR 식재료명과 '식재료' 앵커 워드 간의 유사도 점수 (반올림된 값)
 
