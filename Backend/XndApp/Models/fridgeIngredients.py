@@ -59,15 +59,21 @@ class FridgeIngredients(models.Model):
     date_type_confidence = models.FloatField(default=0.0, help_text="유통기한 유형 신뢰도")
 
     def save(self, *args, **kwargs):
-        # layer값 검사
-        if self.fridge and self.layer > self.fridge.layer_count:
-            raise ValueError(f"layer 값은 fridge.layers({self.fridge.layer_count})보다 작아야 합니다.")
-        
-        # 보관 가능 날짜 DB저장
-        if self.stored_at and self.foodStorageLife and self.foodStorageLife.storage_life:
-            self.storable_due = self.stored_at + timedelta(days=self.foodStorageLife.storage_life)
+
+        # 생성 시점(self._state.adding=True)이거나, storable_due가 비어있을 때만 자동 계산 로직 실행
+        if self._state.adding or self.storable_due is None:
+
+            # 1순위: OCR 유통기한이 인식되었고, 그 상태가 'CONFIRMED' 등일 때
+            if self.expiry_date and (self.expiry_date_status == 'CONFIRMED' or self.expiry_date_status == 'EXPIRED'):
+                self.storable_due = self.expiry_date
+
+                # 2순위: FoodStorageLife 정보를 기반으로 자동 계산
+            elif self.stored_at and self.foodStorageLife and self.foodStorageLife.storage_life:
+                # stored_at이 DateTimeField이므로 .date()를 추출하여 계산합니다.
+                self.storable_due = self.stored_at.date() + timedelta(days=self.foodStorageLife.storage_life)
+
         super().save(*args, **kwargs)
-    
+
     # 메타데이터
     class Meta:
         db_table = 'xndapp_fridgeingredients'
