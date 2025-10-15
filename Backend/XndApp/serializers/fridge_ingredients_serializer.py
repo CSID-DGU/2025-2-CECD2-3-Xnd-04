@@ -36,7 +36,7 @@ class FridgeIngredientsSerializer(serializers.ModelSerializer):
 
 
         read_only_fields = [
-            'id', 'storable_due',
+            'id',
         ]
 
         extra_kwargs = {

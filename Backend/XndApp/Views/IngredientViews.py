@@ -43,3 +43,35 @@ class IngredientView(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, fridge_id, ingredient_id):
+        user = request.user
+
+        try:
+            fridge = Fridge.objects.get(fridge_id=fridge_id, user=user)
+
+            ingredient = FridgeIngredients.objects.get(
+                id=ingredient_id,
+                fridge=fridge
+            )
+
+            ingredient.delete()
+
+            return Response(
+                {"message": f"식재료 ID {ingredient_id}가 냉장고 {fridge_id}에서 성공적으로 삭제되었습니다."},
+                status=status.HTTP_204_NO_CONTENT
+            )
+
+        except Fridge.DoesNotExist:
+            return Response(
+                {"error": "냉장고를 찾을 수 없거나 소유권이 없습니다."},
+                status=status.HTTP_404_NOT_FOUND)
+        except FridgeIngredients.DoesNotExist:
+            return Response(
+                {"error": "해당 냉장고에 식재료 ID가 존재하지 않습니다."},
+                status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response(
+                {'error': '서버 오류', 'message': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
