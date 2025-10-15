@@ -22,7 +22,7 @@ urlpatterns = [
     path('api/fridge/create/',FridgeViews.as_view(),name='create_fridge'), # 냉장고 생성
     path('api/fridge/',FridgeViews.as_view(),name='fridges'), # 냉장고 정보 조회
     path('api/fridge/<int:fridge_id>/',FridgeDetailView.as_view(),name='fridgeDetails'), # 냉장고 내부 조회(GET), 냉장고에 식재료 등록(POST)
-    path('api/fridge/<int:fridge_id>/ingredients/<int:ingredient_id>/', IngredientView.as_view()), # 냉장고 속 재료 하나 선택했을 때 정보 조회
+    path('api/fridge/<int:fridge_id>/ingredients/<int:ingredient_id>/', IngredientView.as_view()), # 냉장고 속 재료 하나 선택했을 때 정보 조회(GET), 정보 수정(PATCH), 식재료 삭제(DELETE)
 
 
     # 검색
@@ -52,5 +52,5 @@ urlpatterns = [
 
     # CV 연동
     path('api/detection/upload/', handle_detection_post, name='cv_detection_upload'),
-    path('api/detection/test/', run_yolo_test, name='cv_pipeline_test') ### 테스트용
+    path('api/detection/test/', run_yolo_test, name='cv_pipeline_test') ### 테스트용 (삭제 예정)
 ]

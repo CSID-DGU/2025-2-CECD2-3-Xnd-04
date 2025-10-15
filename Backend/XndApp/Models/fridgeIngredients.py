@@ -35,7 +35,7 @@ class FridgeIngredients(models.Model):
     # category = models.ForeignKey(Category,on_delete=models.CASCADE)
     foodStorageLife = models.ForeignKey(FoodStorageLife,on_delete=models.SET_DEFAULT, default=100, null=True)
     storable_due = models.DateTimeField(null=True)
-    ingredient_name = models.CharField(max_length=100)
+    ingredient_name = models.CharField(max_length=100, null=True, blank=True)
     ingredient_pic = models.CharField(max_length=255)
 
     status = models.CharField(
@@ -48,7 +48,7 @@ class FridgeIngredients(models.Model):
 
     # 식재료 인식 결과
     category_yolo = models.CharField(max_length=100, default='FALLBACK_MODE', help_text="YOLO 객체 탐지 카테고리")
-    yolo_confidence = models.FloatField(default=0.0, help_text="YOLO 객체 인식 신뢰도 점수 (0.0~1.0)")
+    yolo_confidence = models.FloatField(default=0.0, null=True, help_text="YOLO 객체 인식 신뢰도 점수 (0.0~1.0)")
     product_name_ocr = models.CharField(max_length=100, null=True, blank=True, help_text="OCR Word2Vec 추출 식재료명")
     product_similarity_score = models.FloatField(default=0.0, help_text="Word2Vec '식재료' 앵커 워드 유사도 점수 (0.0~1.0)")
 
@@ -59,15 +59,21 @@ class FridgeIngredients(models.Model):
     date_type_confidence = models.FloatField(default=0.0, help_text="유통기한 유형 신뢰도")
 
     def save(self, *args, **kwargs):
-        # layer값 검사
-        if self.fridge and self.layer > self.fridge.layer_count:
-            raise ValueError(f"layer 값은 fridge.layers({self.fridge.layer_count})보다 작아야 합니다.")
-        
-        # 보관 가능 날짜 DB저장
-        if self.stored_at and self.foodStorageLife and self.foodStorageLife.storage_life:
-            self.storable_due = self.stored_at + timedelta(days=self.foodStorageLife.storage_life)
+
+        # 생성 시점(self._state.adding=True)이거나, storable_due가 비어있을 때만 자동 계산 로직 실행
+        if self._state.adding or self.storable_due is None:
+
+            # 1순위: OCR 유통기한이 인식되었고, 그 상태가 'CONFIRMED' 등일 때
+            if self.expiry_date and (self.expiry_date_status == 'CONFIRMED' or self.expiry_date_status == 'EXPIRED'):
+                self.storable_due = self.expiry_date
+
+                # 2순위: FoodStorageLife 정보를 기반으로 자동 계산
+            elif self.stored_at and self.foodStorageLife and self.foodStorageLife.storage_life:
+                # stored_at이 DateTimeField이므로 .date()를 추출하여 계산합니다.
+                self.storable_due = self.stored_at.date() + timedelta(days=self.foodStorageLife.storage_life)
+
         super().save(*args, **kwargs)
-    
+
     # 메타데이터
     class Meta:
         db_table = 'xndapp_fridgeingredients'
