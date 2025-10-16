@@ -18,7 +18,8 @@ class FridgeIngredientsSerializer(serializers.ModelSerializer):
 
             'ingredient_name',
             'storable_due',
-
+            'storage_location',
+            
             'category_yolo',
             'yolo_confidence',
 

@@ -1,18 +1,15 @@
 import 'package:Frontend/Models/RecipeModel.dart';
-import 'package:Frontend/Services/loadSavedRecipeService.dart';
 import 'package:flutter/material.dart';
 import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
-import 'package:Frontend/Widgets/CommonAppBar.dart';
-import 'dart:math';
+import 'package:Frontend/Services/authService.dart';
+import 'package:Frontend/Views/LoginView.dart';
 
 import '../Models/IngredientModel.dart';
 import '../Services/loadDetailRecipeService.dart';
-import '../Services/loadFridgeIngredientInfoService.dart';
 import 'IngredientsInfoView.dart';
 
 class IngredientsView extends StatefulWidget {
-  // 냉장고 객체 자체 변경 x
   final RefrigeratorModel refrigerator;
   const IngredientsView({Key? key, required this.refrigerator}) : super(key: key);
 
@@ -20,19 +17,25 @@ class IngredientsView extends StatefulWidget {
   State<IngredientsView> createState() => IngredientsPage(refrigerator: refrigerator);
 }
 
-class IngredientsPage extends State<IngredientsView> {
+class IngredientsPage extends State<IngredientsView> with SingleTickerProviderStateMixin {
   late ScrollController _scrollController;
+  late TabController _tabController;
   final RefrigeratorModel refrigerator;
 
-  IngredientsPage({required this.refrigerator}){
+  IngredientsPage({required this.refrigerator});
+
+  @override
+  void initState() {
     super.initState();
     _scrollController = ScrollController();
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
   void dispose() {
-    super.dispose();
     _scrollController.dispose();
+    _tabController.dispose();
+    super.dispose();
   }
 
   int getDueDate(FridgeIngredientModel ingredient){
@@ -41,225 +44,366 @@ class IngredientsPage extends State<IngredientsView> {
     return dueDateParsed.difference(now).inDays + 1;
   }
 
-  Border getColoredBorder(FridgeIngredientModel ingredient){
-    int dueDate = getDueDate(ingredient);
-
-    if (dueDate <= 0){
-      return Border.all(
-        color: Colors.black,
-        style: BorderStyle.solid,
-        width: 5
-      );
-    }
-    else if (dueDate == 1){
-      return Border.all(
-        color: Colors.red,
-        style: BorderStyle.solid,
-        width: 5
-      );
-    }
-    else if (dueDate == 2){
-      return Border.all(
-          color: Colors.orange,
-          style: BorderStyle.solid,
-          width: 5
-      );
-    }
-    else{
-      return Border.all(
-          color: Colors.green,
-          style: BorderStyle.solid,
-          width: 5
-      );
-    }
+  Color getDueDateColor(int dueDate) {
+    if (dueDate <= 0) return Colors.black;
+    if (dueDate == 1) return Colors.red;
+    if (dueDate == 2) return Colors.orange;
+    return Colors.green;
   }
 
-bool updateButtonClicked = false;
+  String getDueDateLabel(int dueDate) {
+    if (dueDate < 0) return 'D+${dueDate.abs()}';
+    return 'D-$dueDate';
+  }
+
+  // 각 층의 식재료 리스트를 가져오는 함수
+  List<FridgeIngredientModel> getIngredientsForFloor(int floor) {
+    if (refrigerator.ingredients == null) return [];
+    return refrigerator.ingredients!.where((ingredient) =>
+      ingredient.layer == floor
+    ).toList();
+  }
+
+  // 모든 식재료 가져오기 (외부/냉동실용)
+  List<FridgeIngredientModel> getAllIngredients() {
+    if (refrigerator.ingredients == null) return [];
+    return refrigerator.ingredients!;
+  }
+
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
+    // 층별 식재료 아이템 위젯 생성
+    Widget buildIngredientItem(FridgeIngredientModel ingredient) {
+      int dueDate = getDueDate(ingredient);
+      Color borderColor = getDueDateColor(dueDate);
+      String dueDateLabel = getDueDateLabel(dueDate);
 
-    // 변동성있는 냉장고의 전체 사이즈를 구하는 알고리즘(20 더한건 모든 층에서 전부 20만큼 오버플로우 나서 더한거임)
-    double getRefrigeratorSize(){
-      double size = 20 + 0.05 * screenHeight * refrigerator.level!;
-      for(int floor = 1; floor <= refrigerator.level!; floor++) {
-        (refrigerator.getNumOfIngredientsFloor(floor: floor) == 0) ?
-        size += screenHeight * 0.125
-            :
-        size += screenHeight * 0.125 *
-            (refrigerator.getNumOfIngredientsFloor(floor: floor) * 0.25).ceil();
-      }
-      return size;
+      return Column(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: borderColor, width: 3)
+              ),
+              child: FilledButton(
+                onPressed: () async {
+                  List<RecipeDetailModel>? recipedetails =
+                      await getRecipeDetailInfoFromServer(ingredient);
+                  if (!context.mounted) return;
+                  pages[7] = FridgeIngredientsInfoView(
+                      recipedetails: recipedetails!,
+                      ingredient: ingredient
+                  );
+                  Navigator.of(context).pushNamed('/${pages[7]}');
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)
+                  ),
+                  padding: EdgeInsets.zero,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.network(ingredient.imgUrl!, fit: BoxFit.cover),
+                )
+              )
+            ),
+          ),
+          SizedBox(height: 4),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: borderColor,
+              borderRadius: BorderRadius.circular(10)
+            ),
+            child: Text(
+              dueDateLabel,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold
+              ),
+            ),
+          ),
+        ],
+      );
     }
 
-    int sum = 0;
-    List<int> startPoint = [0];
+    // 냉장실 층별 섹션 위젯
+    Widget buildFloorSection(int floor) {
+      List<FridgeIngredientModel> ingredients = getIngredientsForFloor(floor);
+      int ingredientCount = ingredients.length;
+      List<FridgeIngredientModel> previewItems = ingredients.take(4).toList();
+      bool hasMore = ingredients.length > 4;
 
-    for (int i = 1; i < refrigerator.level!; i++){
-      sum += refrigerator.getNumOfIngredientsFloor(floor: i);
-      startPoint.add(sum);
+      return Container(
+        margin: EdgeInsets.symmetric(vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Text(
+                '$floor층($ingredientCount)',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Container(
+              height: 140,
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ingredientCount == 0
+                      ? Center(
+                          child: Text(
+                            '식재료가 없습니다',
+                            style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                          ),
+                        )
+                      : GridView.builder(
+                          physics: NeverScrollableScrollPhysics(),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 4,
+                            mainAxisSpacing: 10,
+                            crossAxisSpacing: 10,
+                            childAspectRatio: 0.75,
+                          ),
+                          itemCount: previewItems.length,
+                          itemBuilder: (context, index) => buildIngredientItem(previewItems[index]),
+                        ),
+                  ),
+                  if (hasMore)
+                    Container(
+                      width: 80,
+                      margin: EdgeInsets.only(left: 10),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // 더 보기 기능 (현재는 비어있음)
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[400],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)
+                          ),
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                        ),
+                        child: Text(
+                          '더 보기',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 외부/냉동실 섹션 위젯 (층 구분 없이 전체 나열)
+    Widget buildAllIngredientsSection(String title) {
+      List<FridgeIngredientModel> ingredients = getAllIngredients();
+      int ingredientCount = ingredients.length;
+
+      return Container(
+        margin: EdgeInsets.symmetric(vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Text(
+                '$title($ingredientCount)',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: ingredientCount == 0
+                ? Container(
+                    height: 140,
+                    child: Center(
+                      child: Text(
+                        '식재료가 없습니다',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      ),
+                    ),
+                  )
+                : GridView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: 0.75,
+                    ),
+                    itemCount: ingredients.length,
+                    itemBuilder: (context, index) => buildIngredientItem(ingredients[index]),
+                  ),
+            ),
+          ],
+        ),
+      );
     }
 
     return Scaffold(
-      // 냉장고 선택 페이지 UI
-        appBar: const CommonAppBar(title: 'Xnd'),
-        backgroundColor: Colors.white,
-        bottomNavigationBar: const MainBottomView(),
-        body: Scrollbar(
-          controller: _scrollController,
-          thumbVisibility: true,
-          trackVisibility: true,
-          interactive: true,
-
-          // 그리드 뷰 구축 예정
-          child: ListView(
-            controller: _scrollController,
-            children: <Widget>[
-              Container(
-                height : getRefrigeratorSize(),           //교체
-                margin : EdgeInsets.all(20),
-                decoration: BoxDecoration
-                (
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                      color:Colors.grey,
-                      style: BorderStyle.solid,
-                      width: 10)
+      backgroundColor: Color(0xFF2196F3),
+      bottomNavigationBar: const MainBottomView(),
+      body: Column(
+        children: [
+          // 커스텀 AppBar
+          Container(
+            height: 80,
+            decoration: const BoxDecoration(
+              color: Color(0xFF2196F3),
+            ),
+            child: AppBar(
+              backgroundColor: Colors.transparent,
+              toolbarHeight: 80,
+              automaticallyImplyLeading: false,
+              elevation: 0,
+              title: const Text(
+                'Xnd',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w400,
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    for (int floor = refrigerator.level!; floor > 0; floor--)
-                      // 이 부분 그리드 형식으로 사이즈 어떻게 들어가는 지 예상하기
-                      Container(
-                        height: (refrigerator.getNumOfIngredientsFloor(floor: floor) == 0) ?
-                          screenHeight * 0.175
-                        :
-                          screenHeight * 0.125 *
-                            (refrigerator.getNumOfIngredientsFloor(floor: floor) * 0.25).ceil() +
-                            screenHeight * 0.05,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: <Widget>[
-                            Container(
-                              margin : EdgeInsets.fromLTRB(20, 0, 20, 0),
-                              height: screenHeight * 0.03,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: <Widget>[
-                                  Container(
-                                    width: (screenWidth - 100) * 0.15,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                        color: Colors.grey,
-                                        style: BorderStyle.solid,
-                                        width: 3
-                                      )
-                                    ),
-                                    child: Text('${floor}층',
-                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: screenHeight * 0.01),
-                                      textAlign: TextAlign.center,)
-                                  ),
-                                  (floor == refrigerator.level) ?
-                                  Container(
-                                    width: (screenWidth - 100) * 0.85,
-                                    child: Align(
-                                      alignment: Alignment.centerRight,
-                                      child: GestureDetector(
-                                        onTap: () async {
-                                          updateButtonClicked = true;
-                                          int index = 0;
-                                          for(;index < Fridges.length; index++)
-                                            if (Fridges[index].id == refrigerator.id)
-                                              break;
-                                          await loadFridgeIngredientsInfo(refrigerator, index);
-                                          setState(() {
-                                            updateButtonClicked = false;
-                                          });
-                                        },
-                                        child: Icon(Icons.update, size: 20),
-                                      )
-                                    )
-                                  ) :
-                                  Container(
-                                    width: (screenWidth - 100) * 0.85,
-                                  )
-                                ],
-                              )
-                            ),          // 층수 안내 컨테이너
-                            Container(
-                              margin : EdgeInsets.fromLTRB(20, 0, 20, 0),
-                              height: (refrigerator.getNumOfIngredientsFloor(floor: floor) == 0) ?
-                                screenHeight * 0.125
-                                  :
-                                screenHeight * 0.125 *
-                                  (refrigerator.getNumOfIngredientsFloor(floor: floor) * 0.25).ceil(), //교체
-                              child:
-                                GridView.builder(
-                                  physics: NeverScrollableScrollPhysics(),
-                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 4,
-                                    mainAxisSpacing: 10,
-                                    crossAxisSpacing: 10,
-                                    childAspectRatio: 1/((0.5 * screenHeight - 40)/(screenWidth - 130))
-                                  ),
-                                    itemCount: refrigerator.getNumOfIngredientsFloor(floor: floor),
-                                    itemBuilder: (context, index) => Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: getColoredBorder(refrigerator.ingredients![index + startPoint[floor - 1]])
-                                      ),
-                                      child: FilledButton(
-                                        onPressed: () async {
-                                          List<RecipeDetailModel>? recipedetails = await getRecipeDetailInfoFromServer(
-                                              refrigerator.ingredients![index + startPoint[floor - 1]]
-                                          );
-                                          pages[7] = FridgeIngredientsInfoView(
-                                              recipedetails : recipedetails!,
-                                              ingredient: refrigerator.ingredients![index + startPoint[floor - 1]]
-                                          );
-                                          Navigator.of(context).pushNamed('/' + pages[7].toString());
-                                        },
-                                        style: FilledButton.styleFrom(
-                                          backgroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(20)
-                                          ),
-                                          padding: EdgeInsets.zero,
-                                        ),
-                                        // 식재료 이미지
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(20),
-                                          child: Image.network(refrigerator.ingredients![index + startPoint[floor - 1]].imgUrl!, fit: BoxFit.cover,),
-                                          // child: Opacity(
-                                          //   opacity: 0.5,
-                                          //   child: Image.network(refrigerator.ingredients![index + startPoint[floor - 1]].imgUrl!, fit: BoxFit.cover)
-                                          // )
-                                        )
-                                      )
-                                    ),
-                                ),
-                            ), // 식재료 컨테이너
-                            Container(
-                                margin : EdgeInsets.fromLTRB(20, 0, 20, 0),
-                                height: screenHeight * 0.02,
-                                decoration: BoxDecoration(
-                                  color: Color(0x809E9E9E),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                            ),          // 층별로 쪼개는 컨테이너
-                          ], // 프레임을 쪼개는 곳, 즉 여기에 들어가야 할 위젯은 3개
-                        )
-                      )  // 냉장고 한 층에 적용되는 위젯 사이즈
-                  ],  // 층수를 나누는 즉, 여기에 들어가야 할 위젯은 RL개
-                )
-              )     // 전체 냉장고
-            ],
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/${pages[8]}');
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.settings_outlined, color: Colors.white),
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/${pages[9]}');
+                  },
+                ),
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: Colors.white),
+                  onSelected: (String value) async {
+                    if (value == 'logout') {
+                      bool? confirmLogout = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('로그아웃'),
+                          content: const Text('로그아웃 하시겠습니까?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('취소'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text('로그아웃'),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirmLogout == true && context.mounted) {
+                        await clearTokens();
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (context) => const LoginView()),
+                          (route) => false,
+                        );
+                      }
+                    }
+                  },
+                  itemBuilder: (BuildContext context) {
+                    return [
+                      const PopupMenuItem<String>(
+                        value: 'logout',
+                        child: Row(
+                          children: [
+                            Icon(Icons.logout, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('로그아웃', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ];
+                  },
+                ),
+              ],
+            ),
           ),
-        ),
+          // 탭 바
+          Container(
+            color: Color(0xFF2196F3),
+            child: TabBar(
+              controller: _tabController,
+              indicatorColor: Colors.white,
+              indicatorWeight: 3,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white70,
+              labelStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              unselectedLabelStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
+              tabs: [
+                Tab(text: '냉장실'),
+                Tab(text: '외부'),
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.ac_unit, size: 18),
+                      SizedBox(width: 4),
+                    
+                  ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // 탭 뷰
+          Expanded(
+            child: Container(
+              color: Colors.white,
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // 냉장실 탭 - 층별로 구분
+                  ListView(
+                    controller: _scrollController,
+                    children: [
+                      for (int floor = refrigerator.level!; floor > 0; floor--)
+                        buildFloorSection(floor),
+                    ],
+                  ),
+                  // 외부 탭 - 층 구분 없이 전체 나열
+                  ListView(
+                    controller: _scrollController,
+                    children: [
+                      buildAllIngredientsSection('외부 식재료'),
+                    ],
+                  ),
+                  // 냉동실 탭 - 층 구분 없이 전체 나열
+                  ListView(
+                    controller: _scrollController,
+                    children: [
+                      buildAllIngredientsSection('냉동실'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
