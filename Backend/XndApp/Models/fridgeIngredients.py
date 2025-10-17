@@ -58,6 +58,9 @@ class FridgeIngredients(models.Model):
     date_recognition_confidence = models.FloatField(default=0.0, help_text="유통기한 OCR 인식 신뢰도")
     date_type_confidence = models.FloatField(default=0.0, help_text="유통기한 유형 신뢰도")
 
+    # 사용자 메모
+    memo = models.TextField(max_length=200, null=True, blank=True, help_text="식재료에 대한 메모")
+
     def save(self, *args, **kwargs):
 
         # 생성 시점(self._state.adding=True)이거나, storable_due가 비어있을 때만 자동 계산 로직 실행
