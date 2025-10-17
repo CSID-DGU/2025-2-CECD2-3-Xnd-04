@@ -32,7 +32,7 @@ Future<Response?> requestSavedRecipesFromServer() async {
 
 Future<List<List<dynamic>?>?> getSavedRecipesFromServer() async {
   Response<dynamic>? response = await requestSavedRecipesFromServer();
-  List<List<dynamic>> li = [[], [], [], [], [], []];
+  List<List<dynamic>> li = [[], [], [], [], [], [], [], [], [], [], [], []];
 
   if (response == null) return li;
 
@@ -47,6 +47,12 @@ Future<List<List<dynamic>?>?> getSavedRecipesFromServer() async {
       li[1].add(data[i]['food_name']);
       li[2].add(data[i]['recipe_image']);
       li[3].add(data[i]['is_saved']);
+      li[4].add(data[i]['cooking_time']);
+      li[5].add(data[i]['serving_size']);
+      li[6].add(data[i]['cooking_level']);
+      li[7].add(data[i]['category2']);
+      li[8].add(data[i]['category3']);
+      li[9].add(data[i]['category4']);
     }
 
     print('객체 ${li}');

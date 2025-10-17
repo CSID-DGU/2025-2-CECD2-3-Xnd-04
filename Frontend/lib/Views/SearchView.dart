@@ -3,7 +3,7 @@ import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:Frontend/Widgets/CommonAppBar.dart';
 import 'package:Frontend/Services/loadRecipeQueryService.dart';
 import 'package:Frontend/Models/RecipeModel.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:Frontend/Services/searchHistoryService.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -18,46 +18,29 @@ class _SearchViewState extends State<SearchView> {
   // 최근 검색어 리스트
   List<String> recentSearches = [];
 
-  // SharedPreferences 키
-  static const String _recentSearchesKey = 'recent_searches';
-  static const int _maxRecentSearches = 10; // 최대 10개
-
   @override
   void initState() {
     super.initState();
     _loadRecentSearches();
   }
 
-  // SharedPreferences에서 최근 검색어 불러오기
+  // 최근 검색어 불러오기
   Future<void> _loadRecentSearches() async {
-    final prefs = await SharedPreferences.getInstance();
-    final searches = prefs.getStringList(_recentSearchesKey) ?? [];
+    final searches = await SearchHistoryService.loadRecentSearches();
     setState(() {
       recentSearches = searches;
     });
-  }
-
-  // SharedPreferences에 최근 검색어 저장
-  Future<void> _saveRecentSearches() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_recentSearchesKey, recentSearches);
   }
 
   // 검색 실행 함수
   Future<void> _performSearch(String query) async {
     if (query.trim().isEmpty) return;
 
-    // 검색어를 최근 검색어에 추가 (중복 제거, 최대 10개)
-    setState(() {
-      recentSearches.remove(query);
-      recentSearches.insert(0, query);
-      if (recentSearches.length > _maxRecentSearches) {
-        recentSearches = recentSearches.sublist(0, _maxRecentSearches);
-      }
-    });
+    // 검색어 저장
+    await SearchHistoryService.saveSearch(query);
 
-    // SharedPreferences에 저장
-    await _saveRecentSearches();
+    // 검색어 목록 새로고침
+    await _loadRecentSearches();
 
     // 레시피 검색
     Recipes = await getRecipeQueryInfoFromServer(query: query);
@@ -86,6 +69,9 @@ class _SearchViewState extends State<SearchView> {
 
   @override
   Widget build(BuildContext context) {
+    // 검색 뷰 - 하단바 1번 활성화
+    currentBottomNavIndex = 1;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const CommonAppBar(),
@@ -259,11 +245,9 @@ class _SearchViewState extends State<SearchView> {
               GestureDetector(
                 onTap: () async {
                   // 최근 검색어 삭제 (검색 실행 방지)
-                  setState(() {
-                    recentSearches.remove(keyword);
-                  });
-                  // SharedPreferences에 저장
-                  await _saveRecentSearches();
+                  await SearchHistoryService.removeSearch(keyword);
+                  // 검색어 목록 새로고침
+                  await _loadRecentSearches();
                 },
                 child: Icon(
                   Icons.close,

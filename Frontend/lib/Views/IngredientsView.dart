@@ -7,6 +7,7 @@ import 'package:Frontend/Services/updateFridgeIngredientService.dart';
 import 'package:Frontend/Services/loadFridgeIngredientInfoService.dart';
 import 'package:Frontend/Services/loadRecipeQueryService.dart';
 import 'package:Frontend/Services/deleteFridgeIngredientService.dart';
+import 'package:Frontend/Services/searchHistoryService.dart';
 import 'package:Frontend/Models/RecipeModel.dart';
 
 import '../Models/IngredientModel.dart';
@@ -239,8 +240,8 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
   }
 
   // 식재료 정보 다이얼로그 표시
-  void showIngredientDialog(FridgeIngredientModel initialIngredient) {
-    showDialog(
+  void showIngredientDialog(FridgeIngredientModel initialIngredient) async {
+    await showDialog(
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(
@@ -543,11 +544,19 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
                                     // 레시피 검색 기능 - 식재료명으로 검색
                                     String searchQuery = ingredient.ingredientName ?? '';
                                     if (searchQuery.isNotEmpty) {
+                                      // 검색 기록 저장
+                                      await SearchHistoryService.saveSearch(searchQuery);
+
                                       // 레시피 검색 실행
                                       Recipes = await getRecipeQueryInfoFromServer(query: searchQuery);
+
                                       // 다이얼로그 닫고 RecipeView로 이동
                                       if (context.mounted) {
                                         Navigator.pop(context);
+
+                                        // 하단바 SearchView(index 1)로 변경
+                                        currentBottomNavIndex = 1;
+
                                         Navigator.of(context).pushNamed('/RecipeView');
                                       }
                                     }
@@ -676,10 +685,16 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
         );
       },
     );
+
+    // 다이얼로그가 닫힌 후 부모 위젯 상태 업데이트
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    // 냉장고 내부 뷰 - 하단바 0번 활성화
+    currentBottomNavIndex = 0;
+
     // 냉장실 층별 섹션 위젯
     Widget buildFloorSection(int floor) {
       List<FridgeIngredientModel> ingredients = getIngredientsForFloor(floor);
@@ -700,7 +715,7 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
             ),
             // 식재료 그리드
             Container(
-              height: 130,
+              height: ingredientCount == 0 ? 50 : 130,
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: ingredientCount == 0
                 ? Center(
@@ -786,7 +801,7 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: ingredientCount == 0
                 ? SizedBox(
-                    height: 140,
+                    height: 50,
                     child: Center(
                       child: Text(
                         '식재료가 없습니다',
