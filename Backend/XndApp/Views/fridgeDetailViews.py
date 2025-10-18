@@ -39,30 +39,6 @@ class FridgeDetailView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    def _calculate_default_expiry(self, ingredient_name, expiry_date_cv):
-
-        # 1. CV로 유통기한이 인식된 경우, 그것을 최우선으로 사용
-        if expiry_date_cv:
-            return expiry_date_cv
-
-        # 2. 유통기한 미인식 시: DB에서 기본 보관 기간 조회하여 자동 계산
-        try:
-            storage_info = FoodStorageLife.objects.get(name__iexact=ingredient_name)
-            default_days = storage_info.storage_life
-
-            # 현재 날짜에 기본 기간을 더하여 storable_due 계산
-            calculated_date = timezone.now().date() + timedelta(days=default_days)
-            return timezone.make_aware(timezone.datetime.combine(calculated_date, timezone.datetime.min.time()))
-
-        except FoodStorageLife.DoesNotExist:
-            # 인식된 유통기한도 없고, DB에서도 매칭되는 기본 기한이 없는 경우
-            print(f"[{ingredient_name}]의 유통기한 정보가 없어 storable_due가 NULL로 저장됩니다.")
-            return None
-        except Exception as e:
-            # 기타 DB 조회 오류 처리
-            print(f"FoodStorageLife DB 조회 중 오류 발생: {e}")
-            return None
-
     # 식재료 인식 결과 DB 저장
     def post(self, request, fridge_id):
         user = request.user
@@ -127,44 +103,34 @@ class FridgeDetailView(APIView):
         determined_name = pipeline_result.get('ingredient_name') or ''
         determined_name = determined_name.strip()
 
-        expiry_date_cv = pipeline_result.get('extracted_date')
-
-        # 5. 유통기한 자동 결정 로직 호출
-        final_storable_due = self._calculate_default_expiry(
-            determined_name,
-            expiry_date_cv
-        )
-
         food_storage_life_obj = FoodStorageLife.objects.filter(name__iexact=determined_name).first()
+        food_storage_life_id = food_storage_life_obj.id if food_storage_life_obj else None
 
-        if food_storage_life_obj: # 보관기한 DB에 없는 경우
-            food_storage_life_id = food_storage_life_obj.id
-        else:
-            food_storage_life_id = None
+        if not food_storage_life_obj: #보관기한 DB에 없는 경우
             print(f"[{determined_name}]의 FoodStorageLife DB 매핑에 실패하여 ID가 None으로 저장됩니다.")
 
         # Serializer에 전달할 최종 데이터 조합
+        # storable_due는 전달하지 않으면 모델의 save() 메서드가 자동으로 계산합니다.
         final_data = {
             'fridge': fridge_id,
             'layer': layer_value,
             'ingredient_pic': f"uploaded_images/{filename}",
 
             'ingredient_name': pipeline_result.get('ingredient_name'),
-            'storable_due': final_storable_due,  # 계산된 최종 유통기한 값 (None 가능)
 
             'category_yolo': pipeline_result.get('category_yolo'),
             'yolo_confidence': pipeline_result.get('yolo_confidence'),
             'product_name_ocr': pipeline_result.get('product_name_ocr'),
             'product_similarity_score': pipeline_result.get('product_similarity_score'),
 
-            'expiry_date': pipeline_result.get('extracted_date'),
+            'expiry_date': pipeline_result.get('expiry_date'),
             'expiry_date_status': pipeline_result.get('expiry_date_status'),
             'date_recognition_confidence': pipeline_result.get('date_recognition_confidence'),
             'date_type_confidence': pipeline_result.get('date_type_confidence'),
             'foodStorageLife': food_storage_life_id,  # None 또는 ID
         }
 
-        # 6. Serializer 유효성 검사 및 저장
+        # 5. Serializer 유효성 검사 및 저장
         serializer = FridgeIngredientsSerializer(data=final_data)
         if serializer.is_valid():
             instance = serializer.save(fridge=fridge)
