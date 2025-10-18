@@ -8,13 +8,15 @@ class IngredientModel implements IngredientAbstract {
   String? _imgUrl;
   bool? _inFridge;
   bool? _inCart;
+  String? _amount;
 
-  IngredientModel({int? id, String? ingredientName, String? imgUrl, bool? inFridge, bool? inCart}){
+  IngredientModel({int? id, String? ingredientName, String? imgUrl, bool? inFridge, bool? inCart, String? storageLocation, String? amount}){
     this._id = id;
     this._ingredientName = ingredientName;
     this._imgUrl = imgUrl;
     this._inFridge = inFridge;
     this._inCart = inCart;
+    this._amount = amount;
   }
 
   @override
@@ -23,6 +25,7 @@ class IngredientModel implements IngredientAbstract {
   String? get imgUrl => _imgUrl;
   bool? get inFridge => _inFridge;
   bool? get inCart => _inCart;
+  String? get amount => _amount;
 
   @override
   IngredientModel toIngredient(Response ingredientResponse, int idx){
@@ -32,31 +35,41 @@ class IngredientModel implements IngredientAbstract {
     // this._imgUrl = data[idx]['ingredient_pic'];
     this._inFridge = data[idx]['in_fridge'];
     this._inCart = data[idx]['in_cart'];
+    this._amount = data[idx]['amount'];
     return this;
   }
 }
+  
 
 class FridgeIngredientModel extends IngredientModel implements FridgeIngredientAbstract{
   int? _layer;
   String? _stored_at;
   String? _storable_due;
+  String? _storageLocation;
+  String? _memo;
 
-  FridgeIngredientModel({int? id,
+  FridgeIngredientModel({
+    int? id,
     String? ingredientName,
     String? imgUrl,
     int? layer,
     String? stored_at,
-    String? storable_due}) : super(id : id, ingredientName : ingredientName, imgUrl: imgUrl)
+    String? storable_due,
+    String? memo}) : super(id : id, ingredientName : ingredientName, imgUrl: imgUrl)
   {
     this._layer = layer;
     this._stored_at = stored_at;
     this._storable_due = storable_due;
+    this._memo = memo;
+
   }
 
   @override
   int? get layer => _layer;
   String? get stored_at => _stored_at;
   String? get storable_due => _storable_due;
+  String? get storageLocation => _storageLocation;
+  String? get memo => _memo;
 
   @override
   FridgeIngredientModel toIngredient(Response ingredientResponse, int idx){
@@ -73,6 +86,8 @@ class FridgeIngredientModel extends IngredientModel implements FridgeIngredientA
     this._layer = data[idx]['layer'];
     this._stored_at = data[idx]['stored_at'];
     this._storable_due = data[idx]['storable_due'];
+    this._storageLocation = data[idx]['storage_location'];
+    this._memo = data[idx]['memo'];
     return this;
   }
 }

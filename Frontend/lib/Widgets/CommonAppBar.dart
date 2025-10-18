@@ -7,10 +7,12 @@ import 'package:Frontend/Views/LoginView.dart';
 /// 모든 페이지에서 동일한 스타일의 상단바 사용
 class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
+  final bool showBackButton;
 
   const CommonAppBar({
     Key? key,
     this.title = 'Xnd',
+    this.showBackButton = false,
   }) : super(key: key);
 
   @override
@@ -31,6 +33,14 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
               toolbarHeight: 56,
               automaticallyImplyLeading: false,
               elevation: 0,
+              leading: showBackButton
+                  ? IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    )
+                  : null,
               title: Text(
                 title,
                 style: const TextStyle(

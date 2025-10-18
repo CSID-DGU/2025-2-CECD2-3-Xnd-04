@@ -66,16 +66,32 @@ Future<int> getIngredientInfoFromServer(RecipeModel recipe, bool fromFavoritePag
       }
     }
     // 레시피 상세 정보 초기화 && 추가
-    if (li.length < 5) {
-      li.add([]);
-      li.add([]);
-      for (int idx = 0; idx < 10; idx++) {
-        li[4]!.add(null);
-        li[5]!.add(null);
+    if (li.length < 12) {
+      // 기본 필드가 10개이므로, 10, 11번 인덱스 추가
+      while (li.length < 12) {
+        li.add([]);
+      }
+      // 초기화 - 현재 레시피 개수만큼 null로 채우기
+      int recipeCount = li[0]?.length ?? 0;
+      for (int idx = 0; idx < recipeCount; idx++) {
+        li[10]!.add(null);
+        li[11]!.add(null);
       }
     }
-    li[4]![recipeIdx] = Ingredients;
-    li[5]![recipeIdx] = Descriptions;
+
+    // 인덱스 범위 확인 후 추가
+    if (recipeIdx < li[10]!.length) {
+      li[10]![recipeIdx] = Ingredients;
+      li[11]![recipeIdx] = Descriptions;
+    } else {
+      // 인덱스가 범위를 벗어나면 확장
+      while (li[10]!.length <= recipeIdx) {
+        li[10]!.add(null);
+        li[11]!.add(null);
+      }
+      li[10]![recipeIdx] = Ingredients;
+      li[11]![recipeIdx] = Descriptions;
+    }
 
     return recipeIdx;
   }

@@ -33,15 +33,18 @@ Future<Response?> requestFridgeIngredientInfo(RefrigeratorModel refrigerator) as
 Future<bool> loadFridgeIngredientsInfo(RefrigeratorModel refrigerator, int idx) async {
   Response<dynamic>? response = await requestFridgeIngredientInfo(refrigerator);
 
-  if (response == null) return false;
+  if (response == null) {
+    return false;
+  }
 
   List<dynamic> ingredientsInfo = response.data['ingredients'];
   List<FridgeIngredientModel> ingredients = [];
 
   for (int i = 0; i < ingredientsInfo.length; i++){
-    ingredients.add(FridgeIngredientModel()
+    var ingredient = FridgeIngredientModel()
         .toIngredient(response, i)
-        .toFridgeIngredient(response, i));
+        .toFridgeIngredient(response, i);
+    ingredients.add(ingredient);
   }
 
   refrigerator.setIngredientStorage(ingredients);

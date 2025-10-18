@@ -29,6 +29,9 @@ class FridgeDetailView(APIView):
                 {"error": "냉장고를 찾을 수 없습니다."},
                 status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
+            print(f"❌ FridgeDetailView GET 에러 발생: {e}")
+            import traceback
+            traceback.print_exc()
             return Response(
                 {'error': '서버 오류', 'message': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR

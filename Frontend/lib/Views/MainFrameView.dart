@@ -13,6 +13,7 @@ import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:Frontend/Models/RecipeModel.dart';
 import 'package:Frontend/Models/IngredientModel.dart';
 import 'package:Frontend/Services/loadRecipeService.dart';
+import 'package:Frontend/Services/loadFridgeIngredientInfoService.dart';
 
 import '../Services/loadSavedRecipeService.dart';
 
@@ -83,7 +84,12 @@ class MainBottomBar extends State<MainBottomView> {
 
     // 0: IngredientsView
     if (index == 0){
-      Navigator.of(context).pushNamed('/' + pages[1].toString());
+      // 냉장고 식재료 정보 로드
+      if (Fridges.isNotEmpty && Fridges[0].ingredients == null) {
+        await loadFridgeIngredientsInfo(Fridges[0], 0);
+      }
+      if (!mounted) return;
+      Navigator.of(context).pushNamed('/${pages[1]}');
     }
     // 1: SearchView (검색 페이지)
     else if (index == 1){

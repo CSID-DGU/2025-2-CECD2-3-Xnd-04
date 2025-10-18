@@ -68,8 +68,14 @@ Future<List<List<dynamic>?>?> getRecipeQueryInfoFromServer({required String quer
   List<dynamic> food_names = [];
   List<dynamic> recipe_image_urls = [];
   List<dynamic> is_saved = [];
+  List<dynamic> cooking_times = [];
+  List<dynamic> serving_sizes = [];
+  List<dynamic> cooking_levels = [];
+  List<dynamic> category2s = [];
+  List<dynamic> category3s = [];
+  List<dynamic> category4s = [];
 
-  List<List<dynamic>?> li = [recipe_id, food_names, recipe_image_urls, is_saved];
+  List<List<dynamic>?> li = [recipe_id, food_names, recipe_image_urls, is_saved, cooking_times, serving_sizes, cooking_levels, category2s, category3s, category4s];
 
   List<dynamic>? recipeResponse;
   // 일단 응답이 있는 상황에선 이미지나 이름이 누락됬을지라도 추가하는 방향으로
@@ -82,6 +88,12 @@ Future<List<List<dynamic>?>?> getRecipeQueryInfoFromServer({required String quer
         li[1]!.add(recipeResponse[i]['food_name']);
         li[2]!.add(recipeResponse[i]['recipe_image']);
         li[3]!.add(recipeResponse[i]['is_saved']);
+        li[4]!.add(recipeResponse[i]['cooking_time']);
+        li[5]!.add(recipeResponse[i]['serving_size']);
+        li[6]!.add(recipeResponse[i]['cooking_level']);
+        li[7]!.add(recipeResponse[i]['category2']);
+        li[8]!.add(recipeResponse[i]['category3']);
+        li[9]!.add(recipeResponse[i]['category4']);
       }
     }
   }
