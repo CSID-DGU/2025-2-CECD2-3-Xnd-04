@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:Frontend/Models/RecipeModel.dart';
 import 'package:Frontend/Models/IngredientModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
-import 'package:Frontend/Widgets/CommonAppBar.dart';
+import 'package:Frontend/Views/LoginView.dart';
+import 'package:Frontend/Services/authService.dart';
 
 class RecipeDetailView extends StatefulWidget {
   final RecipeModel recipe;
@@ -82,7 +83,94 @@ class _RecipeDetailViewState extends State<RecipeDetailView> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const CommonAppBar(title: 'Xnd', showBackButton: true),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(80),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFF2196F3),
+          ),
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            toolbarHeight: 80,
+            automaticallyImplyLeading: false,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            title: const Text(
+              'Xnd',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/${pages[8]}');
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.settings_outlined, color: Colors.white),
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/${pages[9]}');
+                },
+              ),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, color: Colors.white),
+                onSelected: (String value) async {
+                  if (value == 'logout') {
+                    bool? confirmLogout = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('로그아웃'),
+                        content: const Text('로그아웃 하시겠습니까?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('취소'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('로그아웃'),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirmLogout == true && context.mounted) {
+                      await clearTokens();
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) => const LoginView()),
+                        (route) => false,
+                      );
+                    }
+                  }
+                },
+                itemBuilder: (BuildContext context) {
+                  return [
+                    const PopupMenuItem<String>(
+                      value: 'logout',
+                      child: Row(
+                        children: [
+                          Icon(Icons.logout, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('로그아웃', style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ];
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
       bottomNavigationBar: const MainBottomView(),
       body: SingleChildScrollView(
         child: Column(
@@ -92,23 +180,26 @@ class _RecipeDetailViewState extends State<RecipeDetailView> {
             Container(
               width: screenWidth,
               height: 250,
-              color: Colors.grey[200],
               child: widget.recipe.imgUrl != null && widget.recipe.imgUrl!.isNotEmpty
                   ? Image.network(
                       widget.recipe.imgUrl!,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
-                        return Center(
-                          child: Icon(Icons.image_not_supported, size: 64, color: Colors.grey),
+                        return Container(
+                          color: Colors.grey[200],
+                          child: const Center(
+                            child: Icon(Icons.image_not_supported, size: 64, color: Colors.grey),
+                          ),
                         );
                       },
                     )
-                  : Center(
-                      child: Icon(Icons.image_not_supported, size: 64, color: Colors.grey),
+                  : Container(
+                      color: Colors.grey[200],
+                      child: const Center(
+                        child: Icon(Icons.image_not_supported, size: 64, color: Colors.grey),
+                      ),
                     ),
             ),
-
-            SizedBox(height: 20),
 
             // 레시피 제목
             Padding(
