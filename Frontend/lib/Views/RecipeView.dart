@@ -47,15 +47,21 @@ class RecipePage extends State<RecipeView> {
     }
   }
 
-  RecipePage(){
+  @override
+  void initState() {
     super.initState();
     getListedRecipes();
     _scrollController = ScrollController();
+    // 전역 검색어를 검색창에 설정
+    if (currentSearchQuery.isNotEmpty) {
+      _searchController.text = currentSearchQuery;
+    }
   }
 
   @override
   void dispose() {
     super.dispose();
+    _searchController.dispose();
     _scrollController.dispose();
   }
 
@@ -79,75 +85,72 @@ class RecipePage extends State<RecipeView> {
       body: Column(
         children: [
           // 검색 바
-          Container(
-            height: screenHeight * 0.06,
-            margin: EdgeInsets.fromLTRB(20, screenHeight * 0.015, 20, screenHeight * 0.01),
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: TextField(
-              controller: _searchController,
-              style: TextStyle(color: Colors.black, fontSize: screenHeight * 0.02),
-              textAlignVertical: TextAlignVertical.center,
-              decoration: InputDecoration(
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: 10),
-                hintText: '레시피 검색',
-                hintStyle: TextStyle(
-                  color: Colors.grey[700],
-                  fontSize: screenHeight * 0.018,
-                  fontWeight: FontWeight.bold,
-                ),
-                prefixIcon: IconButton(
-                  icon: Icon(Icons.search, color: Colors.grey[700]),
-                  onPressed: () async {
-                    if (_searchController.text.trim().isNotEmpty) {
-                      // 검색 기록 저장
-                      await SearchHistoryService.saveSearch(_searchController.text);
-
-                      // 레시피 검색
-                      Recipes = await getRecipeQueryInfoFromServer(query: _searchController.text);
-                      setState(() {
-                        getListedRecipes();
-                      });
-                    }
-                  },
-                ),
-                suffixIcon: (_searchController.text.isNotEmpty)
-                    ? IconButton(
-                        icon: Icon(Icons.clear, color: Colors.red, size: screenHeight * 0.025),
-                        onPressed: () {
-                          setState(() {
-                            _searchController.clear();
-                          });
-                        },
-                      )
-                    : null,
-                border: InputBorder.none,
+          Padding(
+            padding: EdgeInsets.fromLTRB(16, screenHeight * 0.015, 16, screenHeight * 0.01),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(25),
+                border: Border.all(color: Colors.grey.shade300),
               ),
-              onChanged: (value) {
-                setState(() {});
-              },
-              onSubmitted: (value) async {
-                if (value.trim().isNotEmpty) {
-                  // 검색 기록 저장
-                  await SearchHistoryService.saveSearch(value);
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: '키워드를 입력하세요',
+                  hintStyle: TextStyle(color: Colors.grey.shade400),
+                  prefixIcon: Icon(Icons.search, color: Colors.grey.shade400),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(Icons.clear, color: Colors.grey.shade400),
+                          onPressed: () {
+                            setState(() {
+                              _searchController.clear();
+                            });
+                          },
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 15,
+                  ),
+                ),
+                onChanged: (value) {
+                  setState(() {});
+                },
+                onSubmitted: (value) async {
+                  if (value.trim().isNotEmpty) {
+                    // 검색 기록 저장
+                    await SearchHistoryService.saveSearch(value);
 
-                  // 레시피 검색
-                  Recipes = await getRecipeQueryInfoFromServer(query: value);
-                  setState(() {
-                    getListedRecipes();
-                  });
-                }
-              },
+                    // 레시피 검색
+                    Recipes = await getRecipeQueryInfoFromServer(query: value);
+
+                    // 전역 변수에 검색어 저장
+                    currentSearchQuery = value;
+
+                    setState(() {
+                      // 검색어를 유지 (clear 제거)
+                      getListedRecipes();
+                    });
+                  }
+                },
+              ),
+            ),
+          ),
+          // 필터 버튼 영역
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Row(
+              children: [
+                _buildFilterChip('주친순', false),
+                SizedBox(width: 8),
+                _buildFilterChip('정확도순', false),
+                SizedBox(width: 8),
+                _buildFilterChip('인기순', true),
+                Spacer(),
+                _buildFilterButton(),
+              ],
             ),
           ),
           // 레시피 리스트
@@ -312,6 +315,56 @@ class RecipePage extends State<RecipeView> {
         fontSize: 12,
         color: Colors.blue[700],
         fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+
+  // 필터 칩 위젯 (기능 비활성화)
+  Widget _buildFilterChip(String label, bool isSelected) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isSelected ? Color(0xFF2196F3) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isSelected ? Color(0xFF2196F3) : Colors.grey[400]!,
+          width: 1,
+        ),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 13,
+          color: isSelected ? Colors.white : Colors.black,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  // 필터 버튼 위젯 (기능 비활성화)
+  Widget _buildFilterButton() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey[400]!, width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '필터',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.black,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(width: 4),
+          Icon(Icons.tune, size: 16, color: Colors.black),
+        ],
       ),
     );
   }

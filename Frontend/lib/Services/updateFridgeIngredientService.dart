@@ -9,6 +9,8 @@ Future<bool> updateFridgeIngredient({
   String? ingredientName,
   String? storableDue,
   String? memo,
+  int? layer,
+  String? storageLocation,
 }) async {
   final dio = Dio();
   final String? ip = await NetworkInfo().getWifiIP();
@@ -22,6 +24,8 @@ Future<bool> updateFridgeIngredient({
     if (ingredientName != null) data['ingredient_name'] = ingredientName;
     if (storableDue != null) data['storable_due'] = storableDue;
     if (memo != null) data['memo'] = memo;
+    if (layer != null) data['layer'] = layer;
+    if (storageLocation != null) data['storage_location'] = storageLocation;
 
     final response = await dio.patch(
       updateURL,
