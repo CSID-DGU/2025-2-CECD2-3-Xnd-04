@@ -30,6 +30,7 @@ class User(AbstractBaseUser):
     # userInfo(extra_fields)
     name = models.CharField(max_length=100,default='')
     email = models.TextField(default='')
+    budget = models.IntegerField(default=0)  # 이번 달 식비 예산
 
     # Include UserManager
     objects = UserManager()

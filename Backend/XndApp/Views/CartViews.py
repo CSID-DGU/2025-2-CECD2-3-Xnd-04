@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404
 from XndApp.Models.user import User
 from XndApp.Models.ingredients import Ingredient
 from XndApp.Models.cart import Cart
+from XndApp.Models.recipes import Recipes
 from XndApp.serializers.cart_serializers import CartSerializer, CartDetailSerializer
 
 
@@ -51,35 +52,42 @@ class CartManageView(APIView):
     """
     # user_id = request.user.user_id  # 이 줄 삭제!
 
-    """ 장바구니 아이템 추가 (검색 결과 → 장바구니) """
+    """ 장바구니 아이템 추가 (레시피 상세 뷰 → 장바구니) """
 
     def post(self, request):
         try:
-            user_id = request.user.user_id  # 메서드 안에서 정의
+            user_id = request.user.user_id
             ingredient_id = request.data.get('ingredient_id')
-            quantity = request.data.get('quantity', 1)
+            recipe_id = request.data.get('recipe_id')
+            quantity = request.data.get('quantity', '1')
 
             if not ingredient_id:
                 return Response({"error": "식재료 ID가 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
 
             ingredient = get_object_or_404(Ingredient, id=ingredient_id)
+            recipe = None
+            if recipe_id:
+                recipe = get_object_or_404(Recipes, recipe_id=recipe_id)
 
-            # 이미 카트에 있는지 확인
+            # 이미 카트에 있는지 확인 (user, ingredient, recipe 조합으로)
             cart_item, created = Cart.objects.get_or_create(
-                user_id=user_id,  # 수정
+                user_id=user_id,
                 ingredient=ingredient,
+                recipe=recipe,
                 defaults={
                     'quantity': quantity
                 }
             )
 
-            # 이미 있었다면 수량만 증가
+            # 이미 있었다면 기존 것 유지 (중복 방지)
             if not created:
-                cart_item.quantity += quantity
-                cart_item.save()
+                return Response({
+                    "message": "이미 장바구니에 추가된 재료입니다.",
+                    "data": CartSerializer(cart_item).data
+                }, status=status.HTTP_200_OK)
 
             serializer = CartSerializer(cart_item)
-            return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
             return Response(
@@ -125,11 +133,68 @@ class CartManageView(APIView):
 
     def delete(self, request, cart_id):
         try:
-            user_id = request.user.user_id  # 수정
+            user_id = request.user.user_id
 
-            cart_item = get_object_or_404(Cart, id=cart_id, user=user_id)  # 수정
+            cart_item = get_object_or_404(Cart, id=cart_id, user=user_id)
             cart_item.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response({"message": "장바구니에서 삭제되었습니다."}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {
+                    'error': '접근 오류',
+                    'message': str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class CartBulkDeleteView(APIView):
+    """
+    장바구니 선택 삭제 및 전체 삭제 API
+    """
+
+    def post(self, request):
+        """선택한 아이템들 삭제"""
+        try:
+            user_id = request.user.user_id
+            cart_ids = request.data.get('cart_ids', [])
+
+            if not cart_ids:
+                return Response({"error": "삭제할 아이템을 선택해주세요."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # 사용자의 장바구니 아이템만 삭제
+            deleted_count = Cart.objects.filter(
+                id__in=cart_ids,
+                user_id=user_id
+            ).delete()[0]
+
+            return Response({
+                "message": f"{deleted_count}개의 아이템이 삭제되었습니다.",
+                "deleted_count": deleted_count
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {
+                    'error': '접근 오류',
+                    'message': str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def delete(self, request):
+        """전체 삭제"""
+        try:
+            user_id = request.user.user_id
+
+            # 해당 사용자의 모든 장바구니 아이템 삭제
+            deleted_count = Cart.objects.filter(user_id=user_id).delete()[0]
+
+            return Response({
+                "message": "장바구니가 비워졌습니다.",
+                "deleted_count": deleted_count
+            }, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response(

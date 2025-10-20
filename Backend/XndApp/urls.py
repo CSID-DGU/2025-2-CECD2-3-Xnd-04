@@ -6,7 +6,7 @@ from XndApp.Views.loginViews import NaverLoginView
 from XndApp.Views.fridgesViews import FridgeViews
 from XndApp.Views.fridgeDetailViews import FridgeDetailView
 from XndApp.Views.IngredientViews import IngredientView
-from XndApp.Views.CartViews import CartListView, CartManageView
+from XndApp.Views.CartViews import CartListView, CartManageView, CartBulkDeleteView
 from XndApp.Views.savedRecipesViews import SavedRecipesView,SavedRecipeDetailView
 from XndApp.Views.NotificationViews import RegisterDeviceView, DeviceManageView, NotificationView, NotificationDetailView, IngredientNotificationView
 from XndApp.Views.fcmViews import fcm_test_view
@@ -33,6 +33,8 @@ urlpatterns = [
     path('api/cart/', CartListView.as_view(), name='cart-list'), # 장바구니 목록 조회
     path('api/cart/add/', CartManageView.as_view(), name='cart-add'), # 장바구니에 추가
     path('api/cart/<int:cart_id>/', CartManageView.as_view(), name='cart-manage'), # 장바구니 수량 + - x (삭제)
+    path('api/cart/bulk-delete/', CartBulkDeleteView.as_view(), name='cart-bulk-delete'), # 선택 삭제 (POST)
+    path('api/cart/clear/', CartBulkDeleteView.as_view(), name='cart-clear'), # 전체 삭제 (DELETE)
 
     #즐겨찾기(레시피 저장)
     path('api/savedRecipe/', SavedRecipesView.as_view(), name='savedRecipes'),  # 저장된 레시피 목록, 즐겨찾기 추가 및 삭제(토글)
