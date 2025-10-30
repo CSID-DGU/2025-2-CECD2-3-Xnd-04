@@ -3,8 +3,10 @@ import 'package:Frontend/Abstracts/kakaoLogin.dart';
 import 'package:Frontend/Models/LoginModel.dart';
 import 'package:Frontend/Models/cart_model.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
+import 'package:Frontend/Views/DailyExpenseView.dart';
 import 'package:Frontend/Widgets/CommonAppBar.dart';
 import 'package:Frontend/Services/cart_service.dart';
+import 'package:Frontend/Services/shoppingListService.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 
 class CartView extends StatefulWidget {
@@ -125,6 +127,117 @@ class CartPage extends State<CartView> {
           SnackBar(content: Text('장바구니가 비워졌습니다.')),
         );
       }
+    }
+  }
+
+  // 캘린더로 추가
+  Future<void> _addToCalendar() async {
+    // 선택된 항목이 있는지 확인
+    List<CartItemModel> selectedCartItems = items.where((item) {
+      return selectedItems[item.id] == true;
+    }).toList();
+
+    if (selectedCartItems.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('장보기 일정에 추가할 재료를 선택해주세요')),
+      );
+      return;
+    }
+
+    // 날짜 선택 다이얼로그
+    String? selectedOption = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('장보기 일정 선택'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.today, color: Color(0xFF2196F3)),
+                title: Text('오늘'),
+                onTap: () => Navigator.pop(context, 'today'),
+              ),
+              ListTile(
+                leading: Icon(Icons.calendar_month, color: Color(0xFF2196F3)),
+                title: Text('다른 날'),
+                onTap: () => Navigator.pop(context, 'other'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (selectedOption == null) return;
+
+    DateTime selectedDate;
+    if (selectedOption == 'today') {
+      selectedDate = DateTime.now();
+    } else {
+      // 다른 날 선택 - DatePicker 표시
+      DateTime? pickedDate = await showDatePicker(
+        context: context,
+        initialDate: DateTime.now(),
+        firstDate: DateTime.now(), // 오늘 이후만 선택 가능
+        lastDate: DateTime.now().add(Duration(days: 365)),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.light(
+                primary: Color(0xFF2196F3),
+              ),
+            ),
+            child: child!,
+          );
+        },
+      );
+
+      if (pickedDate == null) return;
+      selectedDate = pickedDate;
+    }
+
+    // API로 장보기 일정 추가
+    try {
+      List<int> cartItemIds = selectedCartItems.map((item) => item.id!).toList();
+
+      final result = await addShoppingList(
+        cartItemIds: cartItemIds,
+        shoppingDate: selectedDate,
+      );
+
+      // 장보기 목록에 추가된 항목들을 장바구니에서 삭제
+      await deleteSelectedCartItems(cartItemIds);
+
+      // 장바구니 목록 새로고침
+      await _loadCartData();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? '장보기 일정에 추가되었습니다'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // DailyExpenseView로 이동
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => DailyExpenseView(
+            selectedDate: selectedDate,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -259,13 +372,7 @@ class CartPage extends State<CartView> {
             width: double.infinity,
             padding: EdgeInsets.all(16),
             child: ElevatedButton(
-              onPressed: items.isEmpty ? null : () {
-                // TODO: 캘린더에 추가 기능 구현
-                int selectedCount = selectedItems.values.where((selected) => selected).length;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('캘린더에 추가 기능은 추후 구현 예정입니다. (선택: $selectedCount개)')),
-                );
-              },
+              onPressed: items.isEmpty ? null : _addToCalendar,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFF87CEEB),
                 foregroundColor: Colors.white,

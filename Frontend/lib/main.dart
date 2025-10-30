@@ -1,6 +1,7 @@
   import 'package:flutter/material.dart';
 import 'package:Frontend/Views/LoginView.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
+import 'package:Frontend/Views/AccountBookSettingView.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:Frontend/PushService/fcmService.dart';
@@ -56,6 +57,8 @@ class MyApp extends StatelessWidget {
         '/AccountBookView' : (context) => pages[10],
         //검색 뷰
         '/SearchView' : (context) => pages[11],
+        //가계부 설정 뷰
+        '/AccountBookSettingView' : (context) => const AccountBookSettingView(),
       }
     );
   }

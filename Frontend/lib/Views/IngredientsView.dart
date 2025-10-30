@@ -28,6 +28,8 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
   // 편집 모드 관련 변수
   bool _isEditMode = false;
   Set<int> _selectedIngredientIds = {};
+  bool _isCheckingSession = true;
+  bool _sessionValid = false;
 
   IngredientsPage({required this.refrigerator});
 
@@ -36,6 +38,39 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
     super.initState();
     _scrollController = ScrollController();
     _tabController = TabController(length: 3, vsync: this);
+    _checkSessionOnLoad();
+  }
+
+  Future<void> _checkSessionOnLoad() async {
+    // 세션 유효성 검사
+    bool isValid = await checkSession();
+
+    if (!mounted) return;
+
+    if (!isValid) {
+      // 세션이 유효하지 않으면 스낵바와 함께 로그인 페이지로 이동
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('세션이 만료되었습니다. 다시 로그인해주세요.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // 약간의 딜레이 후 로그인 페이지로 이동
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginView()),
+        (route) => false,
+      );
+    } else {
+      setState(() {
+        _isCheckingSession = false;
+        _sessionValid = true;
+      });
+    }
   }
 
   @override
@@ -47,6 +82,10 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
 
   int getDueDate(FridgeIngredientModel ingredient){
     DateTime now = DateTime.now();
+    if (ingredient.storable_due == null || ingredient.storable_due!.isEmpty) {
+      // 기본값으로 7일 후 설정
+      return 7;
+    }
     DateTime dueDateParsed = DateTime.parse(ingredient.storable_due!.substring(0, 10));
     return dueDateParsed.difference(now).inDays + 1;
   }
@@ -908,6 +947,30 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    // 세션 체크 중이면 로딩 표시
+    if (_isCheckingSession) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF2196F3),
+        body: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        ),
+      );
+    }
+
+    // 세션이 유효하지 않으면 빈 화면 (리다이렉트 중)
+    if (!_sessionValid) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF2196F3),
+        body: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        ),
+      );
+    }
+
     // 냉장고 내부 뷰 - 하단바 0번 활성화
     currentBottomNavIndex = 0;
 

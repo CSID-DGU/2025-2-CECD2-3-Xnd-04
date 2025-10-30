@@ -12,7 +12,7 @@ Future<bool> updateFridgeIngredient({
   int? layer,
   String? storageLocation,
 }) async {
-  final dio = Dio();
+  final dio = createAuthDio(); // 401 에러 자동 처리를 위한 인증 Dio 사용
   final String? ip = await NetworkInfo().getWifiIP();
 
   final String updateURL = (ip!.startsWith('10.0.2'))

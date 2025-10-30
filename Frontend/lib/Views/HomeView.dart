@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:Frontend/Views/IngredientsView.dart';
+import 'package:Frontend/Views/LoginView.dart';
 import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:Frontend/Services/createFridgeService.dart';
 import 'package:Frontend/Services/loadFridgeService.dart';
 import 'package:Frontend/Services/loadFridgeIngredientInfoService.dart';
+import 'package:Frontend/Services/authService.dart';
 import 'package:Frontend/Widgets/CommonAppBar.dart';
 
 bool isPlusButtonClicked = false;
@@ -20,6 +22,46 @@ class InitialHomePage extends State<InitialHomeView> {
   int levelOfRefrigerator = 1;             // 냉장고 추가할 때 사용하는 변수
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _layerController = TextEditingController();
+  bool _isCheckingSession = true;
+  bool _sessionValid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkSessionOnLoad();
+  }
+
+  Future<void> _checkSessionOnLoad() async {
+    // 세션 유효성 검사
+    bool isValid = await checkSession();
+
+    if (!mounted) return;
+
+    if (!isValid) {
+      // 세션이 유효하지 않으면 스낵바와 함께 로그인 페이지로 이동
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('세션이 만료되었습니다. 다시 로그인해주세요.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // 약간의 딜레이 후 로그인 페이지로 이동
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginView()),
+        (route) => false,
+      );
+    } else {
+      setState(() {
+        _isCheckingSession = false;
+        _sessionValid = true;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -30,6 +72,23 @@ class InitialHomePage extends State<InitialHomeView> {
 
   @override
   Widget build(BuildContext context) {
+    // 세션 체크 중이면 로딩 표시
+    if (_isCheckingSession) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    // 세션이 유효하지 않으면 빈 화면 (리다이렉트 중)
+    if (!_sessionValid) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
@@ -345,6 +404,47 @@ class HomeView extends StatefulWidget {
 class HomePage extends State<HomeView> {
 
   List<RefrigeratorModel> fridgeStorage = [];
+  bool _isCheckingSession = true;
+  bool _sessionValid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkSessionOnLoad();
+  }
+
+  Future<void> _checkSessionOnLoad() async {
+    // 세션 유효성 검사
+    bool isValid = await checkSession();
+
+    if (!mounted) return;
+
+    if (!isValid) {
+      // 세션이 유효하지 않으면 스낵바와 함께 로그인 페이지로 이동
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('세션이 만료되었습니다. 다시 로그인해주세요.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // 약간의 딜레이 후 로그인 페이지로 이동
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginView()),
+        (route) => false,
+      );
+    } else {
+      setState(() {
+        _isCheckingSession = false;
+        _sessionValid = true;
+      });
+      getFridges();
+    }
+  }
 
   /// 냉장고 끌어오기
   void getFridges(){
@@ -353,15 +453,25 @@ class HomePage extends State<HomeView> {
       fridgeStorage.add(RefrigeratorModel().getFridge(i));
   }
 
-  HomePage(){
-    super.initState();
-    getFridges();
-  }
-
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
+    // 세션 체크 중이면 로딩 표시
+    if (_isCheckingSession) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    // 세션이 유효하지 않으면 빈 화면 (리다이렉트 중)
+    if (!_sessionValid) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
     return Scaffold(
         appBar: const CommonAppBar(title: 'Xnd'),

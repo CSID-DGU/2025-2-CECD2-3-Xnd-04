@@ -5,7 +5,7 @@ import 'package:Frontend/Models/RecipeModel.dart';
 
 /// query : included in xndapp_recipes.recipeName
 Future<Response?> requestRecipeQuery({required String query}) async {
-  final dio = Dio();
+  final dio = createAuthDio(); // 401 에러 자동 처리를 위한 인증 Dio 사용
   final String? ip = await NetworkInfo().getWifiIP();
 
   final String recipeURL = (ip!.startsWith('10.0.2')) ?
@@ -31,7 +31,7 @@ Future<Response?> requestRecipeQuery({required String query}) async {
 
 /// query : included in xndapp_recipes.recipeName
 Future<Response?> requestRecipeKeyword({required String keyword}) async {
-  final dio = Dio();
+  final dio = createAuthDio(); // 401 에러 자동 처리를 위한 인증 Dio 사용
   final String? ip = await NetworkInfo().getWifiIP();
   // 해시태그 정규화
   keyword = keyword.replaceFirst('#', '');
