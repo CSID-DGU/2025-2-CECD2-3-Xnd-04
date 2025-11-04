@@ -41,13 +41,27 @@ class RecipeView(APIView):
         # 기본 쿼리셋
         recipes = Recipes.objects.all()
 
-        # 검색어
+        # 검색어 (공백으로 구분된 여러 재료 검색 지원)
         if query:
-            recipes = recipes.filter(
-                Q(food_name__icontains=query) |
-                Q(tags__tag_name__icontains=query)
-                # | Q(ingredient_all__icontains=query)
-            ).distinct()
+            # 공백으로 구분하여 여러 검색어 처리
+            query_terms = query.strip().split()
+
+            if len(query_terms) == 1:
+                # 단일 검색어: 기존 OR 방식
+                recipes = recipes.filter(
+                    Q(food_name__icontains=query_terms[0]) |
+                    Q(tags__tag_name__icontains=query_terms[0]) |
+                    Q(ingredient_all__icontains=query_terms[0])
+                ).distinct()
+            else:
+                # 다중 검색어: 모든 검색어가 포함된 레시피 찾기 (AND 조건)
+                # 각 검색어가 제목, 태그, 재료 중 하나에라도 포함되어야 함
+                for term in query_terms:
+                    recipes = recipes.filter(
+                        Q(food_name__icontains=term) |
+                        Q(tags__tag_name__icontains=term) |
+                        Q(ingredient_all__icontains=term)
+                    ).distinct()
 
         # 키워드
         if keyword:

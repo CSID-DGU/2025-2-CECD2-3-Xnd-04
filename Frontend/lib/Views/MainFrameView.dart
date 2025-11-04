@@ -44,6 +44,9 @@ bool nav3Processed = true;
 /// 현재 선택된 하단 네비게이션 인덱스 (전역)
 int currentBottomNavIndex = 0;
 
+/// 현재 검색어 (RecipeView에서 사용)
+String currentSearchQuery = '';
+
 class MainBottomView extends StatefulWidget {
 
   const MainBottomView({

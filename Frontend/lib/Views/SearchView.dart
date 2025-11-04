@@ -45,6 +45,9 @@ class _SearchViewState extends State<SearchView> {
     // 레시피 검색
     Recipes = await getRecipeQueryInfoFromServer(query: query);
 
+    // 전역 변수에 검색어 저장
+    currentSearchQuery = query;
+
     // RecipeView로 이동
     if (mounted) {
       Navigator.of(context).pushNamed('/RecipeView');

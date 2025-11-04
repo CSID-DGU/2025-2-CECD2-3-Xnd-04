@@ -27,6 +27,9 @@ class IngredientModel implements IngredientAbstract {
   bool? get inCart => _inCart;
   String? get amount => _amount;
 
+  // Setters 추가
+  set inCart(bool? value) => _inCart = value;
+
   @override
   IngredientModel toIngredient(Response ingredientResponse, int idx){
     List<dynamic> data = ingredientResponse.data['ingredients'];

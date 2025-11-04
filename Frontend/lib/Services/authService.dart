@@ -113,3 +113,76 @@ Future<bool> handle401Error() async {
 
   return true;
 }
+
+// 인증이 필요한 API 호출용 Dio 인스턴스 생성
+Dio createAuthDio() {
+  final dio = Dio();
+
+  // 인터셉터 추가 - 401 에러 자동 처리
+  dio.interceptors.add(
+    InterceptorsWrapper(
+      onError: (DioException error, ErrorInterceptorHandler handler) async {
+        if (error.response?.statusCode == 401) {
+          // 401 에러 발생 시 세션 만료 처리
+          print('⚠️ 401 에러 감지 - 세션이 만료되었습니다.');
+          await handle401Error();
+
+          // 에러를 계속 전파하지 않고 종료
+          return handler.resolve(
+            Response(
+              requestOptions: error.requestOptions,
+              statusCode: 401,
+              data: {'error': 'Session expired'},
+            ),
+          );
+        }
+        // 401이 아닌 다른 에러는 그대로 전파
+        return handler.next(error);
+      },
+    ),
+  );
+
+  return dio;
+}
+
+// 세션 유효성 검사 함수
+Future<bool> checkSession() async {
+  final tokens = await getSavedTokens();
+  final accessToken = tokens['access_token'];
+
+  if (accessToken == null || accessToken.isEmpty) {
+    return false;
+  }
+
+  // 토큰이 있으면 간단한 API 호출로 유효성 검사
+  try {
+    final dio = Dio();
+    final String? ip = await NetworkInfo().getWifiIP();
+    final String fridgeURL = (ip!.startsWith('10.0.2'))
+        ? 'http://10.0.2.2:8000/api/fridge/'
+        : 'http://$HOST${APIURLS['loadFridge']}';
+
+    final response = await dio.get(
+      fridgeURL,
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+        validateStatus: (status) => status! < 500, // 500 미만은 에러로 처리하지 않음
+      ),
+    );
+
+    if (response.statusCode == 401) {
+      await handle401Error();
+      return false;
+    }
+
+    // responsedAccessToken 전역 변수 업데이트
+    responsedAccessToken = accessToken;
+    return true;
+  } catch (e) {
+    print('세션 체크 실패: $e');
+    return false;
+  }
+}

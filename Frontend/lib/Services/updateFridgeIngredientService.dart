@@ -9,8 +9,10 @@ Future<bool> updateFridgeIngredient({
   String? ingredientName,
   String? storableDue,
   String? memo,
+  int? layer,
+  String? storageLocation,
 }) async {
-  final dio = Dio();
+  final dio = createAuthDio(); // 401 에러 자동 처리를 위한 인증 Dio 사용
   final String? ip = await NetworkInfo().getWifiIP();
 
   final String updateURL = (ip!.startsWith('10.0.2'))
@@ -22,6 +24,8 @@ Future<bool> updateFridgeIngredient({
     if (ingredientName != null) data['ingredient_name'] = ingredientName;
     if (storableDue != null) data['storable_due'] = storableDue;
     if (memo != null) data['memo'] = memo;
+    if (layer != null) data['layer'] = layer;
+    if (storageLocation != null) data['storage_location'] = storageLocation;
 
     final response = await dio.patch(
       updateURL,

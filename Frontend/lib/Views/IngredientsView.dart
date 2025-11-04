@@ -25,6 +25,12 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
   late TabController _tabController;
   final RefrigeratorModel refrigerator;
 
+  // 편집 모드 관련 변수
+  bool _isEditMode = false;
+  Set<int> _selectedIngredientIds = {};
+  bool _isCheckingSession = true;
+  bool _sessionValid = false;
+
   IngredientsPage({required this.refrigerator});
 
   @override
@@ -32,6 +38,39 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
     super.initState();
     _scrollController = ScrollController();
     _tabController = TabController(length: 3, vsync: this);
+    _checkSessionOnLoad();
+  }
+
+  Future<void> _checkSessionOnLoad() async {
+    // 세션 유효성 검사
+    bool isValid = await checkSession();
+
+    if (!mounted) return;
+
+    if (!isValid) {
+      // 세션이 유효하지 않으면 스낵바와 함께 로그인 페이지로 이동
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('세션이 만료되었습니다. 다시 로그인해주세요.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // 약간의 딜레이 후 로그인 페이지로 이동
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginView()),
+        (route) => false,
+      );
+    } else {
+      setState(() {
+        _isCheckingSession = false;
+        _sessionValid = true;
+      });
+    }
   }
 
   @override
@@ -43,6 +82,10 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
 
   int getDueDate(FridgeIngredientModel ingredient){
     DateTime now = DateTime.now();
+    if (ingredient.storable_due == null || ingredient.storable_due!.isEmpty) {
+      // 기본값으로 7일 후 설정
+      return 7;
+    }
     DateTime dueDateParsed = DateTime.parse(ingredient.storable_due!.substring(0, 10));
     return dueDateParsed.difference(now).inDays + 1;
   }
@@ -95,88 +138,124 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.9,
-            height: MediaQuery.of(context).size.height * 0.7,
-            child: Column(
-              children: [
-                // 헤더
-                Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '$floor층 (${ingredients.length})',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: Icon(Icons.close),
-                        padding: EdgeInsets.zero,
-                        constraints: BoxConstraints(),
-                      ),
-                    ],
-                  ),
-                ),
-                // 페이지뷰로 3x3 그리드 표시
-                Expanded(
-                  child: PageView.builder(
-                    itemCount: pages.length,
-                    itemBuilder: (context, pageIndex) {
-                      return Padding(
-                        padding: EdgeInsets.all(16),
-                        child: GridView.builder(
-                          physics: NeverScrollableScrollPhysics(),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                            childAspectRatio: 0.8,
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                height: MediaQuery.of(context).size.height * 0.7,
+                child: Column(
+                  children: [
+                    // 헤더
+                    Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '$floor층 (${ingredients.length})',
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                           ),
-                          itemCount: pages[pageIndex].length,
-                          itemBuilder: (context, index) {
-                            return buildIngredientItem(pages[pageIndex][index]);
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                // 페이지 인디케이터 (페이지가 2개 이상일 때만 표시)
-                if (pages.length > 1)
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        pages.length,
-                        (index) => Container(
-                          margin: EdgeInsets.symmetric(horizontal: 4),
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.grey,
+                          IconButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              // 다이얼로그 닫을 때 부모 위젯도 업데이트
+                              setState(() {});
+                            },
+                            icon: Icon(Icons.close),
+                            padding: EdgeInsets.zero,
+                            constraints: BoxConstraints(),
                           ),
-                        ),
+                        ],
                       ),
                     ),
-                  ),
-              ],
-            ),
-          ),
+                    // 페이지뷰로 3x3 그리드 표시
+                    Expanded(
+                      child: PageView.builder(
+                        itemCount: pages.length,
+                        itemBuilder: (context, pageIndex) {
+                          return Padding(
+                            padding: EdgeInsets.all(16),
+                            child: GridView.builder(
+                              physics: NeverScrollableScrollPhysics(),
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                mainAxisSpacing: 12,
+                                crossAxisSpacing: 12,
+                                childAspectRatio: 0.8,
+                              ),
+                              itemCount: pages[pageIndex].length,
+                              itemBuilder: (context, index) {
+                                FridgeIngredientModel ingredient = pages[pageIndex][index];
+                                bool isSelected = _selectedIngredientIds.contains(ingredient.id);
+
+                                return buildIngredientItemForDialog(
+                                  ingredient,
+                                  floor: floor,
+                                  isSelected: isSelected,
+                                  onSelectionChanged: () {
+                                    setState(() {
+                                      if (isSelected) {
+                                        _selectedIngredientIds.remove(ingredient.id);
+                                        if (_selectedIngredientIds.isEmpty) {
+                                          _isEditMode = false;
+                                        }
+                                      } else {
+                                        _selectedIngredientIds.add(ingredient.id!);
+                                        if (!_isEditMode) {
+                                          _isEditMode = true;
+                                        }
+                                      }
+                                    });
+                                    setDialogState(() {});
+                                  },
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    // 페이지 인디케이터 (페이지가 2개 이상일 때만 표시)
+                    if (pages.length > 1)
+                      Padding(
+                        padding: EdgeInsets.only(bottom: 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            pages.length,
+                            (index) => Container(
+                              margin: EdgeInsets.symmetric(horizontal: 4),
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );
   }
 
-  // 층별 식재료 아이템 위젯 생성
-  Widget buildIngredientItem(FridgeIngredientModel ingredient) {
+  // 다이얼로그용 식재료 아이템 위젯 생성
+  Widget buildIngredientItemForDialog(
+    FridgeIngredientModel ingredient, {
+    required int floor,
+    required bool isSelected,
+    required VoidCallback onSelectionChanged,
+  }) {
     int dueDate = getDueDate(ingredient);
     Color borderColor = getDueDateColor(dueDate);
     String dueDateLabel = getDueDateLabel(dueDate);
@@ -184,39 +263,71 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
     return Column(
       children: [
         Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: borderColor, width: 3)
-            ),
-            child: FilledButton(
-              onPressed: () {
-                showIngredientDialog(ingredient);
-              },
-              style: FilledButton.styleFrom(
-                backgroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)
+          child: Stack(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: _isEditMode && isSelected ? Colors.blue : borderColor,
+                    width: _isEditMode && isSelected ? 4 : 3,
+                  )
                 ),
-                padding: EdgeInsets.zero,
+                child: FilledButton(
+                  onPressed: () {
+                    if (_isEditMode) {
+                      onSelectionChanged();
+                    } else {
+                      Navigator.pop(context);
+                      showIngredientDialog(ingredient);
+                    }
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)
+                    ),
+                    padding: EdgeInsets.zero,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: SizedBox.expand(
+                      child: ingredient.imgUrl != null && ingredient.imgUrl!.isNotEmpty
+                        ? Image.network(
+                            ingredient.imgUrl!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                          )
+                        : Container(
+                            color: Colors.grey[300],
+                            child: Icon(Icons.image_not_supported, color: Colors.grey[600], size: 40),
+                          ),
+                    ),
+                  )
+                )
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: SizedBox.expand(
-                  child: ingredient.imgUrl != null && ingredient.imgUrl!.isNotEmpty
-                    ? Image.network(
-                        ingredient.imgUrl!,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                      )
-                    : Container(
-                        color: Colors.grey[300],
-                        child: Icon(Icons.image_not_supported, color: Colors.grey[600], size: 40),
+              // 편집 모드일 때만 체크박스 표시
+              if (_isEditMode)
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: GestureDetector(
+                    onTap: onSelectionChanged,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
                       ),
+                      child: Icon(
+                        isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                        color: isSelected ? Colors.blue : Colors.grey,
+                        size: 24,
+                      ),
+                    ),
+                  ),
                 ),
-              )
-            )
+            ],
           ),
         ),
         SizedBox(height: 4),
@@ -236,6 +347,150 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
           ),
         ),
       ],
+    );
+  }
+
+  // 층별 식재료 아이템 위젯 생성
+  Widget buildIngredientItem(FridgeIngredientModel ingredient, {int? floor}) {
+    int dueDate = getDueDate(ingredient);
+    Color borderColor = getDueDateColor(dueDate);
+    String dueDateLabel = getDueDateLabel(dueDate);
+    bool isSelected = _selectedIngredientIds.contains(ingredient.id);
+
+    Widget ingredientWidget = Column(
+      children: [
+        Expanded(
+          child: Stack(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: _isEditMode && isSelected ? Colors.blue : borderColor,
+                    width: _isEditMode && isSelected ? 4 : 3,
+                  )
+                ),
+                child: FilledButton(
+                  onPressed: () {
+                    if (_isEditMode) {
+                      // 편집 모드에서는 선택/해제
+                      setState(() {
+                        if (isSelected) {
+                          _selectedIngredientIds.remove(ingredient.id);
+                          // 선택 항목이 없으면 편집 모드 종료
+                          if (_selectedIngredientIds.isEmpty) {
+                            _isEditMode = false;
+                          }
+                        } else {
+                          _selectedIngredientIds.add(ingredient.id!);
+                        }
+                      });
+                    } else {
+                      // 일반 모드에서는 정보 다이얼로그
+                      showIngredientDialog(ingredient);
+                    }
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)
+                    ),
+                    padding: EdgeInsets.zero,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: SizedBox.expand(
+                      child: ingredient.imgUrl != null && ingredient.imgUrl!.isNotEmpty
+                        ? Image.network(
+                            ingredient.imgUrl!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                          )
+                        : Container(
+                            color: Colors.grey[300],
+                            child: Icon(Icons.image_not_supported, color: Colors.grey[600], size: 40),
+                          ),
+                    ),
+                  )
+                )
+              ),
+              // 편집 모드일 때만 체크박스 표시
+              if (_isEditMode)
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (isSelected) {
+                          _selectedIngredientIds.remove(ingredient.id);
+                          // 선택 항목이 없으면 편집 모드 종료
+                          if (_selectedIngredientIds.isEmpty) {
+                            _isEditMode = false;
+                          }
+                        } else {
+                          _selectedIngredientIds.add(ingredient.id!);
+                        }
+                      });
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                        color: isSelected ? Colors.blue : Colors.grey,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        SizedBox(height: 4),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: borderColor,
+            borderRadius: BorderRadius.circular(10)
+          ),
+          child: Text(
+            dueDateLabel,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.bold
+            ),
+          ),
+        ),
+      ],
+    );
+
+    // LongPressDraggable로 감싸서 드래그 기능 추가
+    return LongPressDraggable<Map<String, dynamic>>(
+      data: {
+        'ingredient': ingredient,
+        'fromFloor': floor,
+      },
+      feedback: Opacity(
+        opacity: 0.7,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            width: 80,
+            height: 100,
+            child: ingredientWidget,
+          ),
+        ),
+      ),
+      childWhenDragging: Opacity(
+        opacity: 0.3,
+        child: ingredientWidget,
+      ),
+      child: ingredientWidget,
     );
   }
 
@@ -692,6 +947,30 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    // 세션 체크 중이면 로딩 표시
+    if (_isCheckingSession) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF2196F3),
+        body: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        ),
+      );
+    }
+
+    // 세션이 유효하지 않으면 빈 화면 (리다이렉트 중)
+    if (!_sessionValid) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF2196F3),
+        body: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        ),
+      );
+    }
+
     // 냉장고 내부 뷰 - 하단바 0번 활성화
     currentBottomNavIndex = 0;
 
@@ -702,76 +981,119 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
       List<FridgeIngredientModel> previewItems = ingredients.take(4).toList();
       bool hasMore = ingredients.length > 4;
 
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-            // 층 제목
-            Padding(
-              padding: EdgeInsets.fromLTRB(20, 15, 20, 10),
-              child: Text(
-                '$floor층($ingredientCount)',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+      return DragTarget<Map<String, dynamic>>(
+        onAcceptWithDetails: (details) async {
+          var data = details.data;
+          FridgeIngredientModel ingredient = data['ingredient'];
+
+          // 같은 층에 드롭한 경우 편집 모드 진입
+          if (ingredient.layer == floor && ingredient.storageLocation == 'fridge') {
+            if (!_isEditMode) {
+              setState(() {
+                _isEditMode = true;
+                _selectedIngredientIds.add(ingredient.id!);
+              });
+            }
+          } else {
+            // 다른 층이나 다른 저장소에서 왔을 때만 이동
+            await updateFridgeIngredient(
+              fridgeId: refrigerator.id!,
+              ingredientId: ingredient.id!,
+              layer: floor,
+              storageLocation: 'fridge',
+            );
+            await loadFridgeIngredientsInfo(refrigerator, 0);
+            setState(() {});
+
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('${ingredient.ingredientName}을(를) $floor층으로 이동했습니다')),
+              );
+            }
+          }
+        },
+        builder: (context, candidateData, rejectedData) {
+          bool isHovering = candidateData.isNotEmpty;
+
+          return Container(
+            decoration: BoxDecoration(
+              color: isHovering ? Colors.blue.withOpacity(0.1) : Colors.transparent,
+              border: isHovering ? Border.all(color: Colors.blue, width: 2) : null,
+              borderRadius: BorderRadius.circular(8),
             ),
-            // 식재료 그리드
-            Container(
-              height: ingredientCount == 0 ? 50 : 130,
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: ingredientCount == 0
-                ? Center(
-                    child: Text(
-                      '식재료가 없습니다',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                    ),
-                  )
-                : GridView.builder(
-                    physics: NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      mainAxisSpacing: 8,
-                      crossAxisSpacing: 8,
-                      childAspectRatio: 0.8,
-                    ),
-                    itemCount: previewItems.length,
-                    itemBuilder: (context, index) => buildIngredientItem(previewItems[index]),
-                  ),
-            ),
-            // 더 보기 버튼
-            if (hasMore)
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      showMoreIngredientsDialog(ingredients, floor);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[400],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)
-                      ),
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      minimumSize: Size(70, 32),
-                    ),
-                    child: Text(
-                      '더 보기',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold
-                      ),
-                    ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 층 제목
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20, 15, 20, 10),
+                  child: Text(
+                    '$floor층($ingredientCount)',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
-              ),
-            // 층 구분선
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              height: 1,
-              color: Colors.grey[300],
+                // 식재료 그리드
+                Container(
+                  height: ingredientCount == 0 ? 50 : 130,
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: ingredientCount == 0
+                    ? Center(
+                        child: Text(
+                          '식재료가 없습니다',
+                          style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        ),
+                      )
+                    : GridView.builder(
+                        physics: NeverScrollableScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          mainAxisSpacing: 8,
+                          crossAxisSpacing: 8,
+                          childAspectRatio: 0.8,
+                        ),
+                        itemCount: previewItems.length,
+                        itemBuilder: (context, index) => buildIngredientItem(previewItems[index], floor: floor),
+                      ),
+                ),
+                // 더 보기 버튼
+                if (hasMore)
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          showMoreIngredientsDialog(ingredients, floor);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[400],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          minimumSize: Size(70, 32),
+                        ),
+                        child: Text(
+                          '전체 보기',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                // 층 구분선
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  height: 1,
+                  color: Colors.grey[300],
+                ),
+              ],
             ),
-          ],
+          );
+        },
       );
     }
 
@@ -785,45 +1107,86 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
       }
       int ingredientCount = ingredients.length;
 
-      return Container(
-        margin: EdgeInsets.symmetric(vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Text(
-                '$title($ingredientCount)',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+      return DragTarget<Map<String, dynamic>>(
+        onAcceptWithDetails: (details) async {
+          var data = details.data;
+          FridgeIngredientModel ingredient = data['ingredient'];
+
+          // 같은 저장소에 드롭한 경우 편집 모드 진입
+          if (ingredient.storageLocation == storageType) {
+            if (!_isEditMode) {
+              setState(() {
+                _isEditMode = true;
+                _selectedIngredientIds.add(ingredient.id!);
+              });
+            }
+          } else {
+            // 다른 저장소에서 왔을 때만 이동
+            await updateFridgeIngredient(
+              fridgeId: refrigerator.id!,
+              ingredientId: ingredient.id!,
+              layer: null,
+              storageLocation: storageType,
+            );
+            await loadFridgeIngredientsInfo(refrigerator, 0);
+            setState(() {});
+
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('${ingredient.ingredientName}을(를) $title(으)로 이동했습니다')),
+              );
+            }
+          }
+        },
+        builder: (context, candidateData, rejectedData) {
+          bool isHovering = candidateData.isNotEmpty;
+
+          return Container(
+            margin: EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: isHovering ? Colors.blue.withOpacity(0.1) : Colors.transparent,
+              border: isHovering ? Border.all(color: Colors.blue, width: 2) : null,
+              borderRadius: BorderRadius.circular(8),
             ),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: ingredientCount == 0
-                ? SizedBox(
-                    height: 50,
-                    child: Center(
-                      child: Text(
-                        '식재료가 없습니다',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                      ),
-                    ),
-                  )
-                : GridView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      mainAxisSpacing: 10,
-                      crossAxisSpacing: 10,
-                      childAspectRatio: 0.75,
-                    ),
-                    itemCount: ingredients.length,
-                    itemBuilder: (context, index) => buildIngredientItem(ingredients[index]),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Text(
+                    '$title($ingredientCount)',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: ingredientCount == 0
+                    ? SizedBox(
+                        height: 50,
+                        child: Center(
+                          child: Text(
+                            '식재료가 없습니다',
+                            style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                          ),
+                        ),
+                      )
+                    : GridView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          mainAxisSpacing: 10,
+                          crossAxisSpacing: 10,
+                          childAspectRatio: 0.75,
+                        ),
+                        itemCount: ingredients.length,
+                        itemBuilder: (context, index) => buildIngredientItem(ingredients[index]),
+                      ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       );
     }
 
@@ -847,74 +1210,195 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
                     toolbarHeight: 56,
                     automaticallyImplyLeading: false,
                     elevation: 0,
-                    title: const Text(
-                      'Xnd',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    actions: [
-                      IconButton(
-                        icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-                        onPressed: () {
-                          Navigator.of(context).pushNamed('/${pages[8]}');
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.settings_outlined, color: Colors.white),
-                        onPressed: () {
-                          Navigator.of(context).pushNamed('/${pages[9]}');
-                        },
-                      ),
-                      PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert, color: Colors.white),
-                        onSelected: (String value) async {
-                          if (value == 'logout') {
-                            bool? confirmLogout = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('로그아웃'),
-                                content: const Text('로그아웃 하시겠습니까?'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.of(context).pop(false),
-                                    child: const Text('취소'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => Navigator.of(context).pop(true),
-                                    child: const Text('로그아웃'),
-                                  ),
-                                ],
-                              ),
-                            );
+                    leading: _isEditMode
+                        ? IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white),
+                            onPressed: () {
+                              setState(() {
+                                _isEditMode = false;
+                                _selectedIngredientIds.clear();
+                              });
+                            },
+                          )
+                        : null,
+                    title: _isEditMode
+                        ? Text(
+                            '${_selectedIngredientIds.length}개 선택됨',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          )
+                        : const Text(
+                            'Xnd',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                    actions: _isEditMode
+                        ? [
+                            // 편집 모드일 때의 액션들
+                            TextButton(
+                              onPressed: _selectedIngredientIds.isEmpty
+                                  ? null
+                                  : () async {
+                                      // 선택된 식재료들로 레시피 검색
+                                      List<String> selectedNames = [];
+                                      for (int id in _selectedIngredientIds) {
+                                        var ingredient = refrigerator.ingredients?.firstWhere(
+                                          (ing) => ing.id == id,
+                                          orElse: () => FridgeIngredientModel(),
+                                        );
+                                        if (ingredient?.ingredientName != null) {
+                                          selectedNames.add(ingredient!.ingredientName!);
+                                        }
+                                      }
 
-                            if (confirmLogout == true && context.mounted) {
-                              await clearTokens();
-                              Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(builder: (context) => const LoginView()),
-                                (route) => false,
-                              );
-                            }
-                          }
-                        },
-                        itemBuilder: (BuildContext context) {
-                          return [
-                            const PopupMenuItem<String>(
-                              value: 'logout',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.logout, color: Colors.red),
-                                  SizedBox(width: 8),
-                                  Text('로그아웃', style: TextStyle(color: Colors.red)),
-                                ],
+                                      if (selectedNames.isNotEmpty) {
+                                        String searchQuery = selectedNames.join(' ');
+                                        await SearchHistoryService.saveSearch(searchQuery);
+                                        Recipes = await getRecipeQueryInfoFromServer(query: searchQuery);
+
+                                        // 전역 변수에 검색어 저장
+                                        currentSearchQuery = searchQuery;
+
+                                        setState(() {
+                                          _isEditMode = false;
+                                          _selectedIngredientIds.clear();
+                                        });
+
+                                        if (context.mounted) {
+                                          currentBottomNavIndex = 1;
+                                          Navigator.of(context).pushNamed('/RecipeView');
+                                        }
+                                      }
+                                    },
+                              child: Text(
+                                '레시피 검색',
+                                style: TextStyle(
+                                  color: _selectedIngredientIds.isEmpty ? Colors.white54 : Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ];
-                        },
-                      ),
-                    ],
+                            TextButton(
+                              onPressed: _selectedIngredientIds.isEmpty
+                                  ? null
+                                  : () async {
+                                      // 다중 삭제 확인 다이얼로그
+                                      bool? confirmDelete = await showDialog<bool>(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: const Text('식재료 삭제'),
+                                          content: Text('선택한 ${_selectedIngredientIds.length}개의 식재료를 삭제하시겠습니까?'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context, false),
+                                              child: const Text('취소'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context, true),
+                                              child: const Text('삭제', style: TextStyle(color: Colors.red)),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+
+                                      if (confirmDelete == true) {
+                                        // 선택된 모든 식재료 삭제
+                                        for (int id in _selectedIngredientIds) {
+                                          await deleteFridgeIngredient(
+                                            fridgeId: refrigerator.id!,
+                                            ingredientId: id,
+                                          );
+                                        }
+                                        await loadFridgeIngredientsInfo(refrigerator, 0);
+                                        setState(() {
+                                          _isEditMode = false;
+                                          _selectedIngredientIds.clear();
+                                        });
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('식재료가 삭제되었습니다')),
+                                          );
+                                        }
+                                      }
+                                    },
+                              child: Text(
+                                '삭제',
+                                style: TextStyle(
+                                  color: _selectedIngredientIds.isEmpty ? Colors.white54 : Colors.red[300],
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ]
+                        : [
+                            // 일반 모드일 때의 액션들
+                            IconButton(
+                              icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                              onPressed: () {
+                                Navigator.of(context).pushNamed('/${pages[8]}');
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.settings_outlined, color: Colors.white),
+                              onPressed: () {
+                                Navigator.of(context).pushNamed('/${pages[9]}');
+                              },
+                            ),
+                            PopupMenuButton<String>(
+                              icon: const Icon(Icons.more_vert, color: Colors.white),
+                              onSelected: (String value) async {
+                                if (value == 'logout') {
+                                  bool? confirmLogout = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('로그아웃'),
+                                      content: const Text('로그아웃 하시겠습니까?'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.of(context).pop(false),
+                                          child: const Text('취소'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => Navigator.of(context).pop(true),
+                                          child: const Text('로그아웃'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+
+                                  if (confirmLogout == true && context.mounted) {
+                                    await clearTokens();
+                                    Navigator.of(context).pushAndRemoveUntil(
+                                      MaterialPageRoute(builder: (context) => const LoginView()),
+                                      (route) => false,
+                                    );
+                                  }
+                                }
+                              },
+                              itemBuilder: (BuildContext context) {
+                                return [
+                                  const PopupMenuItem<String>(
+                                    value: 'logout',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.logout, color: Colors.red),
+                                        SizedBox(width: 8),
+                                        Text('로그아웃', style: TextStyle(color: Colors.red)),
+                                      ],
+                                    ),
+                                  ),
+                                ];
+                              },
+                            ),
+                          ],
                   ),
                   // 탭 바
                   Column(

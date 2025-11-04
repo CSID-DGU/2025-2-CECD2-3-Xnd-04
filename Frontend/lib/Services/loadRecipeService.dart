@@ -7,7 +7,7 @@ import 'package:network_info_plus/network_info_plus.dart';
 
 // 통신용 함수
 Future<Response?> requestRecipe() async {
-  final dio = Dio();
+  final dio = createAuthDio(); // 401 에러 자동 처리를 위한 인증 Dio 사용
   final String? ip = await NetworkInfo().getWifiIP();
 
   final String recipeURL = (ip!.startsWith('10.0.2')) ?

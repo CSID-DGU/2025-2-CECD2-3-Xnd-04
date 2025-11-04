@@ -10,7 +10,7 @@ import '../Models/IngredientModel.dart';
 /// 레시피, 즐겨찾기 페이지의 버튼 클릭 시 얻어야 할 정보 요청
 // 특정 레시피!! 에 대한 식재료 정보를 로드
 Future<Response?> requestIngredient(RecipeModel recipe) async{
-  final dio = Dio();
+  final dio = createAuthDio(); // 401 에러 자동 처리를 위한 인증 Dio 사용
   final String? ip = await NetworkInfo().getWifiIP();
 
   final String recipeDetailURL = (ip!.startsWith('10.0.2')) ?
