@@ -5,6 +5,8 @@ from XndApp.Models.fridge import Fridge
 from XndApp.Models.foodStorageLife import FoodStorageLife
 from datetime import timedelta
 from XndApp.Models.ingredients import Ingredient
+from django.utils import timezone
+from datetime import datetime, timedelta
 
 class FridgeIngredients(models.Model):
 
@@ -62,20 +64,19 @@ class FridgeIngredients(models.Model):
     memo = models.TextField(max_length=200, null=True, blank=True, help_text="식재료에 대한 메모")
 
     def save(self, *args, **kwargs):
+        # 객체가 처음 생성되거나, storable_due 값이 비어 있을 때만 자동 계산
+        if self._state.adding or not self.storable_due:
 
-        # 생성 시점(self._state.adding=True)이거나, storable_due가 비어있을 때만 자동 계산 로직 실행
-        if self._state.adding or self.storable_due is None:
+            # 1순위: OCR로 인식한 유통기한이 있는 경우
+            if self.expiry_date:
+                storable_datetime = datetime.combine(self.expiry_date, datetime.min.time())
+                self.storable_due = timezone.make_aware(storable_datetime)
 
-            # 1순위: OCR 유통기한이 인식되었고, 그 상태가 'CONFIRMED' 등일 때
-            if self.expiry_date and (self.expiry_date_status == 'CONFIRMED' or self.expiry_date_status == 'EXPIRED'):
-                self.storable_due = self.expiry_date
+            # 2순위: DB에 저장된 기본 보관 기한 정보로 계산
+            elif self.foodStorageLife and self.foodStorageLife.storage_life is not None:
+                self.storable_due = timezone.now() + timedelta(days=self.foodStorageLife.storage_life)
 
-                # 2순위: FoodStorageLife 정보를 기반으로 자동 계산
-            elif self.stored_at and self.foodStorageLife and self.foodStorageLife.storage_life:
-                # stored_at이 DateTimeField이므로 .date()를 추출하여 계산합니다.
-                self.storable_due = self.stored_at.date() + timedelta(days=self.foodStorageLife.storage_life)
-
-        super().save(*args, **kwargs)
+        super().save(*args, **kwargs)  # 최종적으로 부모의 save 메서드를 호출하여 저장
 
     # 메타데이터
     class Meta:
