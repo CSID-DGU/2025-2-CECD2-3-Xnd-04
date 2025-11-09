@@ -131,6 +131,9 @@ class FridgeDetailView(APIView):
         }
 
         # 5. Serializer 유효성 검사 및 저장
+        if final_data.get('expiry_date_status') == 'UNCERTAIN':
+            final_data['expiry_date'] = None
+
         serializer = FridgeIngredientsSerializer(data=final_data)
         if serializer.is_valid():
             instance = serializer.save(fridge=fridge)
