@@ -86,8 +86,9 @@ def import_complex_recipes():
     row_count = 0
 
     try:
-        with open(FILE_PATH, 'r', encoding='utf-8-sig') as file:
-            print(f"📖 {FILE_PATH} 파일 읽기 시도 중... 데이터 수집 단계")
+        # [수정] encoding='utf-8-sig' 대신 'cp949'로 변경
+        with open(FILE_PATH, 'r', encoding='cp949') as file:
+            print(f"📖 {FILE_PATH} 파일 읽기 시도 중... 데이터 수집 단계 (인코딩: cp949)")
             reader = csv.DictReader(file)
 
             for row in reader:

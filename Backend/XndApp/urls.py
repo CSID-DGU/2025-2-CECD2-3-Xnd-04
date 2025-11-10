@@ -9,11 +9,11 @@ from XndApp.Views.IngredientViews import IngredientView
 from XndApp.Views.CartViews import CartListView, CartManageView, CartBulkDeleteView
 from XndApp.Views.savedRecipesViews import SavedRecipesView,SavedRecipeDetailView
 from XndApp.Views.NotificationViews import RegisterDeviceView, DeviceManageView, NotificationView, NotificationDetailView, IngredientNotificationView
+
 from XndApp.Views.AccountBookViews import account_book_settings, add_expense as add_account_expense, reset_budget
 from XndApp.Views.ShoppingListViews import add_shopping_list, get_shopping_list, complete_shopping, delete_shopping_items, get_daily_spending, get_monthly_spending
 from XndApp.Views.ExpenseViews import get_daily_expenses, add_expense as add_daily_expense, delete_expense
-from XndApp.Views.fcmViews import fcm_test_view
-from XndApp.Views.cv_views import handle_detection_post, run_yolo_test
+
 
 
 urlpatterns = [
@@ -70,10 +70,6 @@ urlpatterns = [
     path('api/notifications/ingredient/<int:ingredient_id>/', IngredientNotificationView.as_view(), name='ingredient_notifications'), # 식재료 유통기한 알림 예약 삭제
     path('api/notifications/<int:notification_id>/', NotificationDetailView.as_view(), name='notification_detail'), # 개별 알림 삭제 및 읽음 처리
 
-    # 푸시 테스트
-    path('fcm-test/', fcm_test_view, name='fcm_test'), # 테스트용 웹 FCM 발급 (추후 프론트로 수정)
-
     # CV 연동
-    path('api/detection/upload/', handle_detection_post, name='cv_detection_upload'),
-    path('api/detection/test/', run_yolo_test, name='cv_pipeline_test') ### 테스트용 (삭제 예정)
+
 ]
