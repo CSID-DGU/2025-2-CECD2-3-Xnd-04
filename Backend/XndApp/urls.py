@@ -14,6 +14,7 @@ from XndApp.Views.ShoppingListViews import add_shopping_list, get_shopping_list,
 from XndApp.Views.ExpenseViews import get_daily_expenses, add_expense as add_daily_expense, delete_expense
 from XndApp.Views.fcmViews import fcm_test_view
 from XndApp.Views.cv_views import handle_detection_post, run_yolo_test
+from XndApp.Views.SurveyViews import survey_submit
 
 
 urlpatterns = [
@@ -75,5 +76,8 @@ urlpatterns = [
 
     # CV 연동
     path('api/detection/upload/', handle_detection_post, name='cv_detection_upload'),
-    path('api/detection/test/', run_yolo_test, name='cv_pipeline_test') ### 테스트용 (삭제 예정)
+    path('api/detection/test/', run_yolo_test, name='cv_pipeline_test'), ### 테스트용 (삭제 예정)
+
+    # 설문조사
+    path('api/survey/', survey_submit, name='survey_submit'), # 설문조사 결과 저장 및 조회
 ]

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:Frontend/Widgets/CommonAppBar.dart';
+import 'package:Frontend/Services/surveyService.dart';
 
 class SurveyView extends StatefulWidget {
   const SurveyView({Key? key}) : super(key: key);
@@ -15,11 +16,12 @@ class _SurveyViewState extends State<SurveyView> {
   // 설문 답변 저장
   final Map<String, dynamic> _answers = {
     'ingredients': <String>[],
-    'favoriteRecipe': '',
+    'favoriteRecipe': <String>[],
     'servingSize': '',
     'cookingFrequency': '',
     'dietaryRestrictions': <String>[],
     'skillLevel': '',
+    'cookingEquipment': <String>[],
   };
 
   final List<Map<String, dynamic>> _questions = [
@@ -27,41 +29,95 @@ class _SurveyViewState extends State<SurveyView> {
       'question': '주로 사용하는 식재료는 무엇인가요?',
       'type': 'multiple',
       'key': 'ingredients',
-      'options': ['고기', '해산물', '채소', '과일', '곡물', '유제품', '계란', '버섯'],
+      'options': ['닭고기', '돼지고기', '소고기', '해물류', '채소류', '가공식품류', '밀가루', '쌀', '달걀/유제품'],
+      'required': true,
+      'minSelection': 1,
     },
     {
-      'question': '가장 자주하는 요리는?',
-      'type': 'single',
+      'question': '좋아하는 요리는?',
+      'type': 'multiple',
       'key': 'favoriteRecipe',
       'options': ['한식', '중식', '일식', '양식', '분식', '베이킹', '샐러드', '기타'],
+      'required': true,
+      'minSelection': 1,
     },
     {
       'question': '주로 몇인분을 요리하나요?',
       'type': 'single',
       'key': 'servingSize',
-      'options': ['1인분', '2인분', '3-4인분', '5인분 이상'],
+      'options': ['1인분', '2인분', '3인분', '4인분', '5인분', '6인분 이상'],
+      'required': true,
     },
     {
       'question': '주로 요리를 얼마나 자주 하시나요?',
       'type': 'single',
       'key': 'cookingFrequency',
       'options': ['매일', '주 3-4회', '주 1-2회', '월 1-2회', '거의 안함'],
+      'required': true,
     },
     {
       'question': '특별히 피하는 음식이 있나요?',
       'type': 'multiple',
       'key': 'dietaryRestrictions',
       'options': ['없음', '매운 음식', '생선', '유제품', '글루텐', '견과류', '채식주의'],
+      'required': true,
+      'minSelection': 1,
     },
     {
       'question': '요리 실력은 어느 정도인가요?',
       'type': 'single',
       'key': 'skillLevel',
-      'options': ['초보', '중급', '고급', '전문가'],
+      'options': ['초급', '중급', '고급'],
+      'required': true,
+    },
+    {
+      'question': '보유하고 있는 요리도구를 선택해주세요',
+      'type': 'multiple',
+      'key': 'cookingEquipment',
+      'options': ['가스레인지', '인덕션', '전자레인지', '오븐', '에어프라이어', '전기밥솥', '믹서기', '토스터기'],
+      'required': true,
+      'minSelection': 1,
     },
   ];
 
   void _nextPage() {
+    // 현재 질문 validation 체크
+    final currentQuestion = _questions[_currentPage];
+    final String key = currentQuestion['key'];
+    final bool isRequired = currentQuestion['required'] ?? false;
+    final int minSelection = currentQuestion['minSelection'] ?? 0;
+
+    // 필수 질문 체크
+    if (isRequired) {
+      if (currentQuestion['type'] == 'multiple') {
+        // 다중 선택인 경우, 최소 선택 개수 확인
+        final List selectedItems = _answers[key] as List;
+        if (selectedItems.length < minSelection) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('최소 ${minSelection}개 이상 선택해주세요.'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
+      } else if (currentQuestion['type'] == 'single') {
+        // 단일 선택인 경우, 선택 여부 확인
+        final String selectedItem = _answers[key] as String;
+        if (selectedItem.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('답변을 선택해주세요.'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
+      }
+    }
+
     if (_currentPage < _questions.length - 1) {
       _pageController.nextPage(
         duration: Duration(milliseconds: 300),
@@ -81,21 +137,36 @@ class _SurveyViewState extends State<SurveyView> {
     }
   }
 
-  void _submitSurvey() {
-    // TODO: 서버에 설문 결과 전송
+  void _submitSurvey() async {
+    // 서버에 설문 결과 전송
     print('설문 결과: $_answers');
 
-    // 설문 완료 후 이전 화면으로 돌아가기
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('설문이 완료되었습니다!'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    // API 호출
+    bool success = await submitSurvey(_answers);
 
-    Future.delayed(Duration(seconds: 2), () {
-      Navigator.pop(context);
-    });
+    if (success) {
+      // 설문 완료 후 이전 화면으로 돌아가기
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('설문이 완료되었습니다!'),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Future.delayed(Duration(seconds: 2), () {
+        Navigator.pop(context);
+      });
+    } else {
+      // 실패 시 에러 메시지
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('설문 제출에 실패했습니다. 다시 시도해주세요.'),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -232,23 +303,53 @@ class _SurveyViewState extends State<SurveyView> {
   }
 
   Widget _buildQuestionPage(Map<String, dynamic> question) {
+    final bool isRequired = question['required'] ?? false;
+    final int minSelection = question['minSelection'] ?? 0;
+
     return SingleChildScrollView(
       padding: EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: 20),
-          Text(
-            question['question'],
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[800],
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  question['question'],
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                ),
+              ),
+              if (isRequired)
+                Container(
+                  margin: EdgeInsets.only(left: 8),
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    '필수',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+            ],
           ),
           SizedBox(height: 12),
           Text(
-            question['type'] == 'multiple' ? '여러 개 선택 가능' : '하나만 선택',
+            question['type'] == 'multiple'
+              ? (isRequired && minSelection > 0
+                  ? '최소 ${minSelection}개 이상 선택'
+                  : '여러 개 선택 가능')
+              : '하나만 선택',
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[600],

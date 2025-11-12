@@ -619,7 +619,7 @@ class _DailyExpenseViewState extends State<DailyExpenseView> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${_formatCurrency(totalAmount + dailyShoppingSpending)}원',
+                  '${_formatCurrency(dailyShoppingSpending)}원',
                   style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,

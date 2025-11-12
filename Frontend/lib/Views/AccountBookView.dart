@@ -27,7 +27,7 @@ class AccountBookPage extends State<AccountBookView> {
 
   final List<Map<String, dynamic>> expenses = [
     {
-      'date': '10월 20일',
+      'date': '11월 20일',
       'items': [
         {'name': '초록마을 무농약 깐양파', 'amount': -4900, 'remaining': 75400},
         {'name': '토종 의성 깐마늘', 'amount': -9800, 'remaining': 80300},
@@ -35,7 +35,7 @@ class AccountBookPage extends State<AccountBookView> {
       ]
     },
     {
-      'date': '10월 19일',
+      'date': '11월 19일',
       'items': [
         {'name': '스파게티 면', 'amount': -4900, 'remaining': 93000},
         {'name': '저당 콜슬로스', 'amount': -7900, 'remaining': 97900},

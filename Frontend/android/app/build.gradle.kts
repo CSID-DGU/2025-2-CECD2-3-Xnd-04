@@ -12,7 +12,7 @@ android {
     namespace = "com.example.Xnd"
     //flutter.compileSdkVersion -> 36으로 수정
     compileSdk = 36
-    ndkVersion = "29.0.13113456"
+    // ndkVersion = "29.0.13113456"  // NDK 버전 문제로 주석 처리
 
     compileOptions {
         // 👇 desugaring 활성화 추가
@@ -27,7 +27,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.Xnd"
-        minSdk = flutter.minSdkVersion
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

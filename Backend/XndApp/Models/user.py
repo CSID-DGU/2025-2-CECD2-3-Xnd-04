@@ -37,6 +37,16 @@ class User(AbstractBaseUser):
     monthly_spent = models.IntegerField(default=0)  # 이번 달 식비 누적 지출
     last_reset_date = models.DateField(null=True, blank=True)  # 마지막 예산 갱신일
 
+    # Survey fields (사전 설문조사 결과)
+    survey_ingredients = models.TextField(blank=True, default='')  # 주로 사용하는 식재료 (쉼표로 구분)
+    survey_favorite_recipe = models.CharField(max_length=50, blank=True, default='')  # 가장 자주하는 요리
+    survey_serving_size = models.CharField(max_length=20, blank=True, default='')  # 주로 요리하는 인분
+    survey_cooking_frequency = models.CharField(max_length=20, blank=True, default='')  # 요리 빈도
+    survey_dietary_restrictions = models.TextField(blank=True, default='')  # 피하는 음식 (쉼표로 구분)
+    survey_skill_level = models.CharField(max_length=20, blank=True, default='')  # 요리 실력
+    survey_cooking_equipment = models.TextField(blank=True, default='')  # 보유 요리도구 (쉼표로 구분)
+    survey_completed = models.BooleanField(default=False)  # 설문조사 완료 여부
+
     # Include UserManager
     objects = UserManager()
 

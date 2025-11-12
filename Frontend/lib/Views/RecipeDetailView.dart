@@ -4,6 +4,7 @@ import 'package:Frontend/Models/IngredientModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:Frontend/Views/LoginView.dart';
 import 'package:Frontend/Services/authService.dart';
+import 'package:Frontend/Services/cart_service.dart';
 
 class RecipeDetailView extends StatefulWidget {
   final RecipeModel recipe;
@@ -290,30 +291,66 @@ class _RecipeDetailViewState extends State<RecipeDetailView> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       // 재료명과 장바구니 버튼
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey[400]!),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              ingredient.ingredientName ?? '재료',
-                              style: TextStyle(fontSize: 14),
-                            ),
-                            SizedBox(width: 8),
-                            Icon(
-                              ingredient.inCart == true
-                                ? Icons.shopping_cart
-                                : Icons.shopping_cart_outlined,
-                              size: 18,
-                              color: ingredient.inCart == true
-                                ? Color(0xFF2196F3)
-                                : Colors.grey[700]
-                            ),
-                          ],
+                      GestureDetector(
+                        onTap: () async {
+                          // 장바구니에 재료 추가
+                          if (ingredient.id == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('재료 정보가 올바르지 않습니다.')),
+                            );
+                            return;
+                          }
+
+                          bool success = await addToCart(
+                            ingredientId: ingredient.id!,
+                            recipeId: widget.recipe.id ?? 0,
+                            quantity: ingredient.amount ?? '1개',
+                          );
+
+                          if (success) {
+                            setState(() {
+                              ingredient.inCart = true;
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('${ingredient.ingredientName}이(가) 장바구니에 추가되었습니다.'),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('장바구니 추가에 실패했습니다.'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey[400]!),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                ingredient.ingredientName ?? '재료',
+                                style: TextStyle(fontSize: 14),
+                              ),
+                              SizedBox(width: 8),
+                              Icon(
+                                ingredient.inCart == true
+                                  ? Icons.shopping_cart
+                                  : Icons.shopping_cart_outlined,
+                                size: 18,
+                                color: ingredient.inCart == true
+                                  ? Color(0xFF2196F3)
+                                  : Colors.grey[700]
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       // 중량 표시
