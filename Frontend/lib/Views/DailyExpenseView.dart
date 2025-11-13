@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:Frontend/Services/shoppingListService.dart';
+import 'package:Frontend/Services/purchaseService.dart';
 import 'package:Frontend/Services/expenseService.dart';
 
 class DailyExpenseView extends StatefulWidget {
@@ -36,31 +36,51 @@ class _DailyExpenseViewState extends State<DailyExpenseView> {
     _loadDailySpending();
   }
 
-  // API에서 장보기 목록 불러오기
+  // API에서 장보기 목록 불러오기 (Purchase 테이블에서 is_purchased=False인 항목)
   Future<void> _initializeShoppingList() async {
     try {
       print('DailyExpenseView: 장보기 목록 불러오기 시작 - 날짜: ${widget.selectedDate}');
-      final items = await getShoppingList(widget.selectedDate);
+      String dateString = DateFormat('yyyy-MM-dd').format(widget.selectedDate);
+      print('DailyExpenseView: API 호출 - date=$dateString');
 
+      final response = await getPendingPurchases(date: dateString);
+      print('DailyExpenseView: API 응답: $response');
+
+      if (response == null) {
+        print('DailyExpenseView: 응답이 null입니다');
+        setState(() {
+          shoppingList.clear();
+          selectedShoppingItems.clear();
+        });
+        return;
+      }
+
+      final items = response['items'] as List<dynamic>? ?? [];
       print('DailyExpenseView: 조회된 항목 수: ${items.length}');
+
+      if (items.isNotEmpty) {
+        print('DailyExpenseView: 첫 번째 항목: ${items[0]}');
+      }
 
       setState(() {
         shoppingList.clear();
         selectedShoppingItems.clear();
 
         for (var item in items) {
+          print('DailyExpenseView: 항목 처리 중 - ${item['ingredient_name']}, is_purchased=${item['is_purchased']}');
           shoppingList.add({
             'id': item['id'],
             'ingredient_id': item['ingredient_id'],
             'name': item['ingredient_name'],
-            'completed': item['is_bought'] ?? false,
-            'price': item['price'],
+            'completed': item['is_purchased'] ?? false,
+            'price': item['price'] != 0 ? item['price'] : null,
+            'quantity': item['quantity'],
           });
           selectedShoppingItems[item['id']] = false;
         }
       });
 
-      print('DailyExpenseView: 장보기 목록 로드 완료');
+      print('DailyExpenseView: 장보기 목록 로드 완료 - 총 ${shoppingList.length}개');
     } catch (e) {
       print('장보기 목록 불러오기 실패: $e');
       // 에러 발생 시 빈 목록으로 처리 (사용자가 직접 추가할 수 있도록)
@@ -71,12 +91,36 @@ class _DailyExpenseViewState extends State<DailyExpenseView> {
     }
   }
 
-  // 해당 날짜의 장보기 지출 불러오기
+  // 해당 날짜의 장보기 지출 불러오기 (Purchase 테이블에서 계산)
   Future<void> _loadDailySpending() async {
     try {
-      final spending = await getDailySpending(widget.selectedDate);
+      // Purchase 테이블의 완료된 항목에서 지출 계산
+      // getPurchaseHistory를 사용하여 해당 월의 데이터를 가져온 뒤 날짜 필터링
+      final response = await getPurchaseHistory(
+        year: widget.selectedDate.year,
+        month: widget.selectedDate.month,
+      );
+
+      int totalSpending = 0;
+      if (response != null && response['expenses'] != null) {
+        final expenses = response['expenses'] as List<dynamic>;
+        String targetDateKey = DateFormat('MM월 dd일').format(widget.selectedDate);
+
+        // 특정 날짜의 지출만 찾기
+        for (var expense in expenses) {
+          if (expense['date'] == targetDateKey) {
+            final items = expense['items'] as List<dynamic>;
+            for (var item in items) {
+              // amount가 음수로 저장되어 있으므로 절댓값 사용
+              totalSpending += (item['amount'] as int).abs();
+            }
+            break;
+          }
+        }
+      }
+
       setState(() {
-        dailyShoppingSpending = spending;
+        dailyShoppingSpending = totalSpending;
       });
     } catch (e) {
       print('날짜별 지출 불러오기 실패: $e');
@@ -370,7 +414,7 @@ class _DailyExpenseViewState extends State<DailyExpenseView> {
     return expenses.fold(0, (sum, item) => sum + (item['amount'] as int));
   }
 
-  // 선택된 장보기 항목 삭제
+  // 선택된 장보기 항목 삭제 (Purchase 테이블에서 삭제)
   Future<void> _deleteSelectedShoppingItems() async {
     List<int> selectedIds = selectedShoppingItems.entries
         .where((entry) => entry.value == true)
@@ -385,8 +429,10 @@ class _DailyExpenseViewState extends State<DailyExpenseView> {
     }
 
     try {
-      // API로 장보기 항목 삭제
-      final result = await deleteShoppingItems(selectedIds);
+      // 각 항목을 개별 삭제 (Purchase API는 단일 삭제만 지원)
+      for (var purchaseId in selectedIds) {
+        await deletePurchase(purchaseId: purchaseId);
+      }
 
       setState(() {
         // 선택된 항목들을 삭제
@@ -401,7 +447,7 @@ class _DailyExpenseViewState extends State<DailyExpenseView> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result['message'] ?? '항목이 삭제되었습니다'),
+          content: Text('${selectedIds.length}개 항목이 삭제되었습니다'),
           backgroundColor: Colors.green,
         ),
       );
@@ -434,7 +480,7 @@ class _DailyExpenseViewState extends State<DailyExpenseView> {
     // 모든 선택된 항목에 가격이 입력되었는지 확인
     List<String> itemsWithoutPrice = [];
     int totalPrice = 0;
-    Map<String, int> prices = {};
+    List<Map<String, int>> purchases = [];
 
     for (var id in selectedIds) {
       int index = shoppingList.indexWhere((item) => item['id'] == id);
@@ -444,7 +490,10 @@ class _DailyExpenseViewState extends State<DailyExpenseView> {
         } else {
           int price = shoppingList[index]['price'] as int;
           totalPrice += price;
-          prices[id.toString()] = price;
+          purchases.add({
+            'purchase_id': id,
+            'price': price,
+          });
         }
       }
     }
@@ -505,12 +554,8 @@ class _DailyExpenseViewState extends State<DailyExpenseView> {
                 Navigator.of(context).pop();
 
                 try {
-                  // API로 장보기 완료 처리 (가격 저장 + is_bought 업데이트 + 지출 추가)
-                  final result = await completeShoppingList(
-                    shoppingListIds: selectedIds,
-                    prices: prices,
-                    shoppingDate: widget.selectedDate,
-                  );
+                  // API로 장보기 완료 처리 (Purchase 테이블: is_purchased=True, 가격 저장, 예산 차감)
+                  final result = await completeShopping(purchases: purchases);
 
                   // 완료 처리된 항목들을 completed=true로 업데이트
                   setState(() {
@@ -526,13 +571,13 @@ class _DailyExpenseViewState extends State<DailyExpenseView> {
                   // 장보기 목록과 지출 새로고침
                   await _initializeShoppingList();
                   await _loadDailySpending();
-                  await _loadExpenses(); // 지출 내역도 새로고침 (장보기 완료 시 자동으로 expense가 생성됨)
+                  await _loadExpenses();
 
                   if (!mounted) return;
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(result['message'] ?? '장보기가 완료되었습니다'),
+                      content: Text(result?['message'] ?? '장보기가 완료되었습니다'),
                       backgroundColor: Colors.green,
                     ),
                   );
@@ -541,7 +586,7 @@ class _DailyExpenseViewState extends State<DailyExpenseView> {
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(e.toString()),
+                      content: Text('장보기 완료 실패: $e'),
                       backgroundColor: Colors.red,
                     ),
                   );

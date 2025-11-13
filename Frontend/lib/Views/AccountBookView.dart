@@ -3,6 +3,7 @@ import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:Frontend/Widgets/CommonAppBar.dart';
 import 'package:Frontend/Services/accountBookService.dart';
 import 'package:Frontend/Services/shoppingListService.dart';
+import 'package:Frontend/Services/purchaseService.dart';
 import 'package:Frontend/Views/DailyExpenseView.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
@@ -25,23 +26,7 @@ class AccountBookPage extends State<AccountBookView> {
   int totalSpent = 0; // 누적 지출
   int remainingBudget = 100000; // 남은 예산
 
-  final List<Map<String, dynamic>> expenses = [
-    {
-      'date': '11월 20일',
-      'items': [
-        {'name': '초록마을 무농약 깐양파', 'amount': -4900, 'remaining': 75400},
-        {'name': '토종 의성 깐마늘', 'amount': -9800, 'remaining': 80300},
-        {'name': '유기농 대파', 'amount': -2900, 'remaining': 90100},
-      ]
-    },
-    {
-      'date': '11월 19일',
-      'items': [
-        {'name': '스파게티 면', 'amount': -4900, 'remaining': 93000},
-        {'name': '저당 콜슬로스', 'amount': -7900, 'remaining': 97900},
-      ]
-    },
-  ];
+  List<Map<String, dynamic>> expenses = [];
 
   @override
   void initState() {
@@ -55,20 +40,31 @@ class AccountBookPage extends State<AccountBookView> {
       _isLoading = true;
     });
 
+    // 가계부 설정 조회
     final settings = await getAccountBookSettings();
 
     if (settings != null) {
-      setState(() {
-        monthlyBudget = settings['monthly_budget'] ?? 100000;
-        totalSpent = settings['monthly_spent'] ?? 0;
-        remainingBudget = settings['budget'] ?? 100000;
-        _isLoading = false;
-      });
-    } else {
-      setState(() {
-        _isLoading = false;
-      });
+      monthlyBudget = settings['monthly_budget'] ?? 100000;
+      totalSpent = settings['monthly_spent'] ?? 0;
+      remainingBudget = settings['budget'] ?? 100000;
     }
+
+    // 구매 내역 조회
+    final purchaseData = await getPurchaseHistory(
+      year: _focusedDay.year,
+      month: _focusedDay.month,
+    );
+
+    if (purchaseData != null) {
+      final expensesData = purchaseData['expenses'] as List<dynamic>? ?? [];
+      expenses = expensesData.map((e) => e as Map<String, dynamic>).toList();
+    } else {
+      expenses = [];
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   @override
@@ -192,6 +188,18 @@ class AccountBookPage extends State<AccountBookView> {
   }
 
   Widget _buildListView() {
+    if (expenses.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(40.0),
+        child: Center(
+          child: Text(
+            '이번 달 구매 내역이 없습니다',
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+          ),
+        ),
+      );
+    }
+
     return Column(
       children: expenses.map((dateGroup) {
         return Column(

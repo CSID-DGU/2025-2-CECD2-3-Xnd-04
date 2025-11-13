@@ -13,13 +13,8 @@ from XndApp.Views.NotificationViews import RegisterDeviceView, DeviceManageView,
 from XndApp.Views.AccountBookViews import account_book_settings, add_expense as add_account_expense, reset_budget
 from XndApp.Views.ShoppingListViews import add_shopping_list, get_shopping_list, complete_shopping, delete_shopping_items, get_daily_spending, get_monthly_spending
 from XndApp.Views.ExpenseViews import get_daily_expenses, add_expense as add_daily_expense, delete_expense
-<<<<<<< HEAD
-from XndApp.Views.fcmViews import fcm_test_view
-from XndApp.Views.cv_views import handle_detection_post, run_yolo_test
 from XndApp.Views.SurveyViews import survey_submit
-=======
-
->>>>>>> b33ee4301a5c3149f2891d772cee3914a4f2b88e
+from XndApp.Views.PurchaseViews import purchase_list, purchase_create, purchase_complete, purchase_pending_list, purchase_delete
 
 
 urlpatterns = [
@@ -54,6 +49,13 @@ urlpatterns = [
     path('api/account-book/expense/', add_account_expense, name='add_account_expense'), # 지출 추가 (가계부용)
     path('api/account-book/reset/', reset_budget, name='reset_budget'), # 예산 수동 초기화
 
+    # 구매 내역 (장보기 일정)
+    path('api/purchases/', purchase_list, name='purchase_list'), # 구매 내역 조회 (?year=YYYY&month=MM)
+    path('api/purchases/pending/', purchase_pending_list, name='purchase_pending_list'), # 장보기 일정 조회 (미완료, ?date=YYYY-MM-DD)
+    path('api/purchases/create/', purchase_create, name='purchase_create'), # 장바구니 -> 장보기 일정 추가
+    path('api/purchases/complete/', purchase_complete, name='purchase_complete'), # 장보기 완료 처리
+    path('api/purchases/<int:purchase_id>/', purchase_delete, name='purchase_delete'), # 구매 내역 삭제
+
     # 지출 내역
     path('api/expenses/', get_daily_expenses, name='get_daily_expenses'), # 특정 날짜 지출 내역 조회 (?date=YYYY-MM-DD)
     path('api/expenses/add/', add_daily_expense, name='add_daily_expense'), # 지출 내역 추가
@@ -77,13 +79,8 @@ urlpatterns = [
     path('api/notifications/<int:notification_id>/', NotificationDetailView.as_view(), name='notification_detail'), # 개별 알림 삭제 및 읽음 처리
 
     # CV 연동
-<<<<<<< HEAD
-    path('api/detection/upload/', handle_detection_post, name='cv_detection_upload'),
-    path('api/detection/test/', run_yolo_test, name='cv_pipeline_test'), ### 테스트용 (삭제 예정)
 
     # 설문조사
     path('api/survey/', survey_submit, name='survey_submit'), # 설문조사 결과 저장 및 조회
-=======
 
->>>>>>> b33ee4301a5c3149f2891d772cee3914a4f2b88e
 ]

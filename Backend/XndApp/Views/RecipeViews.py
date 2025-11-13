@@ -41,6 +41,48 @@ class RecipeView(APIView):
         # 기본 쿼리셋
         recipes = Recipes.objects.all()
 
+        # 검색어, 키워드, 재료가 모두 없을 때 우선순위 높은 레시피 100개 반환
+        if not query and not keyword and not ingredients:
+            # 사용자의 자주 사용하는 식재료 가져오기
+            user = request.user
+            survey_ingredients = user.survey_ingredients  # 예: "소고기,돼지고기,닭고기"
+
+            # 사용자의 선호 식재료로 category3 필터링 (Django ORM 사용)
+            if survey_ingredients:
+                ingredient_list = [ing.strip() for ing in survey_ingredients.split(',') if ing.strip()]
+
+                # category3에 사용자의 선호 식재료 중 하나라도 포함된 레시피 필터링
+                q_objects = Q()
+                for ingredient in ingredient_list:
+                    q_objects |= Q(category3__icontains=ingredient)
+
+                recipes = recipes.filter(q_objects)
+
+            # 데이터베이스에서 필터링된 결과 중 최대 500개만 가져오기
+            recipes_sample = list(recipes[:500])
+
+            # 우선순위 정렬 (500개만)
+            sorted_recipes = self.prioritize_recipes_with_survey(
+                recipes_sample,
+                user=request.user
+            )
+
+            # 상위 100개만 반환
+            top_recipes = sorted_recipes[:100]
+            serializer = RecipeSerializer(top_recipes, many=True)
+
+            # isSaved 필드 추가
+            user_id = request.user.user_id
+            for data in serializer.data:
+                if SavedRecipes.objects.filter(user=user_id, recipe_id=data['recipe_id']).exists():
+                    data['is_saved'] = True
+
+            return Response({
+                'results': serializer.data,
+                'count': len(top_recipes),
+                'message': '추천 레시피'
+            }, status=status.HTTP_200_OK)
+
         # 검색어 (공백으로 구분된 여러 재료 검색 지원)
         if query:
             # 공백으로 구분하여 여러 검색어 처리
@@ -85,8 +127,10 @@ class RecipeView(APIView):
         total_count = recipes.count()
 
         # 유통 기한 + 설문조사 결과를 반영한 레시피 정렬
+        # 성능 최적화: 최대 300개만 가져와서 정렬
+        recipes_sample = list(recipes[:300])
         recipes = self.prioritize_recipes_with_survey(
-            list(recipes),
+            recipes_sample,
             user=request.user
         )
 
@@ -324,17 +368,26 @@ class RecipeView(APIView):
         restricted_penalty = self._calculate_dietary_restriction_penalty(recipe, survey_dietary_restrictions)
         weight += restricted_penalty
 
-        # Q6: 요리 실력 매칭 (cooking_level과 직접 비교, 일치 시 +0.3점)
-        # '아무나'인 레시피는 모든 난이도에 일치
+        # Q6: 요리 실력 매칭 (누적 난이도 방식, +0.3점)
+        # 초급: 초급만 가중치
+        # 중급: 초급, 중급 가중치
+        # 고급: 초급, 중급, 고급 모두 가중치
         if survey_skill_level and recipe.cooking_level:
             recipe_level = recipe.cooking_level.strip()
+            user_level = survey_skill_level.strip()
 
-            # '아무나'인 레시피는 모든 난이도에 대해 가중치 부여
-            if recipe_level == '아무나':
-                weight += 0.3
-            # 설문 선택값과 레시피 난이도가 정확히 일치
-            elif survey_skill_level.strip() == recipe_level:
-                weight += 0.3
+            # 난이도 레벨 정의
+            level_hierarchy = {
+                '초급': ['초급', '아무나'],
+                '중급': ['초급', '중급', '아무나'],
+                '고급': ['초급', '중급', '고급', '아무나']
+            }
+
+            # 사용자 수준에 맞는 레시피인 경우 가중치 부여
+            if user_level in level_hierarchy:
+                allowed_levels = level_hierarchy[user_level]
+                if recipe_level in allowed_levels:
+                    weight += 0.3
 
         # Q7: 요리도구 매칭 (steps에서 포함 여부 판단, 일치당 +0.3점)
         if recipe.steps:
