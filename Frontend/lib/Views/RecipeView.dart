@@ -50,12 +50,22 @@ class RecipePage extends State<RecipeView> {
   @override
   void initState() {
     super.initState();
-    getListedRecipes();
     _scrollController = ScrollController();
     // 전역 검색어를 검색창에 설정
     if (currentSearchQuery.isNotEmpty) {
       _searchController.text = currentSearchQuery;
     }
+    // 초기 로드: 검색어가 없으면 추천 레시피 20개 로드
+    _loadInitialRecipes();
+  }
+
+  // 초기 레시피 로드 함수
+  Future<void> _loadInitialRecipes() async {
+    if (currentSearchQuery.isEmpty) {
+      // 검색어가 없으면 추천 레시피 가져오기
+      Recipes = await getRecipeInfoFromServer();
+    }
+    getListedRecipes();
   }
 
   @override
@@ -74,7 +84,7 @@ class RecipePage extends State<RecipeView> {
     double screenHeight = MediaQuery.of(context).size.height;
 
     if(!nav2Processed){
-      getListedRecipes();
+      _loadInitialRecipes();
       nav2Processed = true;
     }
 
@@ -202,12 +212,28 @@ class RecipePage extends State<RecipeView> {
                 width: 80,
                 height: 80,
                 fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    width: 80,
+                    height: 80,
+                    color: Colors.grey[200],
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                            : null,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  );
+                },
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     width: 80,
                     height: 80,
                     color: Colors.grey[300],
-                    child: Icon(Icons.image_not_supported, color: Colors.grey[600]),
+                    child: Icon(Icons.restaurant, color: Colors.grey[600], size: 32),
                   );
                 },
               ),

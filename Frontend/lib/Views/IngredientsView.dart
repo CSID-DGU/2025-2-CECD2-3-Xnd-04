@@ -1488,7 +1488,7 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
                     ListView(
                       controller: _scrollController,
                       children: [
-                        for (int floor = refrigerator.level!; floor > 0; floor--)
+                        for (int floor = refrigerator.level ?? 3; floor > 0; floor--)
                           buildFloorSection(floor),
                       ],
                     ),

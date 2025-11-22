@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:Frontend/Abstracts/kakaoLogin.dart';
 import 'package:Frontend/Models/LoginModel.dart';
 import 'package:Frontend/Models/cart_model.dart';
@@ -6,7 +7,7 @@ import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:Frontend/Views/DailyExpenseView.dart';
 import 'package:Frontend/Widgets/CommonAppBar.dart';
 import 'package:Frontend/Services/cart_service.dart';
-import 'package:Frontend/Services/shoppingListService.dart';
+import 'package:Frontend/Services/purchaseService.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 
 class CartView extends StatefulWidget {
@@ -197,38 +198,46 @@ class CartPage extends State<CartView> {
       selectedDate = pickedDate;
     }
 
-    // API로 장보기 일정 추가
+    // API로 장보기 일정 추가 (Purchase 테이블 사용)
     try {
       List<int> cartItemIds = selectedCartItems.map((item) => item.id!).toList();
+      String shoppingDateStr = DateFormat('yyyy-MM-dd').format(selectedDate);
 
-      final result = await addShoppingList(
-        cartItemIds: cartItemIds,
-        shoppingDate: selectedDate,
+      final result = await addToShoppingList(
+        cartIds: cartItemIds,
+        shoppingDate: shoppingDateStr,
       );
 
-      // 장보기 목록에 추가된 항목들을 장바구니에서 삭제
-      await deleteSelectedCartItems(cartItemIds);
+      if (result != null) {
+        // 장바구니 목록 새로고침 (이미 백엔드에서 삭제됨)
+        await _loadCartData();
 
-      // 장바구니 목록 새로고침
-      await _loadCartData();
+        if (!mounted) return;
 
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message'] ?? '장보기 일정에 추가되었습니다'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      // DailyExpenseView로 이동
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => DailyExpenseView(
-            selectedDate: selectedDate,
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? '장보기 일정에 추가되었습니다'),
+            backgroundColor: Colors.green,
           ),
-        ),
-      );
+        );
+
+        // DailyExpenseView로 이동
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => DailyExpenseView(
+              selectedDate: selectedDate,
+            ),
+          ),
+        );
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('장보기 일정 추가에 실패했습니다'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
 
