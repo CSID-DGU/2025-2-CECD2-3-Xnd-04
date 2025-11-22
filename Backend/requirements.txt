@@ -21,6 +21,7 @@ urllib3==2.4.0
 
 # Word Embedding
 gensim==4.3.3
+python-Levenshtein==0.21.1
 numpy==1.26.4
 scipy==1.13.1
 smart-open==7.3.1

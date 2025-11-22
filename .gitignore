@@ -3,3 +3,8 @@
 Backend/venv/*
 Backend/__pycache__/*
 nul
+
+
+# Environment files
+Backend/.env
+Backend/.env.example
