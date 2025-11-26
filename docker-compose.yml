@@ -5,6 +5,8 @@ services:
   db:
     image: mysql:8.0
     container_name: xnd_mysql
+    command:
+      - --skip-character-set-client-handshake
     restart: always
     environment:
       MYSQL_DATABASE: ${DB_NAME}
