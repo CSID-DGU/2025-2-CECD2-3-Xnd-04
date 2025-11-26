@@ -118,6 +118,7 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
       - ./nginx/ssl:/etc/nginx/ssl
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - backend
     networks:
