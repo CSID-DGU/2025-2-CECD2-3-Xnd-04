@@ -3,7 +3,7 @@
 Backend/venv/*
 Backend/__pycache__/*
 nul
-
+.env
 
 # Environment files
 Backend/.env
