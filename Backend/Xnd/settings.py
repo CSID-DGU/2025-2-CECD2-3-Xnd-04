@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -179,7 +179,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 ## CV 파이프라인 경로 설정
 # YOLO 모델 저장소 경로
 YOLO_MODEL_DIR = BASE_DIR / "models"
-YOLO_MODEL_FILENAME = "final_ingredients_1.pt"
+YOLO_MODEL_FILENAME = "final_ingredients_2.pt"
 YOLO_MODEL_PATH = YOLO_MODEL_DIR / YOLO_MODEL_FILENAME
 # Word Embedding 모델 저장소 경로
 WORD_EMBEDDING_DIR = BASE_DIR / "models"
