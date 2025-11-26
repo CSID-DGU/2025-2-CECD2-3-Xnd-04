@@ -10,7 +10,7 @@ Future<List<CartItemModel>> loadCartItems() async {
 
   final String cartURL = (ip!.startsWith('10.0.2'))
       ? 'http://10.0.2.2:8000/api/cart/'
-      : 'http://' + HOST! + ':8000/api/cart/';
+      : 'http://$HOST/api/cart/';
 
   try {
     final response = await dio.get(
@@ -46,7 +46,7 @@ Future<bool> addToCart({
 
   final String cartAddURL = (ip!.startsWith('10.0.2'))
       ? 'http://10.0.2.2:8000/api/cart/add/'
-      : 'http://' + HOST! + ':8000/api/cart/add/';
+      : 'http://$HOST/api/cart/add/';
 
   try {
     final response = await dio.post(
@@ -82,7 +82,7 @@ Future<bool> deleteCartItem(int cartId) async {
 
   final String cartDeleteURL = (ip!.startsWith('10.0.2'))
       ? 'http://10.0.2.2:8000/api/cart/$cartId/'
-      : 'http://' + HOST! + ':8000/api/cart/$cartId/';
+      : 'http://$HOST/api/cart/$cartId/';
 
   try {
     final response = await dio.delete(
@@ -113,7 +113,7 @@ Future<bool> deleteSelectedCartItems(List<int> cartIds) async {
 
   final String bulkDeleteURL = (ip!.startsWith('10.0.2'))
       ? 'http://10.0.2.2:8000/api/cart/bulk-delete/'
-      : 'http://' + HOST! + ':8000/api/cart/bulk-delete/';
+      : 'http://$HOST/api/cart/bulk-delete/';
 
   try {
     final response = await dio.post(
@@ -147,7 +147,7 @@ Future<bool> clearCart() async {
 
   final String clearURL = (ip!.startsWith('10.0.2'))
       ? 'http://10.0.2.2:8000/api/cart/clear/'
-      : 'http://' + HOST! + ':8000/api/cart/clear/';
+      : 'http://$HOST/api/cart/clear/';
 
   try {
     final response = await dio.delete(

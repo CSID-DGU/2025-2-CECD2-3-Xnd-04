@@ -11,7 +11,7 @@ Future<bool> createFridgeToServer({required RefrigeratorModel refrigerator}) asy
 
   final String fridgeCreateURL = (ip!.startsWith('10.0.2')) ?
   'http://10.0.2.2:8000/api/fridge/create/' :
-  'http://' + HOST! + APIURLS['createFridge']!;
+  'http://$HOST/${APIURLS['createFridge']}';
   try {
     // 저장된 토큰 불러오기
     String? accessToken = responsedAccessToken;

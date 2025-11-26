@@ -10,7 +10,7 @@ Future<Response?> requestFridgeIngredientInfo(RefrigeratorModel refrigerator) as
 
   final String ingredientDetailURL = (ip!.startsWith('10.0.2')) ?
   'http://10.0.2.2:8000/api/fridge/' + '${refrigerator.id}/':
-  'http://' + HOST! + APIURLS['loadFridge']! + '${refrigerator.id}/';
+  'http://$HOST/${APIURLS['loadFridge']}${refrigerator.id}/';
   try {
     final response = await dio.get(
       ingredientDetailURL, // 👉 백엔드 API 주소

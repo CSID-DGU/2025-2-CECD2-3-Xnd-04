@@ -10,7 +10,7 @@ Future<Response?> requestRecipeQuery({required String query}) async {
 
   final String recipeURL = (ip!.startsWith('10.0.2')) ?
   'http://10.0.2.2:8000/api/recipes/?query=${query}' :
-  'http://' + HOST! + APIURLS['loadRecipe']! + '?query=${query}';
+  'http://$HOST/${APIURLS['loadRecipe']}?query=${query}';
   try {
     final response = await dio.get(
       recipeURL, // 👉 백엔드 API 주소

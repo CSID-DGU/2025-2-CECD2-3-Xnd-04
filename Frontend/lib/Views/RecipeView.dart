@@ -153,7 +153,7 @@ class RecipePage extends State<RecipeView> {
             padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             child: Row(
               children: [
-                _buildFilterChip('주친순', false),
+                _buildFilterChip('추천순', false),
                 SizedBox(width: 8),
                 _buildFilterChip('정확도순', false),
                 SizedBox(width: 8),

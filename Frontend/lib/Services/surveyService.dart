@@ -9,7 +9,7 @@ Future<bool> submitSurvey(Map<String, dynamic> surveyData) async {
 
   final String surveyURL = (ip!.startsWith('10.0.2'))
       ? 'http://10.0.2.2:8000/api/survey/'
-      : 'http://' + HOST! + ':8000/api/survey/';
+      : 'http://$HOST/api/survey/';
 
   try {
     final response = await dio.post(
@@ -49,7 +49,7 @@ Future<Map<String, dynamic>?> getSurveyResults() async {
 
   final String surveyURL = (ip!.startsWith('10.0.2'))
       ? 'http://10.0.2.2:8000/api/survey/'
-      : 'http://' + HOST! + ':8000/api/survey/';
+      : 'http://$HOST/api/survey/';
 
   try {
     final response = await dio.get(

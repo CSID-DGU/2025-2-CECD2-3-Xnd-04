@@ -9,7 +9,7 @@ Future<List<Map<String, dynamic>>> getDailyExpenses(String date) async {
 
     final String expenseURL = (ip!.startsWith('10.0.2'))
         ? 'http://10.0.2.2:8000/api/expenses/'
-        : 'http://$HOST:8000/api/expenses/';
+        : 'http://$HOST/api/expenses/';
 
     final response = await dio.get(
       expenseURL,
@@ -47,7 +47,7 @@ Future<void> addExpense({
 
     final String expenseAddURL = (ip!.startsWith('10.0.2'))
         ? 'http://10.0.2.2:8000/api/expenses/add/'
-        : 'http://$HOST:8000/api/expenses/add/';
+        : 'http://$HOST/api/expenses/add/';
 
     final response = await dio.post(
       expenseAddURL,
@@ -84,7 +84,7 @@ Future<void> deleteExpense(int expenseId) async {
 
     final String expenseDeleteURL = (ip!.startsWith('10.0.2'))
         ? 'http://10.0.2.2:8000/api/expenses/$expenseId/'
-        : 'http://$HOST:8000/api/expenses/$expenseId/';
+        : 'http://$HOST/api/expenses/$expenseId/';
 
     final response = await dio.delete(
       expenseDeleteURL,

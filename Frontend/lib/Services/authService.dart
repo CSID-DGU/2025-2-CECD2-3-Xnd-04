@@ -18,7 +18,7 @@ final APIURLS = {
   'createFridge' : 'api/fridge/create/',
   'loadFridge' : 'api/fridge/',
   'loadRecipe' : 'api/recipes/',
-  'loadIngredient' : 'api/ingredients',
+  'loadIngredient' : 'api/ingredients/',
   'loadCart' : 'api/cart/',
   'addCart' : 'api/cart/add/',
   'savedRecipe' : 'api/savedRecipe/',
@@ -29,7 +29,7 @@ Future<bool> sendKakaoAccessToken(String accessToken) async {
   final String? ip = await NetworkInfo().getWifiIP();
   final String authURL = (ip!.startsWith('10.0.2')) ?
   'http://10.0.2.2:8000/api/auth/kakao-login/' :
-  'http://' + HOST! + APIURLS['kakaoLogin']!;
+  'http://$HOST/${APIURLS['kakaoLogin']}';
   try {
     final response = await dio.post(
       authURL, // 👉 백엔드 API 주소
@@ -160,7 +160,7 @@ Future<bool> checkSession() async {
     final String? ip = await NetworkInfo().getWifiIP();
     final String fridgeURL = (ip!.startsWith('10.0.2'))
         ? 'http://10.0.2.2:8000/api/fridge/'
-        : 'http://$HOST${APIURLS['loadFridge']}';
+        : 'http://$HOST/${APIURLS['loadFridge']}';
 
     final response = await dio.get(
       fridgeURL,

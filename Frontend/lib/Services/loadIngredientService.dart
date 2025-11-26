@@ -15,7 +15,7 @@ Future<Response?> requestIngredient(RecipeModel recipe) async{
 
   final String recipeDetailURL = (ip!.startsWith('10.0.2')) ?
   'http://10.0.2.2:8000/api/recipes/' + '${recipe.id}/':
-  'http://' + HOST! + APIURLS['loadRecipe']! + '${recipe.id}/';
+  'http://$HOST/${APIURLS['loadRecipe']}${recipe.id}/';
   try {
     final response = await dio.get(
       recipeDetailURL, // 👉 백엔드 API 주소

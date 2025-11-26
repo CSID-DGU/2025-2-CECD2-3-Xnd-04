@@ -11,7 +11,7 @@ Future<bool> createSavedRecipe({required RecipeModel recipe}) async {
 
   final String createSavedRecipeURL = (ip!.startsWith('10.0.2')) ?
   'http://10.0.2.2:8000/api/savedRecipe/' :
-  'http://' + HOST! + APIURLS['savedRecipe']!;
+  'http://$HOST/${APIURLS['savedRecipe']}';
   try {
     final response = await dio.post(
       createSavedRecipeURL, // 👉 백엔드 API 주소

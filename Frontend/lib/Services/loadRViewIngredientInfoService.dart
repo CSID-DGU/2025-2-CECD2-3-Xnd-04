@@ -10,7 +10,7 @@ Future<Response?> requestRecipeModalIngredientInfo(int id, int fiid) async{
 
   final String ingredientDetailURL = (ip!.startsWith('10.0.2')) ?
   'http://10.0.2.2:8000/api/fridge/' + '${id}/' + 'ingredients/' + '${fiid}/':
-  'http://' + HOST! + APIURLS['loadFridge']! + '${id}/' + 'ingredients/' + '${fiid}/';
+  'http://$HOST/${APIURLS['loadFridge']}${id}/ingredients/${fiid}/';
   try {
     print('현재 인덱스 : ${id}');
 
