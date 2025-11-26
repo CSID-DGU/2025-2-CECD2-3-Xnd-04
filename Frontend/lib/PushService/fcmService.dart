@@ -170,7 +170,7 @@ class FCMService {
 
       final String deviceURL = (ip!.startsWith('10.0.2')) ?
       'http://10.0.2.2:8000/api/devices/register/' :
-      'http://$HOST/api/devices/register/';
+      'http://$HOST' + 'api/devices/register/';
 
       final response = await dio.post(
         deviceURL,
