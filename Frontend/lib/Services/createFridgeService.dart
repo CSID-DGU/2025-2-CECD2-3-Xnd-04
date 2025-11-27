@@ -6,12 +6,12 @@ import 'package:Frontend/Services/loadFridgeService.dart';
 
 // 모든 서비스는 함수로 관리함. 클래스 만들기 ㄱㅊ
 Future<bool> createFridgeToServer({required RefrigeratorModel refrigerator}) async {
-  final dio = Dio();
+  final dio = createAuthDio(); // 401 에러 자동 처리를 위한 인증 Dio 사용
   final String? ip = await NetworkInfo().getWifiIP();
 
   final String fridgeCreateURL = (ip!.startsWith('10.0.2')) ?
   'http://10.0.2.2:8000/api/fridge/create/' :
-  'http://' + HOST! + APIURLS['createFridge']!;
+  'http://$HOST/${APIURLS['createFridge']}';
   try {
     // 저장된 토큰 불러오기
     String? accessToken = responsedAccessToken;
@@ -41,12 +41,7 @@ Future<bool> createFridgeToServer({required RefrigeratorModel refrigerator}) asy
   }
   catch(e){
     print('에러 로그 : $e');
-
-    // 401 에러 처리 (토큰 만료)
-    if (e is DioException && e.response?.statusCode == 401) {
-      await handle401Error();
-    }
-
+    // 401 에러는 인터셉터에서 자동 처리됨
     return false;
   }
 }

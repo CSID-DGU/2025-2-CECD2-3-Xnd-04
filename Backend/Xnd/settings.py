@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -132,6 +132,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
@@ -178,11 +179,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 ## CV 파이프라인 경로 설정
 # YOLO 모델 저장소 경로
 YOLO_MODEL_DIR = BASE_DIR / "models"
-YOLO_MODEL_FILENAME = "final_ingredients_1.pt"
+YOLO_MODEL_FILENAME = "final_ingredients_2.pt"
 YOLO_MODEL_PATH = YOLO_MODEL_DIR / YOLO_MODEL_FILENAME
 # Word Embedding 모델 저장소 경로
 WORD_EMBEDDING_DIR = BASE_DIR / "models"
-WORD_EMBEDDING_FILENAME = "food_embedding.model"
+WORD_EMBEDDING_FILENAME = "food_embedding_2.word2vec"
 WORD_EMBEDDING_PATH = WORD_EMBEDDING_DIR / WORD_EMBEDDING_FILENAME
 
 # Google Cloud Vision API 인증 경로 추가

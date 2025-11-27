@@ -10,3 +10,5 @@ from .foodStorageLife import FoodStorageLife
 from .ingredients import Ingredient
 from .RecipeIngredient import RecipeIngredient
 from .notification import Device
+from .shoppingList import ShoppingList
+from .expense import Expense

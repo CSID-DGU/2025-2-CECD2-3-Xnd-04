@@ -6,6 +6,7 @@ import 'package:Frontend/Widgets/CommonAppBar.dart';
 import '../Models/IngredientModel.dart';
 import '../Models/RecipeModel.dart';
 import 'package:Frontend/MordalViews/RecipeMordal.dart';
+import 'package:Frontend/Views/RecipeDetailView.dart';
 
 import '../Services/createSavedRecipeService.dart';
 import '../Services/loadIngredientService.dart';
@@ -25,28 +26,65 @@ class FavoritesPage extends State<FavoritesView> {
   late ScrollController _scrollController;
 
   RecipesModel? savedRecipeStorage;
+  RecipesModel? filteredRecipeStorage;
 
   /// 레시피 끌어오기
   void getListedSavedRecipes(){
     List<RecipeModel> savedrecipes = [];
-    for(int i = 0; i < SavedRecipes![0]!.length; i++)
-      savedrecipes.add(RecipeModel().getSavedRecipe(i));
+    // SavedRecipes가 null이거나 비어있는지 확인
+    if (SavedRecipes != null && SavedRecipes!.isNotEmpty && SavedRecipes![0] != null) {
+      for(int i = 0; i < SavedRecipes![0]!.length; i++)
+        savedrecipes.add(RecipeModel().getSavedRecipe(i));
+    }
     savedRecipeStorage = RecipesModel(savedrecipes);
+    filteredRecipeStorage = savedRecipeStorage;
+  }
+
+  /// 레시피 필터링
+  void filterRecipes(String query) {
+    if (query.isEmpty) {
+      setState(() {
+        filteredRecipeStorage = savedRecipeStorage;
+      });
+      return;
+    }
+
+    List<RecipeModel> filtered = [];
+    if (savedRecipeStorage?.recipes != null) {
+      for (var recipe in savedRecipeStorage!.recipes!) {
+        if (recipe.recipeName != null &&
+            recipe.recipeName!.toLowerCase().contains(query.toLowerCase())) {
+          filtered.add(recipe);
+        }
+      }
+    }
+    setState(() {
+      filteredRecipeStorage = RecipesModel(filtered);
+    });
   }
 
   FavoritesPage(){
     super.initState();
     getListedSavedRecipes();
     _scrollController = ScrollController();
+
+    // 검색어 변경 감지 - debounce 없이 즉시 필터링
+    _searchController.addListener(() {
+      filterRecipes(_searchController.text);
+    });
   }
 
   @override
   void dispose() {
-    super.dispose();
+    _searchController.dispose();
     _scrollController.dispose();
+    super.dispose();
   }
 
   Widget build(BuildContext context) {
+    // 저장된 레시피 뷰 - 하단바 4번 활성화
+    currentBottomNavIndex = 4;
+
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
@@ -56,216 +94,270 @@ class FavoritesPage extends State<FavoritesView> {
     }
 
     return Scaffold(
-      // 냉장고 선택 페이지 UI
       appBar: const CommonAppBar(title: 'Xnd'),
       backgroundColor: Colors.white,
       bottomNavigationBar: const MainBottomView(),
-      body: Center(
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Container(
-                  height: screenHeight * 0.04,
-                  margin: EdgeInsets.fromLTRB(20, screenHeight * 0.01, 20, screenHeight * 0.01),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    style: TextStyle(color: Colors.black, fontSize: screenHeight * 0.02),
-                    textAlignVertical: TextAlignVertical.center,
-                    decoration: InputDecoration(
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(vertical:10),
-                      hintText: (_searchQuery.isEmpty) ? '레시피 검색' : null,
-                      hintStyle: TextStyle(color: Colors.grey[700], fontSize: screenHeight * 0.015, fontWeight: FontWeight.bold),
-                      prefixIcon: IconButton(
-                        icon: Icon(Icons.search, color: Colors.grey[700]),
-                        onPressed: () async {
+      body: Column(
+        children: [
+          // 검색 바
+          Container(
+            height: screenHeight * 0.06,
+            margin: EdgeInsets.fromLTRB(20, screenHeight * 0.015, 20, screenHeight * 0.01),
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _searchController,
+              style: TextStyle(color: Colors.black, fontSize: screenHeight * 0.02),
+              textAlignVertical: TextAlignVertical.center,
+              decoration: InputDecoration(
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(vertical: 10),
+                hintText: '저장된 레시피 검색',
+                hintStyle: TextStyle(
+                  color: Colors.grey[700],
+                  fontSize: screenHeight * 0.018,
+                  fontWeight: FontWeight.bold,
+                ),
+                prefixIcon: Icon(Icons.search, color: Colors.grey[700]),
+                suffixIcon: (_searchController.text.isNotEmpty)
+                    ? IconButton(
+                        icon: Icon(Icons.clear, color: Colors.red, size: screenHeight * 0.025),
+                        onPressed: () {
                           _searchController.clear();
-                          for(int i = 0; i < SavedRecipes!.length; i++)
-                            SavedRecipes![i]!.clear();
-                          SavedRecipes = await getSavedRecipeQueryInfoFromServer(query:_searchQuery);
+                          filterRecipes('');
+                        },
+                      )
+                    : null,
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+          // 레시피 리스트
+          Expanded(
+            child: (filteredRecipeStorage?.recipes?.isEmpty ?? true)
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _searchController.text.isEmpty ? Icons.star_border : Icons.search_off,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          _searchController.text.isEmpty
+                              ? '저장된 레시피가 없습니다'
+                              : '검색 결과가 없습니다',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          _searchController.text.isEmpty
+                              ? '마음에 드는 레시피를 별표로 저장해보세요!'
+                              : '다른 검색어를 입력해보세요',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    controller: _scrollController,
+                    itemCount: filteredRecipeStorage?.recipes?.length ?? 0,
+                    itemBuilder: (context, index) {
+                      RecipeModel recipe = filteredRecipeStorage!.recipes![index];
+                      return _buildRecipeCard(recipe, screenWidth, screenHeight);
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 레시피 카드 위젯
+  Widget _buildRecipeCard(RecipeModel recipe, double screenWidth, double screenHeight) {
+    return GestureDetector(
+      onTap: () async {
+        // 서버에서 레시피 상세 정보 가져오기
+        int recipeIdx = await getIngredientInfoFromServer(recipe, true);
+
+        if (recipeIdx >= 0) {
+          // SavedRecipes에서 해당 레시피의 인덱스 찾기
+          int savedRecipeIdx = -1;
+          if (SavedRecipes != null && SavedRecipes![0] != null) {
+            for (int i = 0; i < SavedRecipes![0]!.length; i++) {
+              if (SavedRecipes![0]![i] == recipe.id) {
+                savedRecipeIdx = i;
+                break;
+              }
+            }
+          }
+
+          if (savedRecipeIdx >= 0) {
+            recipe.getDetailSavedRecipe(savedRecipeIdx);
+          }
+        }
+
+        // 새로운 상세 페이지로 이동
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RecipeDetailView(recipe: recipe),
+          ),
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[300]!),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 레시피 이미지
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                recipe.imgUrl ?? '',
+                width: 80,
+                height: 80,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 80,
+                    height: 80,
+                    color: Colors.grey[300],
+                    child: Icon(Icons.image_not_supported, color: Colors.grey[600]),
+                  );
+                },
+              ),
+            ),
+            SizedBox(width: 12),
+            // 레시피 정보
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 제목과 즐겨찾기
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          recipe.recipeName ?? '레시피',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () async {
+                          await createSavedRecipe(recipe: recipe);
                           setState(() {
-                            // 레시피 뷰에서 어디로 쏠건지...
+                            deleteSavedRecipe(savedrecipe: recipe);
+                            for (int i = 0; i < Recipes![0]!.length; i++) {
+                              if (Recipes![0]![i] == recipe.id) {
+                                Recipes![3]![i] = false;
+                                break;
+                              }
+                            }
                             getListedSavedRecipes();
                           });
                         },
+                        child: Icon(
+                          Icons.star,
+                          color: Colors.amber,
+                          size: 28,
+                        ),
                       ),
-                      suffixIcon: (_searchController.text.isNotEmpty)
-                          ? IconButton(
-                        icon: Icon(Icons.clear, color: Colors.red, size: screenHeight * 0.02),
-                        onPressed: () {
-                          setState(() {
-                            _searchController.clear();
-                            _searchQuery = _searchController.text;
-                          });
-                        },
-                      ) : null,
-                      border: InputBorder.none,
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
+                    ],
                   ),
-                ),
-                Expanded(
-                  child: Scrollbar(
-                      controller: _scrollController,
-                      thumbVisibility: true,
-                      trackVisibility: true,
-                      interactive: true,
-                      child: ListView(
-                          controller: _scrollController,
-                          children: <Widget>[
-                            // 실제론 DB에서 랜덤으로 추천돌려서 레시피로 띄워줌
-                            for(RecipeModel savedrecipe in savedRecipeStorage!.recipes!)
-                              Container(
-                                  margin: EdgeInsets.all(20),
-                                  height: screenHeight * 0.18,
-                                  decoration: BoxDecoration(
-                                    color: Colors.greenAccent,
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      // 레시피 이미지
-                                      Container(
-                                        margin: EdgeInsets.fromLTRB((screenWidth - 40) * 0.03, 0, (screenWidth - 40) * 0.04, 0),
-                                        width: (screenWidth - 40) * 0.3,
-                                        height: (screenWidth - 40) * 0.3,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(30),
-                                        ),
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(30),
-                                          child: Image.network(savedrecipe.imgUrl!, fit: BoxFit.cover),
-                                        )
-                                      ),
-                                      // 레시피 설명
-                                      Container(
-                                        margin: EdgeInsets.fromLTRB(0, 0, (screenWidth - 40) * 0.03, 0),
-                                        width: (screenWidth - 40) * 0.6,
-                                        height: (screenWidth - 40) * 0.3,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(30),
-                                        ),
-                                        child: FilledButton(
-                                          onPressed: () {
-                                            setState(() async {
-                                              int recipeIdx = await getIngredientInfoFromServer(savedrecipe, true);
-                                              savedrecipe.getDetailSavedRecipe(recipeIdx);
-                                              // 이 부분에 모달 창
-                                              RecipeDialog recipedialog = RecipeDialog(recipe: savedrecipe);
-                                              showDialog(
-                                                  context: context,
-                                                  builder: (context) => recipedialog.recipeDialog(context)
-                                              );
-                                            });
-                                          },
-                                          style: FilledButton.styleFrom(
-                                            backgroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                                            padding: EdgeInsets.zero,
-                                          ),
-                                          child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.start,
-                                              children: <Widget>[
-                                                Flexible(
-                                                  flex: 2,
-                                                  fit: FlexFit.tight,
-                                                  child: Container(
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.white,
-                                                        borderRadius: BorderRadius.circular(30),
-                                                      ),
-                                                      child: Column(
-                                                        mainAxisAlignment: MainAxisAlignment.start,
-                                                        children: <Widget>[
-                                                          Flexible(
-                                                            flex: 2,
-                                                            fit: FlexFit.tight,
-                                                            child: Row(
-                                                              mainAxisAlignment: MainAxisAlignment.start,
-                                                              children: <Widget>[
-                                                                SizedBox(width: 15),
-                                                                Flexible(
-                                                                  child: Text(savedrecipe.recipeName!,
-                                                                    style: TextStyle(
-                                                                      color: Colors.black,
-                                                                      fontWeight: FontWeight.bold,
-                                                                      fontSize: screenHeight * 0.012
-                                                                    )
-                                                                  ),
-                                                                )
-                                                              ]
-                                                            )
-                                                          ),
-                                                          Flexible(
-                                                            flex: 3,
-                                                            fit: FlexFit.tight,
-                                                            child: SizedBox()
-                                                          ),
-                                                        ],
-                                                      )
-                                                  ),
-                                                ),
-                                                Flexible(
-                                                  flex: 1,
-                                                  fit: FlexFit.tight,
-                                                  child: Container(
-                                                    padding: EdgeInsets.only(top: 20),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.white,
-                                                      borderRadius: BorderRadius.circular(30),
-                                                    ),
-                                                    child: Align(
-                                                        alignment: Alignment.topCenter,
-                                                        child: GestureDetector(
-                                                            onTap: () async {
-                                                              await createSavedRecipe(recipe : savedrecipe);
-                                                              setState((){
-                                                                deleteSavedRecipe(savedrecipe : savedrecipe);
-                                                                for (int i = 0; i < Recipes![0]!.length; i++) {
-                                                                  if (Recipes![0]![i] == savedrecipe.id) {
-                                                                    Recipes![3]![i] = false;
-                                                                    break;
-                                                                  }
-                                                                }
-                                                                getListedSavedRecipes();
-                                                              });
-                                                            },
-                                                            child: Image.asset('assets/hearts/filledheart.png', height: 20, width: 20)
-                                                        )
-                                                    )
-                                                  ),
-                                                ),
-                                              ]
-                                          ),
-                                        ),
-                                      )
-                                    ],
-                                  )
-                              )
-                          ]
-                      )
+                  SizedBox(height: 8),
+                  // 조리시간, 인분, 난이도
+                  Row(
+                    children: [
+                      Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
+                      SizedBox(width: 4),
+                      Text(
+                        recipe.cookingTime ?? '50분',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                      ),
+                      SizedBox(width: 12),
+                      Icon(Icons.people, size: 16, color: Colors.grey[600]),
+                      SizedBox(width: 4),
+                      Text(
+                        recipe.servingSize ?? '4인분',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        '난이도',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        recipe.cookingLevel ?? '쉬움',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.orange,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ]
-          )
+                  SizedBox(height: 8),
+                  // 해시태그
+                  Wrap(
+                    spacing: 4,
+                    children: [
+                      if (recipe.category2 != null && recipe.category2!.isNotEmpty)
+                        _buildHashtag(recipe.category2!),
+                      if (recipe.category4 != null && recipe.category4!.isNotEmpty)
+                        _buildHashtag(recipe.category4!),
+                      if (recipe.category3 != null && recipe.category3!.isNotEmpty)
+                        _buildHashtag(recipe.category3!),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-      resizeToAvoidBottomInset: false,
+    );
+  }
+
+  // 해시태그 위젯
+  Widget _buildHashtag(String text) {
+    return Text(
+      '#$text',
+      style: TextStyle(
+        fontSize: 12,
+        color: Colors.blue[700],
+        fontWeight: FontWeight.w500,
+      ),
     );
   }
 }

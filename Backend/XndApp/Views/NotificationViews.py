@@ -211,8 +211,8 @@ class NotificationDetailView(APIView):
             )
 
             # Celery 태스크 취소
-            if notification.celery_task_id:
-                current_app.control.revoke(notification.celery_task_id, terminate=True)
+            # if notification.celery_task_id:
+            #    current_app.control.revoke(notification.celery_task_id, terminate=True)
 
             notification.delete()
             return Response({'message': '알림 삭제 완료'})

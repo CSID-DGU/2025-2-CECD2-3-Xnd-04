@@ -3,7 +3,7 @@ from ..Models.fridgeIngredients import FridgeIngredients
 from XndApp.serializers.Ingredient_serializers import IngredientSerializer
 
 class FridgeIngredientsSerializer(serializers.ModelSerializer):
-    storable_due = serializers.DateField(required=False, allow_null=True)
+    storable_due = serializers.DateTimeField(required=False, allow_null=True)
 
     class Meta:
         model = FridgeIngredients
@@ -18,6 +18,7 @@ class FridgeIngredientsSerializer(serializers.ModelSerializer):
 
             'ingredient_name',
             'storable_due',
+            'storage_location',
 
             'category_yolo',
             'yolo_confidence',
@@ -30,6 +31,7 @@ class FridgeIngredientsSerializer(serializers.ModelSerializer):
             'date_recognition_confidence',
             'date_type_confidence',
 
+            'memo',
 
             'foodStorageLife',
         ]

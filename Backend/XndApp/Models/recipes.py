@@ -26,3 +26,7 @@ class Recipes(models.Model):
         choices=COOKING_LEVEL_CHOICES,
         default='anyone'
     )
+
+    # 임베딩 벡터 (사전 계산된 텍스트 임베딩 저장)
+    ingredients_embedding = models.JSONField(null=True, blank=True, help_text="재료 임베딩 벡터")
+    name_embedding = models.JSONField(null=True, blank=True, help_text="레시피명 임베딩 벡터")

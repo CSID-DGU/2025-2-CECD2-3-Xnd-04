@@ -6,11 +6,15 @@ from XndApp.Views.loginViews import NaverLoginView
 from XndApp.Views.fridgesViews import FridgeViews
 from XndApp.Views.fridgeDetailViews import FridgeDetailView
 from XndApp.Views.IngredientViews import IngredientView
-from XndApp.Views.CartViews import CartListView, CartManageView
+from XndApp.Views.CartViews import CartListView, CartManageView, CartBulkDeleteView
 from XndApp.Views.savedRecipesViews import SavedRecipesView,SavedRecipeDetailView
 from XndApp.Views.NotificationViews import RegisterDeviceView, DeviceManageView, NotificationView, NotificationDetailView, IngredientNotificationView
-from XndApp.Views.fcmViews import fcm_test_view
-from XndApp.Views.cv_views import handle_detection_post, run_yolo_test
+
+from XndApp.Views.AccountBookViews import account_book_settings, add_expense as add_account_expense, reset_budget
+from XndApp.Views.ShoppingListViews import add_shopping_list, get_shopping_list, complete_shopping, delete_shopping_items, get_daily_spending, get_monthly_spending
+from XndApp.Views.ExpenseViews import get_daily_expenses, add_expense as add_daily_expense, delete_expense
+from XndApp.Views.SurveyViews import survey_submit
+from XndApp.Views.PurchaseViews import purchase_list, purchase_create, purchase_complete, purchase_pending_list, purchase_delete
 
 
 urlpatterns = [
@@ -33,10 +37,37 @@ urlpatterns = [
     path('api/cart/', CartListView.as_view(), name='cart-list'), # 장바구니 목록 조회
     path('api/cart/add/', CartManageView.as_view(), name='cart-add'), # 장바구니에 추가
     path('api/cart/<int:cart_id>/', CartManageView.as_view(), name='cart-manage'), # 장바구니 수량 + - x (삭제)
+    path('api/cart/bulk-delete/', CartBulkDeleteView.as_view(), name='cart-bulk-delete'), # 선택 삭제 (POST)
+    path('api/cart/clear/', CartBulkDeleteView.as_view(), name='cart-clear'), # 전체 삭제 (DELETE)
 
     #즐겨찾기(레시피 저장)
     path('api/savedRecipe/', SavedRecipesView.as_view(), name='savedRecipes'),  # 저장된 레시피 목록, 즐겨찾기 추가 및 삭제(토글)
     path('api/savedRecipe/<int:id>', SavedRecipeDetailView.as_view(), name='savedRecipe-detail'), # 저장된 레시피 상세보기 및 상세보기 내에서 삭제
+
+    # 가계부
+    path('api/account-book/settings/', account_book_settings, name='account_book_settings'), # 가계부 설정 조회 및 수정
+    path('api/account-book/expense/', add_account_expense, name='add_account_expense'), # 지출 추가 (가계부용)
+    path('api/account-book/reset/', reset_budget, name='reset_budget'), # 예산 수동 초기화
+
+    # 구매 내역 (장보기 일정)
+    path('api/purchases/', purchase_list, name='purchase_list'), # 구매 내역 조회 (?year=YYYY&month=MM)
+    path('api/purchases/pending/', purchase_pending_list, name='purchase_pending_list'), # 장보기 일정 조회 (미완료, ?date=YYYY-MM-DD)
+    path('api/purchases/create/', purchase_create, name='purchase_create'), # 장바구니 -> 장보기 일정 추가
+    path('api/purchases/complete/', purchase_complete, name='purchase_complete'), # 장보기 완료 처리
+    path('api/purchases/<int:purchase_id>/', purchase_delete, name='purchase_delete'), # 구매 내역 삭제
+
+    # 지출 내역
+    path('api/expenses/', get_daily_expenses, name='get_daily_expenses'), # 특정 날짜 지출 내역 조회 (?date=YYYY-MM-DD)
+    path('api/expenses/add/', add_daily_expense, name='add_daily_expense'), # 지출 내역 추가
+    path('api/expenses/<int:expense_id>/', delete_expense, name='delete_expense'), # 지출 내역 삭제
+
+    # 장보기 목록
+    path('api/shopping-list/add/', add_shopping_list, name='add_shopping_list'), # 장보기 목록에 추가 (캘린더에 추가)
+    path('api/shopping-list/', get_shopping_list, name='get_shopping_list'), # 특정 날짜의 장보기 목록 조회 (?date=YYYY-MM-DD)
+    path('api/shopping-list/complete/', complete_shopping, name='complete_shopping'), # 장보기 완료 (가격 저장 + is_bought 업데이트 + 지출 추가)
+    path('api/shopping-list/delete/', delete_shopping_items, name='delete_shopping_items'), # 장보기 항목 삭제 (완료 없이)
+    path('api/shopping-list/daily-spending/', get_daily_spending, name='get_daily_spending'), # 특정 날짜의 장보기 지출 조회 (?date=YYYY-MM-DD)
+    path('api/shopping-list/monthly-spending/', get_monthly_spending, name='get_monthly_spending'), # 특정 월의 날짜별 장보기 지출 조회 (?year=YYYY&month=MM)
 
     # 기기 관리
     path('api/devices/register/', RegisterDeviceView.as_view(), name='register_device'), # 알림 받을 기기 등록 (로그인시)
@@ -47,10 +78,9 @@ urlpatterns = [
     path('api/notifications/ingredient/<int:ingredient_id>/', IngredientNotificationView.as_view(), name='ingredient_notifications'), # 식재료 유통기한 알림 예약 삭제
     path('api/notifications/<int:notification_id>/', NotificationDetailView.as_view(), name='notification_detail'), # 개별 알림 삭제 및 읽음 처리
 
-    # 푸시 테스트
-    path('fcm-test/', fcm_test_view, name='fcm_test'), # 테스트용 웹 FCM 발급 (추후 프론트로 수정)
-
     # CV 연동
-    path('api/detection/upload/', handle_detection_post, name='cv_detection_upload'),
-    path('api/detection/test/', run_yolo_test, name='cv_pipeline_test') ### 테스트용 (삭제 예정)
+
+    # 설문조사
+    path('api/survey/', survey_submit, name='survey_submit'), # 설문조사 결과 저장 및 조회
+
 ]

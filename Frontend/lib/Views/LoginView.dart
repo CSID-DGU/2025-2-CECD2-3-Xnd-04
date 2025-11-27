@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:Frontend/Abstracts/kakaoLogin.dart';
 import 'package:Frontend/Models/LoginModel.dart';
+import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:Frontend/Services/loadFridgeService.dart';
 import 'package:Frontend/Services/authService.dart';
+import 'package:Frontend/Services/loadFridgeIngredientInfoService.dart';
 
 import '../PushService/fcmService.dart';
 
@@ -66,6 +68,13 @@ class LoginPage extends State<LoginView>{
           if (mounted) {
             // 냉장고 유무에 따라 페이지 이동
             if (fridgeNonZero) {
+              // 자동 로그인 시 식재료 정보도 함께 로드
+              try {
+                await loadFridgeIngredientsInfo(Fridges[0], 0);
+              } catch (e) {
+                print('자동 로그인: 식재료 정보 로드 실패 - $e');
+              }
+
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (i) => pages[1]), // IngredientsView
@@ -178,6 +187,13 @@ class LoginPage extends State<LoginView>{
 
                   if (context.mounted) {
                     if (fridgeNonZero) {
+                      // 카카오 로그인 시 식재료 정보도 함께 로드
+                      try {
+                        await loadFridgeIngredientsInfo(Fridges[0], 0);
+                      } catch (e) {
+                        print('카카오 로그인: 식재료 정보 로드 실패 - $e');
+                      }
+
                       Navigator.push(context, MaterialPageRoute(builder: (i) => pages[1])); // IngredientsView
                     } else {
                       Navigator.push(context, MaterialPageRoute(builder: (i) => pages[0])); // InitialHomeView

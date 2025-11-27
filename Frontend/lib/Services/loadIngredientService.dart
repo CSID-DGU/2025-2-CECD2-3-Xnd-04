@@ -10,12 +10,12 @@ import '../Models/IngredientModel.dart';
 /// 레시피, 즐겨찾기 페이지의 버튼 클릭 시 얻어야 할 정보 요청
 // 특정 레시피!! 에 대한 식재료 정보를 로드
 Future<Response?> requestIngredient(RecipeModel recipe) async{
-  final dio = Dio();
+  final dio = createAuthDio(); // 401 에러 자동 처리를 위한 인증 Dio 사용
   final String? ip = await NetworkInfo().getWifiIP();
 
   final String recipeDetailURL = (ip!.startsWith('10.0.2')) ?
   'http://10.0.2.2:8000/api/recipes/' + '${recipe.id}/':
-  'http://' + HOST! + APIURLS['loadRecipe']! + '${recipe.id}/';
+  'http://$HOST/${APIURLS['loadRecipe']}${recipe.id}/';
   try {
     final response = await dio.get(
       recipeDetailURL, // 👉 백엔드 API 주소
@@ -66,16 +66,32 @@ Future<int> getIngredientInfoFromServer(RecipeModel recipe, bool fromFavoritePag
       }
     }
     // 레시피 상세 정보 초기화 && 추가
-    if (li.length < 5) {
-      li.add([]);
-      li.add([]);
-      for (int idx = 0; idx < 10; idx++) {
-        li[4]!.add(null);
-        li[5]!.add(null);
+    if (li.length < 12) {
+      // 기본 필드가 10개이므로, 10, 11번 인덱스 추가
+      while (li.length < 12) {
+        li.add([]);
+      }
+      // 초기화 - 현재 레시피 개수만큼 null로 채우기
+      int recipeCount = li[0]?.length ?? 0;
+      for (int idx = 0; idx < recipeCount; idx++) {
+        li[10]!.add(null);
+        li[11]!.add(null);
       }
     }
-    li[4]![recipeIdx] = Ingredients;
-    li[5]![recipeIdx] = Descriptions;
+
+    // 인덱스 범위 확인 후 추가
+    if (recipeIdx < li[10]!.length) {
+      li[10]![recipeIdx] = Ingredients;
+      li[11]![recipeIdx] = Descriptions;
+    } else {
+      // 인덱스가 범위를 벗어나면 확장
+      while (li[10]!.length <= recipeIdx) {
+        li[10]!.add(null);
+        li[11]!.add(null);
+      }
+      li[10]![recipeIdx] = Ingredients;
+      li[11]![recipeIdx] = Descriptions;
+    }
 
     return recipeIdx;
   }

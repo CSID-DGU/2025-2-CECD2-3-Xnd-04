@@ -1,3 +1,14 @@
+// 상단에 패키지 import, defaultConfig 내에 카카오 앱 키 추가
+import java.util.Properties
+import java.io.FileInputStream
+
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) {
+        load(FileInputStream(file))
+    }
+}
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -12,7 +23,7 @@ android {
     namespace = "com.example.Xnd"
     //flutter.compileSdkVersion -> 36으로 수정
     compileSdk = 36
-    ndkVersion = "29.0.13113456"
+    // ndkVersion = "29.0.13113456"  // NDK 버전 문제로 주석 처리
 
     compileOptions {
         // 👇 desugaring 활성화 추가
@@ -27,10 +38,14 @@ android {
 
     defaultConfig {
         applicationId = "com.example.Xnd"
-        minSdk = flutter.minSdkVersion
+        minSdk = 23 // 테스트 디버깅용 수정
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // 이 부분 추가
+        manifestPlaceholders["KAKAO_APP_KEY"] =
+            localProperties.getProperty("KAKAO_APP_KEY")
     }
 
     buildTypes {

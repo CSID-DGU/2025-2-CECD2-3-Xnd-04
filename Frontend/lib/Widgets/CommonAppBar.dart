@@ -7,10 +7,14 @@ import 'package:Frontend/Views/LoginView.dart';
 /// 모든 페이지에서 동일한 스타일의 상단바 사용
 class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
+  final bool showBackButton;
+  final Color? curveColor;
 
   const CommonAppBar({
     Key? key,
     this.title = 'Xnd',
+    this.showBackButton = false,
+    this.curveColor,
   }) : super(key: key);
 
   @override
@@ -31,12 +35,26 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
               toolbarHeight: 56,
               automaticallyImplyLeading: false,
               elevation: 0,
-              title: Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w400,
+              leading: showBackButton
+                  ? IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    )
+                  : null,
+              title: InkWell(
+                onTap: () {
+                  // Xnd 클릭 시 냉장고 내부 뷰로 이동
+                  Navigator.of(context).pushNamed('/${pages[1]}');
+                },
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
               ),
               actions: [
@@ -110,8 +128,8 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
             // 하단에 body가 올라오는 곡선 영역
             Container(
               height: 24,
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: curveColor ?? Colors.white,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(20),
                   topRight: Radius.circular(20),

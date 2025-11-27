@@ -18,11 +18,11 @@ class RecipeIngredientDetailSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
     in_cart = serializers.SerializerMethodField()
+    amount = serializers.CharField()
 
     class Meta:
         model = RecipeIngredient
-        # amount 필드를 포함할 필요가 없다면 제외합니다. (기존 JSON에 없었음)
-        fields = ['id', 'name', 'in_cart']
+        fields = ['id', 'name', 'in_cart', 'amount']
 
     def get_in_cart(self, obj):
         # 장바구니 상태 체크 로직
@@ -38,7 +38,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipes
-        fields = ['recipe_id', 'food_name', 'recipe_image', 'serving_size', 'cooking_time', 'cooking_level', 'is_saved']
+        fields = ['recipe_id', 'food_name', 'recipe_image', 'serving_size', 'cooking_time', 'cooking_level', 'category2', 'category3', 'category4', 'is_saved']
 
     def get_is_saved(self, obj):
         user_id = self.context.get('user_id')

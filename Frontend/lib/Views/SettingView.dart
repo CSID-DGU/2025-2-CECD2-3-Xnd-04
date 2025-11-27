@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:Frontend/Models/LoginModel.dart';
 import 'package:Frontend/Views/LoginView.dart';
+import 'package:Frontend/Views/SurveyView.dart';
 import 'package:Frontend/Abstracts/kakaoLogin.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:Frontend/Widgets/CommonAppBar.dart';
@@ -34,6 +35,23 @@ class SettingPage extends State<SettingView> {
             SizedBox(height: 20),
             Text('설정 페이지', style: TextStyle(fontSize: 24, color: Colors.grey)),
             SizedBox(height: 40),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SurveyView(),
+                  ),
+                );
+              },
+              child: Text('사전 설문조사', style: TextStyle(fontSize: 20)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+              ),
+            ),
+            SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
                 setState(() {
