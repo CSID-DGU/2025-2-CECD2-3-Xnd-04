@@ -3,10 +3,10 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from XndApp.Models.fridge import Fridge
 from XndApp.Models.foodStorageLife import FoodStorageLife
-from datetime import timedelta
+
 from XndApp.Models.ingredients import Ingredient
 from django.utils import timezone
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 class FridgeIngredients(models.Model):
 
@@ -69,12 +69,16 @@ class FridgeIngredients(models.Model):
 
             # 1순위: OCR로 인식한 유통기한이 있는 경우
             if self.expiry_date:
-                storable_datetime = datetime.combine(self.expiry_date, datetime.min.time())
+                storable_datetime = datetime.combine(self.expiry_date, datetime.max.time())
                 self.storable_due = timezone.make_aware(storable_datetime)
 
             # 2순위: DB에 저장된 기본 보관 기한 정보로 계산
             elif self.foodStorageLife and self.foodStorageLife.storage_life is not None:
-                self.storable_due = timezone.now() + timedelta(days=self.foodStorageLife.storage_life)
+                # 오늘 날짜 + 보관일수
+                future_date = date.today() + timedelta(days=self.foodStorageLife.storage_life)
+                # 그 날짜의 마지막 시간(23:59:59)으로 설정
+                storable_datetime = datetime.combine(future_date, datetime.max.time())
+                self.storable_due = timezone.make_aware(storable_datetime)
 
         super().save(*args, **kwargs)  # 최종적으로 부모의 save 메서드를 호출하여 저장
 
