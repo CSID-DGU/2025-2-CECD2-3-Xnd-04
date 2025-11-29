@@ -38,7 +38,12 @@ class FridgeIngredients(models.Model):
     foodStorageLife = models.ForeignKey(FoodStorageLife,on_delete=models.SET_DEFAULT, default=100, null=True)
     storable_due = models.DateTimeField(null=True)
     ingredient_name = models.CharField(max_length=100, null=True, blank=True)
-    ingredient_pic = models.CharField(max_length=255)
+    ingredient_pic = models.ImageField(
+        upload_to='fridge_ingredients/',  # S3 버킷 내의 경로 설정
+        max_length=255,                  # 기존 max_length 유지 가능
+        null=True,                       # 기존 데이터 처리를 위해 잠시 null 허용 권장
+        blank=True
+    )
 
     status = models.CharField(
         max_length=20,

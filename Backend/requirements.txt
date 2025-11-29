@@ -40,3 +40,7 @@ ultralytics>=8.3.217  # YOLOv8 사용 시
 Pillow>=12.0.0
 opencv-python>=4.11.0.86
 google-cloud-vision>=3.10.2
+
+#이미지 호스팅
+django-storages
+boto3

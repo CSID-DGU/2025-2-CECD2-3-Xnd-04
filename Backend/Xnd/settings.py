@@ -2,6 +2,9 @@ from pathlib import Path
 from decouple import config
 from datetime import timedelta
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 # import firebase_admin
 # from firebase_admin import credentials
 
@@ -12,7 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -38,6 +41,7 @@ INSTALLED_APPS = [
     'XndApp',
     'rest_framework',
     'rest_framework_simplejwt',
+    'storages',  # django-storages 앱 등록
 ]
 
 REST_FRAMEWORK = {
@@ -192,3 +196,21 @@ GOOGLE_APPLICATION_CREDENTIALS = BASE_DIR / "auth" / "vision_api_key.json"
 # 미디어 파일 경로 (이미지 저장소)
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = '/media/'
+
+# =========================================================
+# S3 설정
+# =========================================================
+
+# .env에서 값 불러오기 (따옴표는 이미 .env 파일에서 처리되었으므로, 여기서는 문자열로 사용)
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME') # 'ap-northeast-2'
+
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+# 파일 접근 권한 설정 (웹에서 이미지를 읽을 수 있도록 public-read 설정)
+AWS_DEFAULT_ACL = 'public-read'
+
+# S3 URL에 쿼리스트링(인증 정보)이 붙는 것을 방지
+AWS_QUERYSTRING_AUTH = False
