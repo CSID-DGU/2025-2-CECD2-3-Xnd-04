@@ -39,3 +39,7 @@ ultralytics  # YOLOv8 사용 시
 Pillow
 opencv-python
 google-cloud-vision
+
+#이미지 호스팅
+django-storages
+boto3

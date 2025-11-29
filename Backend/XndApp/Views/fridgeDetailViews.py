@@ -69,6 +69,8 @@ class FridgeDetailView(APIView):
         user_identifier = str(user.pk)
         pipeline_user_id = user.pk
 
+        pipeline_image_path = None # 파이프라인 경로 변수 초기화
+
         try:  # 2. 이미지 저장 및 경로 확보
             file_extension = os.path.splitext(uploaded_file.name)[1]
             filename = f"{user_identifier}_{int(time.time())}{file_extension}"
@@ -114,7 +116,7 @@ class FridgeDetailView(APIView):
         final_data = {
             'fridge': fridge_id,
             'layer': layer_value,
-            'ingredient_pic': f"uploaded_images/{filename}",
+            'ingredient_pic': uploaded_file,
 
             'ingredient_name': pipeline_result.get('ingredient_name'),
 
