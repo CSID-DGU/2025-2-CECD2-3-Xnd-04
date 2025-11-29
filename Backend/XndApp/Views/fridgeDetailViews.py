@@ -14,8 +14,12 @@ from XndApp.Models.foodStorageLife import FoodStorageLife
 import os
 import time
 import traceback
+from rest_framework.parsers import MultiPartParser, FormParser
+
 
 class FridgeDetailView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+
     def get(self, request, fridge_id):
         user = request.user
         try:
@@ -69,7 +73,7 @@ class FridgeDetailView(APIView):
         user_identifier = str(user.pk)
         pipeline_user_id = user.pk
 
-        pipeline_image_path = None # 파이프라인 경로 변수 초기화
+        pipeline_image_path = None  # 파이프라인 경로 변수 초기화
 
         try:  # 2. 이미지 저장 및 경로 확보
             file_extension = os.path.splitext(uploaded_file.name)[1]
@@ -108,7 +112,7 @@ class FridgeDetailView(APIView):
         food_storage_life_obj = FoodStorageLife.objects.filter(name__iexact=determined_name).first()
         food_storage_life_id = food_storage_life_obj.id if food_storage_life_obj else None
 
-        if not food_storage_life_obj: #보관기한 DB에 없는 경우
+        if not food_storage_life_obj:  # 보관기한 DB에 없는 경우
             print(f"[{determined_name}]의 FoodStorageLife DB 매핑에 실패하여 ID가 None으로 저장됩니다.")
 
         # Serializer에 전달할 최종 데이터 조합
