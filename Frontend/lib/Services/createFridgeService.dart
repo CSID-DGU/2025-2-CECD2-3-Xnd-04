@@ -1,17 +1,13 @@
 import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:dio/dio.dart';
 import 'package:Frontend/Services/authService.dart';
-import 'package:network_info_plus/network_info_plus.dart';
 import 'package:Frontend/Services/loadFridgeService.dart';
 
 // 모든 서비스는 함수로 관리함. 클래스 만들기 ㄱㅊ
 Future<bool> createFridgeToServer({required RefrigeratorModel refrigerator}) async {
   final dio = createAuthDio(); // 401 에러 자동 처리를 위한 인증 Dio 사용
-  final String? ip = await NetworkInfo().getWifiIP();
 
-  final String fridgeCreateURL = (ip!.startsWith('10.0.2')) ?
-  'http://10.0.2.2:8000/api/fridge/create/' :
-  'http://' + HOST! + APIURLS['createFridge']!;
+  final String fridgeCreateURL = await buildApiUrl('/api/fridge/create/');
   try {
     // 저장된 토큰 불러오기
     String? accessToken = responsedAccessToken;

@@ -92,19 +92,27 @@ class MainBottomBar extends State<MainBottomView> {
         await loadFridgeIngredientsInfo(Fridges[0], 0);
       }
       if (!mounted) return;
-      Navigator.of(context).pushNamed('/${pages[1]}');
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => pages[1]),
+      );
     }
     // 1: SearchView (검색 페이지)
     else if (index == 1){
-      Navigator.of(context).pushNamed('/' + pages[11].toString());
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => pages[11]),
+      );
     }
     // 2: AccountBookView
     else if (index == 2){
-      Navigator.of(context).pushNamed('/' + pages[10].toString());
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => pages[10]),
+      );
     }
     // 3: CartView
     else if (index == 3){
-      Navigator.of(context).pushNamed('/' + pages[4].toString());
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => pages[4]),
+      );
     }
     // 4: FavoritesView
     else if (index == 4){
@@ -113,7 +121,9 @@ class MainBottomBar extends State<MainBottomView> {
         savedRecipeFirstLoading = false;
       }
       nav3Processed = false;
-      Navigator.of(context).pushNamed('/' + pages[3].toString());
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => pages[3]),
+      );
     }
   }
 

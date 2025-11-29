@@ -2,7 +2,6 @@ import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:dio/dio.dart';
 import 'package:Frontend/Services/authService.dart';
 import 'package:Frontend/Services/loadRecipeService.dart';
-import 'package:network_info_plus/network_info_plus.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:Frontend/Models/RecipeModel.dart';
 import '../Models/IngredientModel.dart';
@@ -11,11 +10,8 @@ import '../Models/IngredientModel.dart';
 // 특정 레시피!! 에 대한 식재료 정보를 로드
 Future<Response?> requestIngredient(RecipeModel recipe) async{
   final dio = createAuthDio(); // 401 에러 자동 처리를 위한 인증 Dio 사용
-  final String? ip = await NetworkInfo().getWifiIP();
 
-  final String recipeDetailURL = (ip!.startsWith('10.0.2')) ?
-  'http://10.0.2.2:8000/api/recipes/' + '${recipe.id}/':
-  'http://' + HOST! + APIURLS['loadRecipe']! + '${recipe.id}/';
+  final String recipeDetailURL = await buildApiUrl('/api/recipes/${recipe.id}/');
   try {
     final response = await dio.get(
       recipeDetailURL, // 👉 백엔드 API 주소

@@ -113,13 +113,17 @@ class _RecipeDetailViewState extends State<RecipeDetailView> {
               IconButton(
                 icon: const Icon(Icons.notifications_outlined, color: Colors.white),
                 onPressed: () {
-                  Navigator.of(context).pushNamed('/${pages[8]}');
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => pages[8]),
+                  );
                 },
               ),
               IconButton(
                 icon: const Icon(Icons.settings_outlined, color: Colors.white),
                 onPressed: () {
-                  Navigator.of(context).pushNamed('/${pages[9]}');
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => pages[9]),
+                  );
                 },
               ),
               PopupMenuButton<String>(

@@ -333,7 +333,9 @@ class InitialHomePage extends State<InitialHomeView> {
                                   _nameController.clear();
                                   _layerController.clear();
                                 });
-                                Navigator.of(context).pushNamed('/${pages[5]}');
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(builder: (context) => pages[5]),
+                                );
                               } else {
                                 showDialog(
                                   context: context,
@@ -507,7 +509,9 @@ class HomePage extends State<HomeView> {
                               setState(() {
                                 pages[1] = IngredientsView(refrigerator: fridgeStorage[index]);
                               });
-                              Navigator.of(context).pushNamed('/${pages[1]}');
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (context) => pages[1]),
+                              );
                             },
                             child: Image.asset('assets/refrigerators/R1.png',
                                 width: 180,
@@ -523,8 +527,10 @@ class HomePage extends State<HomeView> {
                             onPressed: () async {
                               setState(() {
                                 isPlusButtonClicked = true;
-                                Navigator.of(context).pushNamed('/' + pages[0].toString());
                               });
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (context) => pages[0]),
+                              );
                             },
                             child: Image.asset('assets/images/plus.png',
                                 width: 120,
