@@ -16,17 +16,16 @@ import time
 import traceback
 import cv2
 import numpy as np
-from rest_framework.parsers import MultiPartParser, FormParser
-from django.core.files import File
+from django.db.models import F
 
 
 class FridgeDetailView(APIView):
-    parser_classes = [MultiPartParser, FormParser]
-
     def get(self, request, fridge_id):
         user = request.user
         try:
             fridge = Fridge.objects.get(fridge_id=fridge_id, user=user)
+            # 수량 개념이 없으므로, 현재는 layer만 필터링합니다. (UPDATE 시 수량 로직 추가)
+            # 현재는 status가 'outbound'가 아닌 항목만 보여준다고 가정합니다.
             ingredients = FridgeIngredients.objects.filter(fridge=fridge_id).order_by('layer')
             serializer = FridgeIngredientsSerializer(ingredients, many=True)
 
@@ -46,7 +45,7 @@ class FridgeDetailView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    # 식재료 인식 결과 DB 저장
+    # 식재료 인식 결과 DB 저장 및 업데이트
     def post(self, request, fridge_id):
         user = request.user
 
@@ -65,6 +64,10 @@ class FridgeDetailView(APIView):
         layer = request.data.get('layer')
         action_type = request.data.get('action_type')
 
+        # [추가] RPi가 보내는 해상도 정보 추출 (없을 경우 기본값 1920x1080 사용)
+        image_width = int(request.data.get('image_width', 1920))
+        image_height = int(request.data.get('image_height', 1080))
+
         # 필수값 확인
         if not image_files or layer is None:
             return Response(
@@ -78,29 +81,8 @@ class FridgeDetailView(APIView):
 
         user_identifier = str(user.pk)
         pipeline_user_id = user.pk
+
         saved_file_paths = []
-
-        # 파이프라인에 전달할 [파일 바이트 데이터] 리스트
-        image_data_list = []
-        # S3에 최종 업로드할 [Best Shot 파일 객체] 변수
-        file_to_upload_to_s3 = None
-
-        # 로컬에 최종적으로 저장된 파일의 절대 경로를 가져옵니다.
-        # final_rel_path는 3. 파일 이름 변경 섹션에서 이미 계산된 값입니다.
-        final_abs_path = os.path.join(settings.MEDIA_ROOT, final_rel_path)
-
-        if os.path.exists(final_abs_path):
-            try:
-
-                # 'rb' (읽기 바이너리 모드)로 파일 열기
-                # 파일 포인터는 자동으로 닫힙니다.
-                file_obj = open(final_abs_path, 'rb')
-
-                # S3에 저장될 이름을 명시하여 File 객체 생성
-                file_to_upload_to_s3 = File(file_obj, name=os.path.basename(final_abs_path))
-
-            except Exception as e:
-                print(f"❌ 최종 파일 객체 생성 실패: {e}")
 
         try:
             timestamp = int(time.time())
@@ -134,6 +116,8 @@ class FridgeDetailView(APIView):
                 pipeline_user_id,
                 image_paths=saved_file_paths,
                 layer=layer,
+                image_width=image_width,  # [수정] 해상도 인자 전달
+                image_height=image_height,  # [수정] 해상도 인자 전달
                 action_type=action_type
             )
 
@@ -169,7 +153,7 @@ class FridgeDetailView(APIView):
         if best_shot_path and os.path.exists(best_shot_path):
             try:
                 os.rename(best_shot_path, new_file_path)
-                # final_rel_path = os.path.join('uploaded_images', new_filename).replace('\\', '/')
+                final_rel_path = os.path.join('uploaded_images', new_filename).replace('\\', '/')
                 print(f"✅ 파일명 변경 완료: {new_filename}")
             except OSError as e:
                 print(f"⚠️ 파일명 변경 실패 (그냥 원본 사용): {e}")
@@ -215,11 +199,13 @@ class FridgeDetailView(APIView):
                     pass
 
         # ------------------------------------------------------------------
-        # 4. DB 저장 및 응답
+        # 4. DB 저장/업데이트 로직 (핵심 수정 부분)
         # ------------------------------------------------------------------
 
         determined_name = pipeline_result.get('ingredient_name') or ''
         determined_name = determined_name.strip()
+        determined_status = pipeline_result.get('status', 'inbound')
+        determined_layer = pipeline_result.get('layer', layer_value)
 
         food_storage_life_obj = FoodStorageLife.objects.filter(name__iexact=determined_name).first()
         food_storage_life_id = food_storage_life_obj.id if food_storage_life_obj else None
@@ -228,11 +214,12 @@ class FridgeDetailView(APIView):
             print(f"[{determined_name}]의 FoodStorageLife DB 매핑에 실패하여 ID가 None으로 저장됩니다.")
 
         final_data = {
+            # DB에 저장/업데이트할 최종 데이터 필드
             'fridge': fridge_id,
-            'layer': pipeline_result.get('layer', layer_value),
-            'status': pipeline_result.get('status', 'inbound'),
-            'ingredient_pic': file_to_upload_to_s3,
-            'ingredient_name': pipeline_result.get('ingredient_name'),
+            'layer': determined_layer,
+            'status': determined_status,
+            'ingredient_pic': final_rel_path,
+            'ingredient_name': determined_name,
             'category_yolo': pipeline_result.get('category_yolo'),
             'yolo_confidence': pipeline_result.get('yolo_confidence'),
             'product_name_ocr': pipeline_result.get('product_name_ocr'),
@@ -242,41 +229,91 @@ class FridgeDetailView(APIView):
             'date_recognition_confidence': pipeline_result.get('date_recognition_confidence'),
             'date_type_confidence': pipeline_result.get('date_type_confidence'),
             'foodStorageLife': food_storage_life_id,
+            # (수량 필드가 모델에 없지만, MVP를 위해 1개씩 처리한다고 가정)
         }
 
-        # 5. 저장
-        if final_data.get('expiry_date_status') == 'UNCERTAIN':
-            final_data['expiry_date'] = None
+        # --------------------------------------------------
+        # 5. 분기 처리: OUTBOUND (UPDATE) vs INBOUND (POST/CREATE)
+        # --------------------------------------------------
 
-        serializer = FridgeIngredientsSerializer(data=final_data)
+        http_status = status.HTTP_201_CREATED  # 기본값: 생성
 
-        if serializer.is_valid():
-            instance = serializer.save(fridge=fridge)
-            response_serializer = FridgeIngredientsSerializer(instance)
+        if determined_status == 'outbound':
+            # 5-A. 출고 처리 (UPDATE: status 변경)
 
-            # [최종 응답] Pi 요청인 경우
-            if request.data.get('action_type') == 'analyzing':
+            # [검색 조건] 해당 식재료가 DB에 존재하는지 확인 (status가 'inbound'인 항목만)
+            existing_item = FridgeIngredients.objects.filter(
+                fridge=fridge_id,
+                ingredient_name__iexact=determined_name,
+                layer=determined_layer,
+                status='inbound'  # status가 inbound인 항목만 출고 대상으로 간주
+            ).order_by('-stored_at').first()  # 가장 최근에 저장된 항목 1개만 찾음
 
-                final_log_summary = {
-                    "status": pipeline_result.get('status', 'N/A'),
-                    "layer": pipeline_result.get('layer', 'N/A'),
-                    "item_name": pipeline_result.get('ingredient_name', '미확인'),
-                    "yolo_conf": pipeline_result.get('yolo_confidence', 0.0),
+            if existing_item:
+                # 항목이 존재하면: UPDATE (status를 'outbound'로 변경)
 
-                    "raw_start_x": pipeline_result.get('raw_start_x', 0.0),
-                    "raw_end_x": pipeline_result.get('raw_end_x', 0.0),
-                    "raw_start_y": pipeline_result.get('raw_start_y', 0.0),
-                    "raw_end_y": pipeline_result.get('raw_end_y', 0.0),
+                # UPDATE 수행
+                existing_item.status = 'outbound'
+                existing_item.save(update_fields=['status'])
 
-                    "detail_log": pipeline_result.get('decision_log', '로그 정보 없음'),
-                    "log": "AI pipeline executed successfully."
-                }
-                return Response(final_log_summary, status=status.HTTP_201_CREATED)
+                print(f"✅ 출고 업데이트 완료: {determined_name} (Layer {determined_layer}) status OUTBOUND로 변경.")
+
+                # 응답을 위해 업데이트된 항목의 데이터를 사용
+                response_serializer = FridgeIngredientsSerializer(existing_item)
+                response_data = response_serializer.data
+                http_status = status.HTTP_200_OK  # 200 OK (업데이트 완료)
 
             else:
-                # [최종 응답] 일반 모바일 앱 요청: 기존 DB 정보 전체 리턴
-                return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+                # 항목이 없으면: 경고 및 POST 시도 안 함
+                print(f"❌ 출고 실패: {determined_name} (Layer {determined_layer}) 활성 재고가 DB에 없습니다.")
+                return Response(
+                    {"error": "출고 실패", "message": f"DB에 {determined_name} 활성 재고가 없어 상태를 변경할 수 없습니다."},
+                    status=status.HTTP_404_NOT_FOUND)
 
         else:
-            print(f"Serializer Errors: {serializer.errors}")
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            # 5-B. 입고 처리 (POST / CREATE)
+
+            # Uncertain 상태는 pipeline_logic에서 이미 'inbound'로 재매핑됨.
+
+            if final_data.get('expiry_date_status') == 'UNCERTAIN':
+                final_data['expiry_date'] = None  # 불확실한 유통기한은 저장하지 않음
+
+            serializer = FridgeIngredientsSerializer(data=final_data)
+
+            if serializer.is_valid():
+                instance = serializer.save(fridge=fridge)  # 새로운 객체 생성
+                response_serializer = FridgeIngredientsSerializer(instance)
+                response_data = response_serializer.data
+                http_status = status.HTTP_201_CREATED
+
+            else:
+                print(f"Serializer Errors: {serializer.errors}")
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # --------------------------------------------------
+        # 6. 최종 응답
+        # --------------------------------------------------
+
+        # [최종 응답] Pi 요청인 경우 (파이프라인 로그를 포함하여 리턴)
+        if request.data.get('action_type') == 'analyzing':
+
+            final_log_summary = {
+                "status": determined_status,
+                "layer": determined_layer,
+                "item_name": detected_name,
+                "yolo_conf": pipeline_result.get('yolo_confidence', 0.0),
+
+                "raw_start_x": pipeline_result.get('raw_start_x', 0.0),
+                "raw_end_x": pipeline_result.get('raw_end_x', 0.0),
+                "raw_start_y": pipeline_result.get('raw_start_y', 0.0),
+                "raw_end_y": pipeline_result.get('raw_end_y', 0.0),
+
+                "detail_log": pipeline_result.get('decision_log', '로그 정보 없음'),
+                "log": "AI pipeline executed successfully."
+            }
+            # 출고 시에도 200 OK를 리턴하여 성공을 알림
+            return Response(final_log_summary, status=http_status)
+
+        else:
+            # [최종 응답] 일반 모바일 앱 요청: 기존 DB 정보 전체 리턴
+            return Response(response_data, status=http_status)
