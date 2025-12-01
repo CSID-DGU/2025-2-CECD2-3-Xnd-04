@@ -1,4 +1,3 @@
-# XndApp/Services/pipeline_logic.py
 import os
 import numpy as np
 import cv2
@@ -13,6 +12,8 @@ from gensim.models import Word2Vec
 import Levenshtein
 from collections import Counter
 import logging
+# [추가] 병렬 처리를 위한 모듈 임포트
+from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger('PipelineLogic')
 logger.setLevel(logging.INFO)
@@ -34,6 +35,23 @@ STANDARD_MAP = {
     "케찹": "케첩",
     "고추가루": "고춧가루"
 }
+
+
+# ====================================================================
+# [수정] 전역 헬퍼 함수 정의 (Area, Center_X)
+# ====================================================================
+def get_area(box: List[int]) -> int:
+    """바운딩 박스 면적 계산"""
+    return (box[2] - box[0]) * (box[3] - box[1])
+
+
+def get_center_x(box: List[int]) -> float:
+    """바운딩 박스 중심 X 좌표 계산"""
+    return (box[0] + box[2]) / 2
+
+
+# ====================================================================
+
 
 def get_standard_ingredient_list() -> List[str]:
     """
@@ -59,22 +77,35 @@ def get_standard_ingredient_list() -> List[str]:
 
 def get_standard_name(ingredient_name: str) -> str:
     return STANDARD_MAP.get(ingredient_name, ingredient_name)
-TYPO_THRESHOLD = 0.85 # Fuzz 교정 임계값
+
+
+TYPO_THRESHOLD = 0.85  # Fuzz 교정 임계값
+
 
 # 1. 메인 파이프라인 함수
-def process_image_pipeline(user_id: int, image_paths: List[str], layer: str, action_type: str = 'analyzing') -> Dict[
+# [수정] image_width와 image_height 인자를 추가
+def process_image_pipeline(user_id: int, image_paths: List[str], layer: str, image_width: int = 1920,
+                           image_height: int = 1080, action_type: str = 'analyzing') -> Dict[
     str, Any]:
-    # 1. 모든 이미지에 대해 YOLO 수행
+    # 1. 모든 이미지에 대해 YOLO 수행 (병렬 처리 적용)
     yolo_results = []
-    for path in image_paths:
-        if not os.path.exists(path): continue
-        result = run_yolo_detection(path)
-        if result:
-            result['file_path'] = path
-            yolo_results.append(result)
 
-    # 2. 감지된 프레임만 필터링
-    valid_detections = [res for res in yolo_results if res is not None]
+    # [수정] 병렬 처리를 위한 ThreadPoolExecutor 사용
+    with ThreadPoolExecutor(max_workers=os.cpu_count() or 4) as executor:
+        # 모든 이미지 경로에 대해 run_yolo_detection을 비동기적으로 실행
+        futures = {executor.submit(run_yolo_detection, path): path for path in image_paths}
+
+        # 완료된 작업의 결과를 수집 (원래 순서대로 수집하지 않음)
+        for future in futures:
+            result = future.result()
+            if result:
+                result['file_path'] = futures[future]  # 파일 경로를 결과에 다시 매핑
+                yolo_results.append(result)
+
+    # 2. [수정] YOLO 결과의 순서를 이미지 경로 순서와 맞춥니다 (궤적 분석을 위해 필수)
+    # 이미지 경로를 기준으로 yolo_results를 정렬합니다.
+    path_to_result = {res['file_path']: res for res in yolo_results}
+    valid_detections = [path_to_result[path] for path in image_paths if path in path_to_result]
 
     ACTION_DETAIL_LOG = []
 
@@ -90,47 +121,140 @@ def process_image_pipeline(user_id: int, image_paths: List[str], layer: str, act
     target_path = image_paths[-1] if image_paths else None
     target_yolo_result = None
 
-    # ---------------------------------------------------------
-    # [분석 1] 이동 방향 판단
-    # ---------------------------------------------------------
-    if len(valid_detections) >= 2:
-        first_valid = valid_detections[0]
-        last_valid = valid_detections[-1]
+    # ====================================================================
+    # [분석 1] 이동 방향 판단 (옆벽 부착 환경 최적화 로직으로 대체)
+    # ====================================================================
 
-        def get_center_x(box):
-            return (box[0] + box[2]) / 2
+    # --- [수정] 비율 기반 임계값 정의 ---
+    # 비율 설정
+    RATIO_X_THRESHOLD = 0.010  # 1.0% (1920x1080 기준 약 19px)
+    RATIO_X_MIN_MOVEMENT = 0.015  # 1.5% (1920x1080 기준 약 28px)
 
-        start_x = get_center_x(first_valid['bounding_box'])
-        end_x = get_center_x(last_valid['bounding_box'])
-        delta_x = end_x - start_x
+    # 해상도에 따른 픽셀 값 변환
+    X_THRESHOLD = image_width * RATIO_X_THRESHOLD
+    X_MIN_MOVEMENT = image_width * RATIO_X_MIN_MOVEMENT
+    AREA_THRESHOLD = 500  # Area 최소 변화 임계값 (픽셀^2, 픽셀 단위 유지)
+    AREA_PEAK_DROP_RATIO = 0.1  # Peak 대비 End Area가 이 비율만큼 작아져야 완료로 인정 (30%)
 
-        if delta_x > 20:
-            determined_status = 'inbound'
-            log_msg = f"이동: 입고 (X: {start_x:.0f}→{end_x:.0f} | Gap: +{delta_x:.0f})"
-            logger.info(f"➡️ {log_msg}")
-            ACTION_DETAIL_LOG.append(log_msg)
+    # ------------------------------------
 
-        elif delta_x < -20:
-            determined_status = 'outbound'
-            log_msg = f"이동: 출고 (X: {start_x:.0f}→{end_x:.0f} | Gap: {delta_x:.0f})"
-            logger.info(f"⬅️ {log_msg}")
-            ACTION_DETAIL_LOG.append(log_msg)
-
-        else:
-            determined_status = 'inbound'
-            log_msg = f"이동미미: 기본값 사용 (X: {start_x:.0f}→{end_x:.0f} | Gap: {delta_x:.0f})"
-            logger.info(f"⏺️ {log_msg}")
-            ACTION_DETAIL_LOG.append(log_msg)
-
-    elif len(valid_detections) == 1:
-        msg = "⚠️ 1장만 인식됨: 이동 파악 불가 (기본값)"
-        logger.warning(msg)
-        ACTION_DETAIL_LOG.append(msg)
-
-    else:
+    if len(valid_detections) == 0:
         msg = "❌ 인식된 객체 없음: (기본값)"
         logger.error(msg)
         ACTION_DETAIL_LOG.append(msg)
+        # target_yolo_result는 아래 Fallback에서 처리됨
+
+    elif len(valid_detections) == 1:
+        # Case 3: 1장 탐지
+        msg = "⚠️ 1장만 인식됨: 이동 파악 불가 (기본값 inbound)"
+        logger.warning(msg)
+        ACTION_DETAIL_LOG.append(msg)
+        determined_status = 'inbound'  # Fallback
+
+    else:  # 2장 이상 탐지 시
+        first_d = valid_detections[0]
+        last_d = valid_detections[-1]
+
+        start_x = get_center_x(first_d['bounding_box'])
+        end_x = get_center_x(last_d['bounding_box'])
+        delta_x = end_x - start_x
+
+        Area_start = get_area(first_d['bounding_box'])
+        Area_end = get_area(last_d['bounding_box'])
+        delta_area = Area_end - Area_start
+
+        # Best Shot 관련 값 미리 계산
+        all_areas = [get_area(d['bounding_box']) for d in valid_detections]
+        Area_max = max(all_areas)
+
+        # 완료 검증: Peak 대비 최종 면적 감소율
+        Area_peak_drop = (Area_max - Area_end) / Area_max if Area_max > 0 else 0
+        is_complete = Area_peak_drop >= AREA_PEAK_DROP_RATIO
+
+        if len(valid_detections) >= 3:
+            # Case 1: 3장 이상 탐지 (Best Shot 궤적 분석)
+
+            best_shot_data = max(valid_detections, key=lambda d: get_area(d['bounding_box']))
+            X_peak = get_center_x(best_shot_data['bounding_box'])
+
+            # --- 입고 후보 (X축 증가) ---
+            if delta_x > X_MIN_MOVEMENT:
+                # 방향성 검증: X_start < X_peak < X_end 가 모두 성립해야 함
+                is_consistent_inbound = (start_x < X_peak) and (X_peak < end_x)
+
+                if not is_consistent_inbound:
+                    ACTION_DETAIL_LOG.append("❌ 입고: 이동 방향 불일치 (X-Axis Failure)")  # X축 일관성 실패
+                if not is_complete:
+                    ACTION_DETAIL_LOG.append("❌ 입고: 행위 미완료 (Area Drop Failure)")  # Area 완료 실패
+
+                if is_consistent_inbound and is_complete:
+                    determined_status = 'inbound'
+                    log_msg = f"✅ 입고 확정(3+): X 일관성 O, 완료율:{Area_peak_drop:.2f} | Gap: +{delta_x:.0f}"
+                else:
+                    determined_status = 'uncertain_conflict'
+                    log_msg = f"❌ [결론] 입고 불확실 (원인: X/완료 실패)"
+
+            # --- 출고 후보 (X축 감소) ---
+            elif delta_x < -X_MIN_MOVEMENT:
+                # 방향성 검증: X_start > X_peak > X_end 가 모두 성립해야 함
+                is_consistent_outbound = (start_x > X_peak) and (X_peak > end_x)
+
+                if not is_consistent_outbound:
+                    ACTION_DETAIL_LOG.append("❌ 출고: 이동 방향 불일치 (X-Axis Failure)")  # X축 일관성 실패
+                if not is_complete:
+                    ACTION_DETAIL_LOG.append("❌ 출고: 행위 미완료 (Area Drop Failure)")  # Area 완료 실패
+
+                if is_consistent_outbound and is_complete:
+                    determined_status = 'outbound'
+                    log_msg = f"✅ 출고 확정(3+): X 일관성 O, 완료율:{Area_peak_drop:.2f} | Gap: {delta_x:.0f}"
+                else:
+                    determined_status = 'uncertain_conflict'
+                    log_msg = f"❌ [결론] 출고 불확실 (원인: X/완료 실패)"
+
+            # --- 이동 미미 (입/출고 임계값 미달) ---
+            else:
+                determined_status = 'uncertain_adjust'  # 미미한 이동은 uncertain_adjust로 분류
+                log_msg = f"⚠️ 이동 미미 (조정 추정): Gap: {delta_x:.0f}"
+                if delta_x > 0:
+                    ACTION_DETAIL_LOG.append(f"❌ 입고: X축 이동량 미달 (Gap: +{delta_x:.0f})")
+                elif delta_x < 0:
+                    ACTION_DETAIL_LOG.append(f"❌ 출고: X축 이동량 미달 (Gap: {delta_x:.0f})")
+
+            logger.info(log_msg)
+            ACTION_DETAIL_LOG.append(log_msg)
+
+
+        else:
+            # Case 2: 2장 탐지 (Start & End 비교 + X/Area 일관성 결합)
+
+            # X와 Area의 방향이 일치해야만 확정
+            is_inbound_coherent = (delta_x > X_THRESHOLD) and (delta_area < -AREA_THRESHOLD)
+            is_outbound_coherent = (delta_x < -X_THRESHOLD) and (delta_area > AREA_THRESHOLD)
+
+            if is_inbound_coherent:
+                determined_status = 'inbound'
+                log_msg = f"✅ 입고 확정(2프레임): X:{delta_x:.0f}, Area:{delta_area:.0f}"
+
+            elif is_outbound_coherent:
+                determined_status = 'outbound'
+                log_msg = f"✅ 출고 확정(2프레임): X:{delta_x:.0f}, Area:{delta_area:.0f}"
+
+            else:
+                # 불확실 상황
+                determined_status = 'uncertain_conflict'
+
+                # 실패 원인 기록
+                if abs(delta_x) < X_THRESHOLD:
+                    ACTION_DETAIL_LOG.append(f"❌ 2프레임: X축 이동량 미미 (Gap: {delta_x:.0f})")
+
+                # X와 Area의 방향이 충돌할 때 (일관성이 없을 때)
+                if not is_inbound_coherent and not is_outbound_coherent:
+                    ACTION_DETAIL_LOG.append(f"❌ 2프레임: X/Area 방향 불일치 (X:{delta_x:.0f}, Area:{delta_area:.0f})")
+
+                log_msg = f"❌ [결론] 이동 불확실 (2프레임 충돌)"
+
+            logger.info(log_msg)
+            ACTION_DETAIL_LOG.append(log_msg)
 
     # ---------------------------------------------------------
     # [분석 2] Best Shot 선정 및 층수 판단 (제스처 우선 + 다수결로 객체 판단)
@@ -144,37 +268,15 @@ def process_image_pipeline(user_id: int, image_paths: List[str], layer: str, act
         end_y = (last_box[1] + last_box[3]) / 2
         delta_y = start_y - end_y  # 위로 가면 양수(+), 아래로 가면 음수(-)
 
-        FRAME_CENTER_Y = 360  # 720p 기준
+        # 층 판단 제스처 임계값 (튜닝 필요)
+        GESTURE_THRESHOLD = image_height * 0.05  # [수정] 5% 비율 사용 (50px 대신)
 
-        if len(valid_detections) == 1:
-            determined_layer = 2 if end_y < FRAME_CENTER_Y else 1
-            ACTION_DETAIL_LOG.append(f"층판단: 단일 프레임 위치 기반 ({determined_layer}층)")
+        # [수정] FRAME_CENTER_Y를 동적 해상도 기반으로 계산 (50% 비율 사용)
+        FRAME_CENTER_Y = image_height * 0.5
 
-        elif determined_status == 'outbound':  # 출고 시: 시작 위치(start_y) 기준
-            determined_layer = 2 if start_y < FRAME_CENTER_Y else 1
-            ACTION_DETAIL_LOG.append(f"층판단: 출고 시작 위치 ({determined_layer}층)")
-
-        else:  # 입고 (Inbound)일 때
-            if delta_y > 50:
-                determined_layer = 2
-                ACTION_DETAIL_LOG.append(f"층판단: 위로 제스처 감지 (2층 확정)")
-            elif delta_y < -50:
-                determined_layer = 1
-                ACTION_DETAIL_LOG.append(f"층판단: 아래로 제스처 감지 (1층 확정)")
-            else:
-                determined_layer = 2 if end_y < FRAME_CENTER_Y else 1
-                ACTION_DETAIL_LOG.append(f"층판단: 제스처 미미함. 위치 기반 ({determined_layer}층)")
-
-        # 2. OCR용 Best Shot 선정
-        def get_area(box):
-            return (box[2] - box[0]) * (box[3] - box[1])
-
-        best_shot_data = max(valid_detections, key=lambda x: get_area(x['bounding_box']))
-
-        target_path = best_shot_data['file_path']
-        target_yolo_result = best_shot_data
-
-        # 3. 🗳️ 신뢰도 가중치 투표 (Weighted Voting)
+        # -----------------------------------------------------------
+        # 3. 🗳️ 신뢰도 가중치 투표 (Weighted Voting) - Best Shot 선정 전에 실행
+        # -----------------------------------------------------------
         score_board = {}
 
         for d in valid_detections:
@@ -192,15 +294,99 @@ def process_image_pipeline(user_id: int, image_paths: List[str], layer: str, act
         ]
         winner_max_conf = max(winner_scores) if winner_scores else 0.0
 
-        FINAL_CUTOFF = 0.6 # 최종 판정 객체의 신뢰도 임계값
+        FINAL_CUTOFF = 0.6  # 최종 판정 객체의 신뢰도 임계값
 
+        # -----------------------------------------------------------
+        # 2. OCR용 Best Shot 선정 (스코어링 기반으로 변경 + 투표 결과 필터링)
+        # -----------------------------------------------------------
+
+        # A) 투표 승리 품목만 필터링
+        winning_detections = [
+            d for d in valid_detections if d['category_name'] == most_weighted_category
+        ]
+
+        # B) Best Shot 스코어링 고도화 로직
+        if winning_detections:
+            # 전체 프레임 중 최대 Area를 찾고, 이미지 중심 좌표 계산
+            all_areas_winning = [get_area(d['bounding_box']) for d in winning_detections]
+            max_area = max(all_areas_winning) if all_areas_winning else 1.0  # 분모 0 방지
+
+            center_x_img = image_width / 2
+            center_y_img = image_height / 2
+            max_possible_distance = math.sqrt(center_x_img ** 2 + center_y_img ** 2)
+
+            # 가중치 설정 (Area 80%, Centering 20%로 가정)
+            WEIGHT_AREA = 0.8
+            WEIGHT_CENTER = 0.2
+
+            def calculate_best_shot_score(data_point):
+                box = data_point['bounding_box']
+                current_area = get_area(box)
+                current_center_x = get_center_x(box)
+                current_center_y = (box[1] + box[3]) / 2
+
+                # --- 1. Area 정규화 (0 ~ 1) ---
+                norm_area = current_area / max_area
+
+                # --- 2. Centering 정규화 (0 ~ 1) ---
+                distance_px = math.sqrt(
+                    (current_center_x - center_x_img) ** 2 + (current_center_y - center_y_img) ** 2
+                )
+                # 거리를 0~1로 정규화 후, 반전 (1: 중심, 0: 모서리)
+                norm_centering = 1.0 - (distance_px / max_possible_distance)
+
+                # --- 3. 최종 스코어 ---
+                score = (WEIGHT_AREA * norm_area) + (WEIGHT_CENTER * norm_centering)
+                return score
+
+            # 가장 높은 스코어를 가진 데이터 포인트를 Best Shot으로 선정
+            best_shot_data = max(winning_detections, key=calculate_best_shot_score)
+
+        else:
+            # 투표 승리 품목이 없으면, 전체에서 Area 최대값을 Fallback으로 사용 (기존 방식)
+            # 이 경우는 '미확인'으로 처리되지만, OCR을 위해 최소한의 이미지를 가져옴
+            best_shot_data = max(valid_detections, key=lambda x: get_area(x['bounding_box']))
+
+        # --- Best Shot 스코어링 고도화 로직 끝 ---
+
+        target_path = best_shot_data['file_path']
+        target_yolo_result = best_shot_data  # Best Shot Data는 여기서 결정됨
+
+        # 3. 투표 결과 검증 및 보정 (투표 이후)
         if winner_max_conf < FINAL_CUTOFF:
             logger.warning(f"⚠️ [검증 실패] 우승자({most_weighted_category}) 신뢰도({winner_max_conf:.2f})가 너무 낮음 -> 미확인 처리")
             target_yolo_result['category_name'] = '식재료 미확인'
 
         elif target_yolo_result['category_name'] != most_weighted_category:
+            # 이 로직은 이제 발생하지 않음: Best Shot이 winning category 프레임에서만 나오기 때문
+            # 하지만 혹시 모를 에러 방지를 위해 유지
             logger.info(f"🗳️ [투표 보정] {target_yolo_result['category_name']} -> {most_weighted_category} (점수 1위)로 변경")
             target_yolo_result['category_name'] = most_weighted_category
+
+        # -----------------------------------------------------------
+        # 1. 층수 판단 (투표 및 Best Shot 결정 후)
+        # -----------------------------------------------------------
+
+        if len(valid_detections) == 1:
+            determined_layer = 2 if end_y < FRAME_CENTER_Y else 1
+            ACTION_DETAIL_LOG.append(f"층판단: 단일 프레임 위치 기반 ({determined_layer}층)")
+
+        elif determined_status == 'outbound':  # 출고 확정 시: 시작 위치(start_y) 기준
+            determined_layer = 2 if start_y < FRAME_CENTER_Y else 1
+            ACTION_DETAIL_LOG.append(f"층판단: 출고 시작 위치 ({determined_layer}층)")
+
+        else:  # 입고 (Inbound) 및 모든 불확실 상태 (uncertain_adjust, uncertain_conflict) 포함
+            if delta_y > GESTURE_THRESHOLD:
+                determined_layer = 2
+                # 로그에 실제 delta_y 값과 임계값 포함
+                ACTION_DETAIL_LOG.append(f"층판단: 위로 제스처 감지 (2층 확정) | ΔY: {delta_y:.0f} > {GESTURE_THRESHOLD:.0f}")
+            elif delta_y < -GESTURE_THRESHOLD:
+                determined_layer = 1
+                # 로그에 실제 delta_y 값과 임계값 포함
+                ACTION_DETAIL_LOG.append(f"층판단: 아래로 제스처 감지 (1층 확정) | ΔY: {delta_y:.0f} < -{GESTURE_THRESHOLD:.0f}")
+            else:
+                determined_layer = 2 if end_y < FRAME_CENTER_Y else 1
+                ACTION_DETAIL_LOG.append(f"층판단: 제스처 미미함. 위치 기반 ({determined_layer}층)")
 
     else:
         # 인식 실패 시 Fallback
@@ -217,7 +403,11 @@ def process_image_pipeline(user_id: int, image_paths: List[str], layer: str, act
         target_yolo_result = {'category_name': 'FALLBACK_MODE', 'fallback_mode': True, 'bounding_box': [0, 0, 0, 0]}
 
     if target_path is None:
-        return {'error': 'No images found'}
+        # valid_detections가 0일 때 target_path가 None일 수 있음
+        if image_paths:
+            target_path = image_paths[-1]  # 임시 Fallback path
+        else:
+            return {'error': 'No images found'}
 
     result_data = {
         'user_id': user_id,
@@ -281,6 +471,7 @@ def process_image_pipeline(user_id: int, image_paths: List[str], layer: str, act
 
     return final_data
 
+
 # 2. ② YOLO 모델 적용 (객체 탐지)
 def run_yolo_detection(image_path: str) -> Dict[str, Any]:
     model = SrmappConfig.yolo_model
@@ -289,10 +480,11 @@ def run_yolo_detection(image_path: str) -> Dict[str, Any]:
         return None
 
     try:
-        results = model.predict(source=image_path, conf=0.15, iou=0.5, verbose=True)
+        # [수정] imgsz=640 인자를 추가하여 최소 해상도를 확보 (640x640으로 분석)
+        results = model.predict(source=image_path, imgsz=640, conf=0.15, iou=0.5, verbose=True)
 
         if not results or not results[0].boxes:
-            return None # 탐지 실패 시 None 반환
+            return None  # 탐지 실패 시 None 반환
 
         ## 객체 인식 성공 시
         box = results[0].boxes[0]
@@ -383,6 +575,7 @@ def run_ocr(image_path: str, yolo_result: Dict[str, Any]) -> Dict[str, Any]:
         logger.error(f"OCR execution error: {e}")
         return {"raw_text": f"Error: {e}", 'word_blocks': word_blocks, 'cropped_image_path': None}
 
+
 # ④ 정보 추출 및 가공
 
 # 텍스트 블록 사이의 거리 계산 (단어 - 숫자)
@@ -402,7 +595,8 @@ def calculate_distance(block1: Dict, block2: Dict) -> float:
 
 # 4-1. 유통기한 패턴 설정
 DATE_PATTERNS = [
-    r'(?:소비기한|유통기한)\s*[:]?\s*(\d{4})[년./-]\s*(\d{1,2})[월./-]\s*(\d{1,2})[일]?(?:\s+\d{2}:\d{2}(?::\d{2})?)?[.]?', # 소비/유통기한 : YYYY년 MM월 DD일
+    r'(?:소비기한|유통기한)\s*[:]?\s*(\d{4})[년./-]\s*(\d{1,2})[월./-]\s*(\d{1,2})[일]?(?:\s+\d{2}:\d{2}(?::\d{2})?)?[.]?',
+    # 소비/유통기한 : YYYY년 MM월 DD일
     r'(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일(?:\s+\d{2}:\d{2}(?::\d{2})?)?[.]?',  # YYYY년 MM월 DD일
     r'(\d{2})년\s*(\d{1,2})월\s*(\d{1,2})일(?:\s+\d{2}:\d{2}(?::\d{2})?)?[.]?',  # YY년 MM월 DD일
     r'(\d{4})[년./-]\s*(\d{1,2})[월./-]\s*(\d{1,2})[일]?\s*까지(?:\s+\d{2}:\d{2}(?::\d{2})?)?[.]?',  # YYYY년 MM월 DD일까지
@@ -442,7 +636,6 @@ def extract_ocr_info(ocr_raw_output: Dict[str, Any]) -> Dict[str, Any]:
                     parsed_date = None
                     date_format_parts = 0  # 날짜 파트 개수 (2: MM/DD, 3: YMD)
                     today = date.today()  # 현재 날짜 객체 정의
-
 
                     if len(date_parts) == 3:
                         year, month, day = map(int, date_parts)
@@ -588,7 +781,7 @@ def extract_product_name(raw_text: str, yolo_category: str, product_candidate_bl
         return {'name': best_match, 'similarity': final_confidence}
 
     else:  # 유사도가 임계값을 넘지 못하거나 매칭되는 단어가 없는 경우
-        return {'name': None, 'similarity': 0.0}
+        return {'name': 'Word Embedding Model Not Loaded', 'similarity': 0.0}
 
 
 # 5. 결과 통합 및 신뢰도 분기 처리
@@ -663,13 +856,14 @@ def integrate_results(base_data: Dict[str, Any], yolo_result: Dict[str, Any], oc
     extracted_date = ocr_info.get('extracted_date')
 
     # **[유통기한 신뢰도 결합]**
-    FINAL_DATE_CONFIDENCE = recognition_conf * type_conf # 인식 신뢰도 x 유형 신뢰도 결합
-    FINAL_CONFIDENCE_THRESHOLD = 0.60 # 최종 임계값
+    FINAL_DATE_CONFIDENCE = recognition_conf * type_conf  # 인식 신뢰도 x 유형 신뢰도 결합
+    FINAL_CONFIDENCE_THRESHOLD = 0.60  # 최종 임계값
 
     # **[유통기한 상태 최종 결정]**
     expiry_date_status = 'NOT_FOUND'
 
     if extracted_date:
+
         if extracted_date < date.today():
             expiry_date_status = 'EXPIRED'  # 1순위: 만료됨
         elif FINAL_DATE_CONFIDENCE >= FINAL_CONFIDENCE_THRESHOLD:
@@ -677,12 +871,38 @@ def integrate_results(base_data: Dict[str, Any], yolo_result: Dict[str, Any], oc
         else:
             expiry_date_status = 'UNCERTAIN'  # 3순위: 신뢰도 낮음
 
+    # 👇 [수정] ACTION_DETAIL_LOG에 유통기한 결과 기록
+    if extracted_date:
+        # 이미 위에서 결정된 최종 상태(expiry_date_status)를 가져와 기록합니다.
+        ACTION_DETAIL_LOG.append(f"✅ 유통기한: {extracted_date} ({expiry_date_status})")
+        ACTION_DETAIL_LOG.append(f"💰 유통기한 신뢰도: {FINAL_DATE_CONFIDENCE:.2f}")
+    else:
+        ACTION_DETAIL_LOG.append("❌ 유통기한 탐지 실패")
+
+    # =======================================================
+    # [수정] Serializer 호환성을 위한 상태 재매핑 로직 (필수 수정)
+    # DB Model이 'inbound'/'outbound' 외의 값을 허용하지 않을 때 처리
+    # =======================================================
+    current_status = base_data.get('status')
+
+    if current_status in ['uncertain_adjust', 'uncertain_conflict', 'FALLBACK_MODE']:
+        log_msg = f"⚠️ 상태 : 기본값(inbound) 사용"
+        logger.warning(log_msg)
+        ACTION_DETAIL_LOG.append(log_msg)
+
+        # DB에 저장 가능한 값으로 'inbound'로 강제 변환
+        base_data['status'] = 'inbound'
+
+    # [주의] 이 로직은 base_data['status']만 수정하며, base_data['layer']는 수정하지 않습니다.
+
+    # -------------------------------------------------------------
+
     # base_data에서 좌표 정보를 꺼내서 최종 결과에 담습니다.
     final_data = {
         'user_id': base_data['user_id'],
 
         'layer': base_data.get('layer'),
-        'status': base_data.get('status'),
+        'status': base_data.get('status'),  # 재매핑된 값이 적용됨
 
         'ingredient_pic': base_data['ingredient_pic'],
         'stored_at': base_data['stored_at'],
@@ -709,6 +929,6 @@ def integrate_results(base_data: Dict[str, Any], yolo_result: Dict[str, Any], oc
         'raw_start_y': base_data.get('raw_start_y', 0.0),
         'raw_end_y': base_data.get('raw_end_y', 0.0),
     }
-    final_data['decision_log'] = " | ".join(ACTION_DETAIL_LOG) #임베디드 확인용
+    final_data['decision_log'] = " | ".join(ACTION_DETAIL_LOG)  # 임베디드 확인용
 
     return final_data
