@@ -17,6 +17,9 @@ import traceback
 import cv2
 import numpy as np
 from django.db.models import F
+# [추가] S3 업로드를 위한 boto3 import 추가
+import boto3
+from botocore.exceptions import ClientError
 
 
 class FridgeDetailView(APIView):
@@ -24,7 +27,7 @@ class FridgeDetailView(APIView):
         user = request.user
         try:
             fridge = Fridge.objects.get(fridge_id=fridge_id, user=user)
-            # 수량 개념이 없으므로, 현재는 layer만 필터링합니다. (UPDATE 시 수량 로직 추가)
+            # 수량 개념이 없으므로, 현재는 layer만 필터링합니다.
             # 현재는 status가 'outbound'가 아닌 항목만 보여준다고 가정합니다.
             ingredients = FridgeIngredients.objects.filter(fridge=fridge_id).order_by('layer')
             serializer = FridgeIngredientsSerializer(ingredients, many=True)
@@ -44,6 +47,39 @@ class FridgeDetailView(APIView):
                 {'error': '서버 오류', 'message': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+    # ===== [추가] S3 업로드 함수 =====
+    def upload_to_s3(self, file_path, s3_key):
+        """
+        로컬 파일을 S3에 업로드하고 S3 경로(키)를 반환합니다.
+        (settings에 AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME 필요)
+        """
+        try:
+            # boto3 클라이언트를 사용하여 S3에 업로드
+            s3_client = boto3.client(
+                's3',
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                region_name=settings.AWS_S3_REGION_NAME
+            )
+
+            with open(file_path, 'rb') as f:
+                s3_client.upload_fileobj(
+                    f,
+                    settings.AWS_STORAGE_BUCKET_NAME,
+                    s3_key,
+                    ExtraArgs={'ContentType': 'image/jpeg'}
+                )
+
+            print(f"✅ S3 업로드 성공: {s3_key}")
+            return s3_key
+
+        except AttributeError:
+            print("❌ S3 설정(AWS_ACCESS_KEY_ID 등)이 settings에 누락되었습니다.")
+            raise
+        except ClientError as e:
+            print(f"❌ S3 업로드 실패: {e}")
+            raise Exception(f"S3 업로드 오류: {str(e)}")
 
     # 식재료 인식 결과 DB 저장 및 업데이트
     def post(self, request, fridge_id):
@@ -84,15 +120,18 @@ class FridgeDetailView(APIView):
 
         saved_file_paths = []
 
+        # --- 로컬 임시 저장소 경로 설정 (S3 업로드 전) ---
+        temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_uploaded_images')
+        os.makedirs(temp_dir, exist_ok=True)
+
         try:
             timestamp = int(time.time())
 
+            # 1. 모든 이미지 파일을 로컬 임시 폴더에 저장
             for idx, img_file in enumerate(image_files):
                 file_extension = os.path.splitext(img_file.name)[1]
                 filename = f"{user_identifier}_{timestamp}_{idx}{file_extension}"
-
-                file_path = os.path.join(settings.MEDIA_ROOT, 'uploaded_images', filename)
-                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                file_path = os.path.join(temp_dir, filename)
 
                 with open(file_path, 'wb+') as destination:
                     for chunk in img_file.chunks():
@@ -112,12 +151,13 @@ class FridgeDetailView(APIView):
 
         try:
             # 2. 파이프라인 실행
+            # [수정] 해상도 인자를 pipeline_logic.py에 전달
             pipeline_result = process_image_pipeline(
                 pipeline_user_id,
                 image_paths=saved_file_paths,
                 layer=layer,
-                image_width=image_width,  # [수정] 해상도 인자 전달
-                image_height=image_height,  # [수정] 해상도 인자 전달
+                image_width=image_width,
+                image_height=image_height,
                 action_type=action_type
             )
 
@@ -127,99 +167,72 @@ class FridgeDetailView(APIView):
         except Exception as e:
             print(f"Pipeline Execution Error: {e}")
             traceback.print_exc()
+
+            # 실패 시 임시 파일 정리
+            for p in saved_file_paths:
+                if os.path.exists(p): os.remove(p)
+
             return Response(
                 {'error': '식재료 인식 파이프라인 오류', 'message': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # ------------------------------------------------------------------
-        # 3. 파일 이름 변경 및 Collage 생성 (디버깅/관리 목적)
+        # 3. Best Shot 선정, S3 업로드 및 청소
         # ------------------------------------------------------------------
 
-        # 1. 결과 데이터 가져오기
         detected_name = pipeline_result.get('ingredient_name', '미확인')
         if not detected_name: detected_name = '미확인'
 
         status_kor = '입고' if pipeline_result.get('status') == 'inbound' else '출고'
-        timestamp_for_name = pipeline_result.get('raw_timestamp', int(time.time()))  # 파이프라인 내부에서 쓰는 타임스탬프 활용
+        timestamp_for_name = pipeline_result.get('raw_timestamp', int(time.time()))
 
-        # 2. Best Shot의 원래 경로 찾기
         best_shot_path = pipeline_result.get('ingredient_pic')
 
-        # 3. 새로운 파일명
-        new_filename = f"{timestamp_for_name}_{detected_name}_{status_kor}.jpg"
-        new_file_path = os.path.join(settings.MEDIA_ROOT, 'uploaded_images', new_filename)
-        final_rel_path = ""
+        s3_key = None
 
-        if best_shot_path and os.path.exists(best_shot_path):
-            try:
-                os.rename(best_shot_path, new_file_path)
-                final_rel_path = os.path.join('uploaded_images', new_filename).replace('\\', '/')
-                print(f"✅ 파일명 변경 완료: {new_filename}")
-            except OSError as e:
-                print(f"⚠️ 파일명 변경 실패 (그냥 원본 사용): {e}")
-                if str(settings.MEDIA_ROOT) in best_shot_path:
-                    final_rel_path = os.path.relpath(best_shot_path, settings.MEDIA_ROOT).replace('\\', '/')
-                else:
-                    final_rel_path = best_shot_path
-        else:
-            final_rel_path = best_shot_path
-
-        # 4. [디버깅용] 10장 요약본(Collage) 만들기
         try:
-            images_to_concat = []
-            for idx, path in enumerate(saved_file_paths):
-                if os.path.exists(path):
-                    img = cv2.imread(path)
-                    if img is not None:
-                        h, w = img.shape[:2]
-                        new_w = 300
-                        new_h = int(h * (300 / w))
-                        resized_img = cv2.resize(img, (new_w, new_h))
-                        item_name = pipeline_result.get('ingredient_name', 'UNKNOWN')
-                        cv2.putText(resized_img, f"F:{idx} | {item_name}",
-                                    (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                        images_to_concat.append(resized_img)
+            # 3-A. S3 키 생성 및 업로드
+            s3_filename = f"{user_identifier}_{timestamp_for_name}_{detected_name}_{status_kor}.jpg"
+            s3_key = f"uploaded_images/{s3_filename}"
 
-            if images_to_concat:
-                summary_img = cv2.hconcat(images_to_concat)
-                summary_filename = f"{timestamp_for_name}_{detected_name}_DEBUG_SUMMARY_{status_kor}.jpg"
-                summary_path = os.path.join(settings.MEDIA_ROOT, 'uploaded_images', summary_filename)
-                cv2.imwrite(summary_path, summary_img)
-                print(f"👀 [디버깅] 요약 이미지 생성 완료: {summary_filename}")
+            print(f"☁️ S3에 최적 이미지 업로드 중: {s3_key}")
+            s3_key = self.upload_to_s3(best_shot_path, s3_key)
+            final_storage_path = s3_key  # DB에는 S3 키(경로)를 저장
 
         except Exception as e:
-            print(f"⚠️ 디버깅 이미지 생성 실패: {e}")
+            print(f"❌ S3 최종 업로드 실패! DB에 임시 로컬 경로 저장: {e}")
+            # S3 업로드 실패 시, DB에 임시 파일의 로컬 경로를 저장합니다.
+            final_storage_path = best_shot_path
 
-        # 5. [청소] Best Shot이 아닌 나머지 삭제
+            # 3-B. [청소] 모든 임시 파일 삭제
+        print(f"🗑️ 임시 파일 {len(saved_file_paths)}개 삭제 중...")
         for temp_path in saved_file_paths:
-            if temp_path != best_shot_path and os.path.exists(temp_path):
+            if os.path.exists(temp_path):
                 try:
                     os.remove(temp_path)
-                except:
-                    pass
+                except OSError as e:
+                    print(f"  ⚠️ 삭제 실패: {temp_path} - {e}")
 
         # ------------------------------------------------------------------
-        # 4. DB 저장/업데이트 로직 (핵심 수정 부분)
+        # 4. DB 저장/업데이트 로직
         # ------------------------------------------------------------------
 
-        determined_name = pipeline_result.get('ingredient_name') or ''
-        determined_name = determined_name.strip()
         determined_status = pipeline_result.get('status', 'inbound')
         determined_layer = pipeline_result.get('layer', layer_value)
 
-        food_storage_life_obj = FoodStorageLife.objects.filter(name__iexact=determined_name).first()
+        food_storage_life_obj = FoodStorageLife.objects.filter(name__iexact=detected_name).first()
         food_storage_life_id = food_storage_life_obj.id if food_storage_life_obj else None
 
         if not food_storage_life_obj:
-            print(f"[{determined_name}]의 FoodStorageLife DB 매핑에 실패하여 ID가 None으로 저장됩니다.")
+            print(f"[{detected_name}]의 FoodStorageLife DB 매핑에 실패하여 ID가 None으로 저장됩니다.")
 
         final_data = {
             # DB에 저장/업데이트할 최종 데이터 필드
             'fridge': fridge_id,
             'layer': determined_layer,
             'status': determined_status,
-            'ingredient_pic': final_rel_path,
-            'ingredient_name': determined_name,
+            'ingredient_pic': final_storage_path,  # S3 키 또는 로컬 임시 경로
+            'ingredient_name': detected_name,
             'category_yolo': pipeline_result.get('category_yolo'),
             'yolo_confidence': pipeline_result.get('yolo_confidence'),
             'product_name_ocr': pipeline_result.get('product_name_ocr'),
@@ -229,7 +242,6 @@ class FridgeDetailView(APIView):
             'date_recognition_confidence': pipeline_result.get('date_recognition_confidence'),
             'date_type_confidence': pipeline_result.get('date_type_confidence'),
             'foodStorageLife': food_storage_life_id,
-            # (수량 필드가 모델에 없지만, MVP를 위해 1개씩 처리한다고 가정)
         }
 
         # --------------------------------------------------
@@ -241,47 +253,41 @@ class FridgeDetailView(APIView):
         if determined_status == 'outbound':
             # 5-A. 출고 처리 (UPDATE: status 변경)
 
-            # [검색 조건] 해당 식재료가 DB에 존재하는지 확인 (status가 'inbound'인 항목만)
             existing_item = FridgeIngredients.objects.filter(
                 fridge=fridge_id,
-                ingredient_name__iexact=determined_name,
+                ingredient_name__iexact=detected_name,
                 layer=determined_layer,
                 status='inbound'  # status가 inbound인 항목만 출고 대상으로 간주
-            ).order_by('-stored_at').first()  # 가장 최근에 저장된 항목 1개만 찾음
+            ).order_by('-stored_at').first()
 
             if existing_item:
                 # 항목이 존재하면: UPDATE (status를 'outbound'로 변경)
-
-                # UPDATE 수행
                 existing_item.status = 'outbound'
                 existing_item.save(update_fields=['status'])
 
-                print(f"✅ 출고 업데이트 완료: {determined_name} (Layer {determined_layer}) status OUTBOUND로 변경.")
+                print(f"✅ 출고 업데이트 완료: {detected_name} (Layer {determined_layer}) status OUTBOUND로 변경.")
 
-                # 응답을 위해 업데이트된 항목의 데이터를 사용
                 response_serializer = FridgeIngredientsSerializer(existing_item)
                 response_data = response_serializer.data
-                http_status = status.HTTP_200_OK  # 200 OK (업데이트 완료)
+                http_status = status.HTTP_200_OK
 
             else:
                 # 항목이 없으면: 경고 및 POST 시도 안 함
-                print(f"❌ 출고 실패: {determined_name} (Layer {determined_layer}) 활성 재고가 DB에 없습니다.")
+                print(f"❌ 출고 실패: {detected_name} (Layer {determined_layer}) 활성 재고가 DB에 없습니다.")
                 return Response(
-                    {"error": "출고 실패", "message": f"DB에 {determined_name} 활성 재고가 없어 상태를 변경할 수 없습니다."},
+                    {"error": "출고 실패", "message": f"DB에 {detected_name} 활성 재고가 없어 상태를 변경할 수 없습니다."},
                     status=status.HTTP_404_NOT_FOUND)
 
         else:
             # 5-B. 입고 처리 (POST / CREATE)
 
-            # Uncertain 상태는 pipeline_logic에서 이미 'inbound'로 재매핑됨.
-
             if final_data.get('expiry_date_status') == 'UNCERTAIN':
-                final_data['expiry_date'] = None  # 불확실한 유통기한은 저장하지 않음
+                final_data['expiry_date'] = None
 
             serializer = FridgeIngredientsSerializer(data=final_data)
 
             if serializer.is_valid():
-                instance = serializer.save(fridge=fridge)  # 새로운 객체 생성
+                instance = serializer.save(fridge=fridge)
                 response_serializer = FridgeIngredientsSerializer(instance)
                 response_data = response_serializer.data
                 http_status = status.HTTP_201_CREATED

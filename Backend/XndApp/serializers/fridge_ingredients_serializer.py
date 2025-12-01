@@ -4,6 +4,7 @@ from XndApp.serializers.Ingredient_serializers import IngredientSerializer
 
 class FridgeIngredientsSerializer(serializers.ModelSerializer):
     storable_due = serializers.DateTimeField(required=False, allow_null=True)
+    ingredient_pic = serializers.CharField(max_length=512, required=False, allow_null=True)
 
     class Meta:
         model = FridgeIngredients

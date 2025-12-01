@@ -481,7 +481,6 @@ def run_yolo_detection(image_path: str) -> Dict[str, Any]:
 
     try:
         # [수정] imgsz=640 인자를 추가하여 최소 해상도를 확보 (640x640으로 분석)
-        # 이 값은 담당자에게 받은 학습 해상도로 최종 튜닝 필요
         results = model.predict(source=image_path, imgsz=640, conf=0.15, iou=0.5, verbose=True)
 
         if not results or not results[0].boxes:
