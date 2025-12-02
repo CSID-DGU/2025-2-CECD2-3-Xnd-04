@@ -1,44 +1,45 @@
-﻿asgiref==3.8.1
-celery==5.5.3
-certifi==2025.4.26
-charset-normalizer==3.4.2
-cryptography==45.0.3
-Django==4.2.8
-djangorestframework==3.14.0
-djangorestframework_simplejwt==5.5.0
-firebase-admin==6.8.0
-idna==3.10
-mysqlclient==2.2.7
-PyMySQL==1.1.1
-PyJWT==2.9.0
-python-decouple==3.8
-python-dotenv==1.1.0
-pytz==2025.2
-requests==2.32.3
-sqlparse==0.5.3
-tzdata==2025.2
-urllib3==2.4.0
+﻿asgiref>=3.8.1
+celery>=5.5.3
+certifi>=2025.4.26
+charset-normalizer>=3.4.2
+cryptography>=45.0.3
+Django>=4.2.8
+djangorestframework>=3.14.0
+djangorestframework_simplejwt>=5.5.0
+firebase-admin>=6.8.0
+idna>=3.10
+mysqlclient>=2.2.7
+PyMySQL>=1.1.1
+PyJWT>=2.9.0
+python-decouple>=3.8
+python-dotenv>=1.1.0
+pytz>=2025.2
+redis>=7.1.0
+requests>=2.32.3
+sqlparse>=0.5.3
+tzdata>=2025.2
+urllib3>=2.4.0
 
 # Word Embedding
-gensim==4.3.3
-python-Levenshtein==0.21.1
-numpy==1.26.4
-scipy==1.13.1
-smart-open==7.3.1
+gensim>=4.3.3
+python-Levenshtein>=0.21.1
+numpy>=1.26.4
+scipy>=1.13.1
+smart-open>=7.3.1
 
 # Sentence Transformers for text similarity
-sentence-transformers==2.2.2
-scikit-learn==1.3.2
+sentence-transformers>=2.2.2
+scikit-learn>=1.3.2
 
 # Deep Learning (YOLO)
 torch
 torchvision
-ultralytics  # YOLOv8 사용 시
+ultralytics<=8.3.199
 
 # 이미지 및 OCR 처리
-Pillow
-opencv-python
-google-cloud-vision
+Pillow>=12.0.0
+opencv-python>=4.11.0.86
+google-cloud-vision>=3.10.2
 
 #이미지 호스팅
 django-storages
