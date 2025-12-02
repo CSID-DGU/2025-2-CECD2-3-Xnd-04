@@ -1,3 +1,4 @@
+// 상단에 패키지 import, defaultConfig 내에 카카오 앱 키 추가
 import java.util.Properties
 import java.io.FileInputStream
 
@@ -42,7 +43,7 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        // 카카오 앱 키 추가
+        // 이 부분 추가
         manifestPlaceholders["KAKAO_APP_KEY"] =
             localProperties.getProperty("KAKAO_APP_KEY")
     }
