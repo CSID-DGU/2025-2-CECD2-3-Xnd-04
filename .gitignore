@@ -8,3 +8,9 @@ nul
 # Environment files
 Backend/.env
 Backend/.env.example
+
+# Fix scripts
+final_fix.py
+fix_urls.py
+complete_fix.py
+correct_fix.py
