@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import 'package:Frontend/Models/RefrigeratorModel.dart';
 import 'package:Frontend/Views/MainFrameView.dart';
 import 'package:Frontend/Services/authService.dart';
@@ -259,6 +260,7 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
     int dueDate = getDueDate(ingredient);
     Color borderColor = getDueDateColor(dueDate);
     String dueDateLabel = getDueDateLabel(dueDate);
+    bool isOutbound = ingredient.status == 'outbound';
 
     return Column(
       children: [
@@ -291,18 +293,45 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
-                    child: SizedBox.expand(
-                      child: ingredient.imgUrl != null && ingredient.imgUrl!.isNotEmpty
-                        ? Image.network(
-                            ingredient.imgUrl!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            height: double.infinity,
-                          )
-                        : Container(
-                            color: Colors.grey[300],
-                            child: Icon(Icons.image_not_supported, color: Colors.grey[600], size: 40),
+                    child: Stack(
+                      children: [
+                        SizedBox.expand(
+                          child: ingredient.imgUrl != null && ingredient.imgUrl!.isNotEmpty
+                            ? Image.network(
+                                ingredient.imgUrl!,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                              )
+                            : Container(
+                                color: Colors.grey[300],
+                                child: Icon(Icons.image_not_supported, color: Colors.grey[600], size: 40),
+                              ),
+                        ),
+                        // 출고 상태일 때 블러 처리
+                        if (isOutbound)
+                          Positioned.fill(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: BackdropFilter(
+                                filter: ui.ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                                child: Container(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  child: Center(
+                                    child: Text(
+                                      '출고',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
+                      ],
                     ),
                   )
                 )
@@ -832,20 +861,77 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
                               SizedBox(width: 10),
                               Expanded(
                                 child: ElevatedButton(
-                                  onPressed: () {
-                                    // 추가 기능
-                                    Navigator.pop(context);
-                                  },
+                                  onPressed: ingredient.status == 'outbound'
+                                    ? null
+                                    : () async {
+                                        // 출고 처리 확인 다이얼로그
+                                        bool? confirmOutbound = await showDialog<bool>(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: Text('출고 처리'),
+                                            content: Text('${ingredient.ingredientName ?? '이 식재료'}를 출고 처리하시겠습니까?'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(context, false),
+                                                child: Text('취소'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(context, true),
+                                                child: Text('출고', style: TextStyle(color: Colors.blue)),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+
+                                        if (confirmOutbound == true) {
+                                          // 출고 처리 API 호출
+                                          bool success = await updateFridgeIngredient(
+                                            fridgeId: refrigerator.id!,
+                                            ingredientId: ingredient.id!,
+                                            status: 'outbound',
+                                          );
+
+                                          if (!mounted) return;
+
+                                          if (success) {
+                                            // 상태 업데이트
+                                            setState(() {
+                                              ingredient.status = 'outbound';
+                                            });
+
+                                            // 다이얼로그 닫기
+                                            Navigator.pop(context);
+
+                                            // 성공 메시지
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('출고 처리되었습니다.')),
+                                            );
+                                          } else {
+                                            // 실패 메시지
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('출고 처리에 실패했습니다.')),
+                                            );
+                                          }
+                                        }
+                                      },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.grey[400],
+                                    backgroundColor: ingredient.status == 'outbound'
+                                      ? Colors.grey[300]
+                                      : Colors.orange,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     padding: EdgeInsets.symmetric(vertical: 14),
                                   ),
                                   child: Text(
-                                    '추가 기능',
-                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                                    ingredient.status == 'outbound' ? '출고됨' : '출고 처리',
+                                    style: TextStyle(
+                                      color: ingredient.status == 'outbound'
+                                        ? Colors.grey[600]
+                                        : Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
                                   ),
                                 ),
                               ),

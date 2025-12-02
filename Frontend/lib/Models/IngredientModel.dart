@@ -50,6 +50,7 @@ class FridgeIngredientModel extends IngredientModel implements FridgeIngredientA
   String? _storable_due;
   String? _storageLocation;
   String? _memo;
+  String? _status;
 
   FridgeIngredientModel({
     int? id,
@@ -58,12 +59,14 @@ class FridgeIngredientModel extends IngredientModel implements FridgeIngredientA
     int? layer,
     String? stored_at,
     String? storable_due,
-    String? memo}) : super(id : id, ingredientName : ingredientName, imgUrl: imgUrl)
+    String? memo,
+    String? status}) : super(id : id, ingredientName : ingredientName, imgUrl: imgUrl)
   {
     this._layer = layer;
     this._stored_at = stored_at;
     this._storable_due = storable_due;
     this._memo = memo;
+    this._status = status;
 
   }
 
@@ -73,6 +76,9 @@ class FridgeIngredientModel extends IngredientModel implements FridgeIngredientA
   String? get storable_due => _storable_due;
   String? get storageLocation => _storageLocation;
   String? get memo => _memo;
+  String? get status => _status;
+
+  set status(String? value) => _status = value;
 
   @override
   FridgeIngredientModel toIngredient(Response ingredientResponse, int idx){
@@ -91,6 +97,7 @@ class FridgeIngredientModel extends IngredientModel implements FridgeIngredientA
     this._storable_due = data[idx]['storable_due'];
     this._storageLocation = data[idx]['storage_location'];
     this._memo = data[idx]['memo'];
+    this._status = data[idx]['status'];
     return this;
   }
 }

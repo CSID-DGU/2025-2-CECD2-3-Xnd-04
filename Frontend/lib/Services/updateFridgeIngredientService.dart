@@ -10,6 +10,7 @@ Future<bool> updateFridgeIngredient({
   String? memo,
   int? layer,
   String? storageLocation,
+  String? status,
 }) async {
   final dio = createAuthDio(); // 401 에러 자동 처리를 위한 인증 Dio 사용
 
@@ -22,6 +23,7 @@ Future<bool> updateFridgeIngredient({
     if (memo != null) data['memo'] = memo;
     if (layer != null) data['layer'] = layer;
     if (storageLocation != null) data['storage_location'] = storageLocation;
+    if (status != null) data['status'] = status;
 
     final response = await dio.patch(
       updateURL,
