@@ -87,8 +87,8 @@ class MainBottomBar extends State<MainBottomView> {
 
     // 0: IngredientsView
     if (index == 0){
-      // 냉장고 식재료 정보 로드
-      if (Fridges.isNotEmpty && Fridges[0].ingredients == null) {
+      // 냉장고 식재료 정보 로드 (매번 새로고침)
+      if (Fridges.isNotEmpty) {
         await loadFridgeIngredientsInfo(Fridges[0], 0);
       }
       if (!mounted) return;

@@ -40,6 +40,20 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
     _scrollController = ScrollController();
     _tabController = TabController(length: 3, vsync: this);
     _checkSessionOnLoad();
+    _loadIngredients();
+  }
+
+  Future<void> _loadIngredients() async {
+    // 냉장고 식재료 정보 다시 로드
+    if (Fridges.isNotEmpty) {
+      int fridgeIndex = Fridges.indexWhere((f) => f.id == refrigerator.id);
+      if (fridgeIndex != -1) {
+        await loadFridgeIngredientsInfo(Fridges[fridgeIndex], fridgeIndex);
+        if (mounted) {
+          setState(() {});
+        }
+      }
+    }
   }
 
   Future<void> _checkSessionOnLoad() async {
