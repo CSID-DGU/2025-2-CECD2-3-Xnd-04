@@ -1,16 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:Frontend/Services/authService.dart';
-import 'package:network_info_plus/network_info_plus.dart';
 import 'package:Frontend/Models/RecipeModel.dart';
 
 /// query : included in xndapp_recipes.recipeName
 Future<Response?> requestRecipeQuery({required String query}) async {
   final dio = createAuthDio(); // 401 에러 자동 처리를 위한 인증 Dio 사용
-  final String? ip = await NetworkInfo().getWifiIP();
 
-  final String recipeURL = (ip!.startsWith('10.0.2')) ?
-  'http://10.0.2.2:8000/api/recipes/?query=${query}' :
-  'http://$HOST/${APIURLS['loadRecipe']}?query=${query}';
+  final String recipeURL = await buildApiUrl('/api/recipes/?query=${query}');
   try {
     final response = await dio.get(
       recipeURL, // 👉 백엔드 API 주소
@@ -32,13 +28,10 @@ Future<Response?> requestRecipeQuery({required String query}) async {
 /// query : included in xndapp_recipes.recipeName
 Future<Response?> requestRecipeKeyword({required String keyword}) async {
   final dio = createAuthDio(); // 401 에러 자동 처리를 위한 인증 Dio 사용
-  final String? ip = await NetworkInfo().getWifiIP();
   // 해시태그 정규화
   keyword = keyword.replaceFirst('#', '');
 
-  final String recipeURL = (ip!.startsWith('10.0.2')) ?
-  'http://10.0.2.2:8000/api/recipes/?keyword=${keyword}' :
-  'http://' + HOST! + APIURLS['loadRecipe']! + '?keyword=${keyword}';
+  final String recipeURL = await buildApiUrl('/api/recipes/?keyword=${keyword}');
   try {
     final response = await dio.get(
       recipeURL, // 👉 백엔드 API 주소
@@ -60,6 +53,12 @@ Future<Response?> requestRecipeKeyword({required String keyword}) async {
 ///Recipes = await getRecipeQueryInfoFromServer();
 Future<List<List<dynamic>?>?> getRecipeQueryInfoFromServer({required String query}) async {
   query = query.trimLeft();
+
+  // 빈 문자열 체크
+  if (query.isEmpty) {
+    return null;
+  }
+
   Response<dynamic>? response = (query[0] == '#') ? await requestRecipeKeyword(keyword: query): await requestRecipeQuery(query:query);
   // 띄워줄 레시피의 수는 최대 10개
   int count = (response!.data['count'] < 10) ? response.data['count'] : 10;

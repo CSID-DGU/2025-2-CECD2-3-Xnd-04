@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:Frontend/Services/authService.dart';
 import 'package:intl/intl.dart';
-import 'package:network_info_plus/network_info_plus.dart';
 
 // 장보기 목록에 추가 (캘린더에 추가)
 Future<Map<String, dynamic>> addShoppingList({
@@ -15,10 +14,7 @@ Future<Map<String, dynamic>> addShoppingList({
       throw Exception('로그인이 필요합니다');
     }
 
-    final String? ip = await NetworkInfo().getWifiIP();
-    final String baseUrl = (ip!.startsWith('10.0.2'))
-        ? 'http://10.0.2.2:8000'
-        : 'http://$HOST';
+    final String baseUrl = await buildApiUrl('', port: '');
 
     final dateString = DateFormat('yyyy-MM-dd').format(shoppingDate);
 
@@ -54,10 +50,7 @@ Future<List<Map<String, dynamic>>> getShoppingList(DateTime date) async {
       throw Exception('로그인이 필요합니다');
     }
 
-    final String? ip = await NetworkInfo().getWifiIP();
-    final String baseUrl = (ip!.startsWith('10.0.2'))
-        ? 'http://10.0.2.2:8000'
-        : 'http://$HOST';
+    final String baseUrl = await buildApiUrl('', port: '');
 
     final dateString = DateFormat('yyyy-MM-dd').format(date);
 
@@ -119,10 +112,7 @@ Future<Map<String, dynamic>> completeShoppingList({
       throw Exception('로그인이 필요합니다');
     }
 
-    final String? ip = await NetworkInfo().getWifiIP();
-    final String baseUrl = (ip!.startsWith('10.0.2'))
-        ? 'http://10.0.2.2:8000'
-        : 'http://$HOST';
+    final String baseUrl = await buildApiUrl('', port: '');
 
     final dateString = DateFormat('yyyy-MM-dd').format(shoppingDate);
 
@@ -159,10 +149,7 @@ Future<int> getDailySpending(DateTime date) async {
       throw Exception('로그인이 필요합니다');
     }
 
-    final String? ip = await NetworkInfo().getWifiIP();
-    final String baseUrl = (ip!.startsWith('10.0.2'))
-        ? 'http://10.0.2.2:8000'
-        : 'http://$HOST';
+    final String baseUrl = await buildApiUrl('', port: '');
 
     final dateString = DateFormat('yyyy-MM-dd').format(date);
 
@@ -198,10 +185,7 @@ Future<Map<String, int>> getMonthlySpending(int year, int month) async {
       throw Exception('로그인이 필요합니다');
     }
 
-    final String? ip = await NetworkInfo().getWifiIP();
-    final String baseUrl = (ip!.startsWith('10.0.2'))
-        ? 'http://10.0.2.2:8000'
-        : 'http://$HOST';
+    final String baseUrl = await buildApiUrl('', port: '');
 
     final response = await dio.get(
       '$baseUrl/api/shopping-list/monthly-spending/',
@@ -242,10 +226,7 @@ Future<Map<String, dynamic>> deleteShoppingItems(List<int> shoppingListIds) asyn
       throw Exception('로그인이 필요합니다');
     }
 
-    final String? ip = await NetworkInfo().getWifiIP();
-    final String baseUrl = (ip!.startsWith('10.0.2'))
-        ? 'http://10.0.2.2:8000'
-        : 'http://$HOST';
+    final String baseUrl = await buildApiUrl('', port: '');
 
     final response = await dio.delete(
       '$baseUrl/api/shopping-list/delete/',

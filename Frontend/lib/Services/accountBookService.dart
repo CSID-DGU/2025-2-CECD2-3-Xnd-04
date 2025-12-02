@@ -1,15 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:Frontend/Services/authService.dart';
-import 'package:network_info_plus/network_info_plus.dart';
 
 /// 가계부 설정 조회
 Future<Map<String, dynamic>?> getAccountBookSettings() async {
   final dio = createAuthDio();
-  final String? ip = await NetworkInfo().getWifiIP();
 
-  final String url = (ip!.startsWith('10.0.2'))
-      ? 'http://10.0.2.2:8000/api/account-book/settings/'
-      : 'http://$HOST/api/account-book/settings/';
+  final String url = await buildApiUrl('/api/account-book/settings/');
 
   try {
     final response = await dio.get(
@@ -39,11 +35,8 @@ Future<bool> updateAccountBookSettings({
   int? budgetResetDay,
 }) async {
   final dio = createAuthDio();
-  final String? ip = await NetworkInfo().getWifiIP();
 
-  final String url = (ip!.startsWith('10.0.2'))
-      ? 'http://10.0.2.2:8000/api/account-book/settings/'
-      : 'http://$HOST/api/account-book/settings/';
+  final String url = await buildApiUrl('/api/account-book/settings/');
 
   try {
     Map<String, dynamic> data = {};
@@ -75,11 +68,8 @@ Future<bool> updateAccountBookSettings({
 /// 지출 추가
 Future<bool> addExpense(int amount) async {
   final dio = createAuthDio();
-  final String? ip = await NetworkInfo().getWifiIP();
 
-  final String url = (ip!.startsWith('10.0.2'))
-      ? 'http://10.0.2.2:8000/api/account-book/expense/'
-      : 'http://$HOST/api/account-book/expense/';
+  final String url = await buildApiUrl('/api/account-book/expense/');
 
   try {
     final response = await dio.post(
@@ -107,11 +97,8 @@ Future<bool> addExpense(int amount) async {
 /// 예산 수동 초기화
 Future<bool> resetBudget() async {
   final dio = createAuthDio();
-  final String? ip = await NetworkInfo().getWifiIP();
 
-  final String url = (ip!.startsWith('10.0.2'))
-      ? 'http://10.0.2.2:8000/api/account-book/reset/'
-      : 'http://$HOST/api/account-book/reset/';
+  final String url = await buildApiUrl('/api/account-book/reset/');
 
   try {
     final response = await dio.post(

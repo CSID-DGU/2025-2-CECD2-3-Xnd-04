@@ -46,7 +46,9 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
               title: InkWell(
                 onTap: () {
                   // Xnd 클릭 시 냉장고 내부 뷰로 이동
-                  Navigator.of(context).pushNamed('/${pages[1]}');
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => pages[1]),
+                  );
                 },
                 child: Text(
                   title,
@@ -62,14 +64,18 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
                 IconButton(
                   icon: const Icon(Icons.notifications_outlined, color: Colors.white),
                   onPressed: () {
-                    Navigator.of(context).pushNamed('/${pages[8]}');
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => pages[8]),
+                    );
                   },
                 ),
                 // 설정 버튼
                 IconButton(
                   icon: const Icon(Icons.settings_outlined, color: Colors.white),
                   onPressed: () {
-                    Navigator.of(context).pushNamed('/${pages[9]}');
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => pages[9]),
+                    );
                   },
                 ),
                 // 더보기 메뉴 (로그아웃)

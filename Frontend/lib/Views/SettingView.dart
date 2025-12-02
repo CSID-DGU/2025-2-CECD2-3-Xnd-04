@@ -76,19 +76,29 @@ class SettingPage extends State<SettingView> {
           // 하단바 아이콘 클릭 시 해당 페이지로 이동
           if (index == 0) {
             currentBottomNavIndex = 0;
-            Navigator.of(context).pushReplacementNamed('/' + pages[1].toString());
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => pages[1]),
+            );
           } else if (index == 1) {
             currentBottomNavIndex = 1;
-            Navigator.of(context).pushReplacementNamed('/' + pages[11].toString());
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => pages[11]),
+            );
           } else if (index == 2) {
             currentBottomNavIndex = 2;
-            Navigator.of(context).pushReplacementNamed('/' + pages[10].toString());
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => pages[10]),
+            );
           } else if (index == 3) {
             currentBottomNavIndex = 3;
-            Navigator.of(context).pushReplacementNamed('/' + pages[4].toString());
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => pages[4]),
+            );
           } else if (index == 4) {
             currentBottomNavIndex = 4;
-            Navigator.of(context).pushReplacementNamed('/' + pages[3].toString());
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => pages[3]),
+            );
           }
         },
         showSelectedLabels: false,

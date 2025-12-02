@@ -9,7 +9,12 @@ import android.util.Base64
 import android.util.Log
 import java.security.MessageDigest
 
+
 class MainActivity : FlutterActivity() {
+    override fun onResume() {
+        super.onResume()
+        Log.d("XND_RELEASE_LOG", "App resumed! (flutter print() won't show in release)")
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

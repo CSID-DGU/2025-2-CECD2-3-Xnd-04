@@ -1258,7 +1258,16 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
                                       }
 
                                       if (selectedNames.isNotEmpty) {
-                                        String searchQuery = selectedNames.join(' ');
+                                        String searchQuery = selectedNames.join(' ').trim();
+
+                                        // 빈 검색어 체크
+                                        if (searchQuery.isEmpty) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('검색할 식재료를 선택해주세요')),
+                                          );
+                                          return;
+                                        }
+
                                         await SearchHistoryService.saveSearch(searchQuery);
                                         Recipes = await getRecipeQueryInfoFromServer(query: searchQuery);
 
@@ -1343,13 +1352,17 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
                             IconButton(
                               icon: const Icon(Icons.notifications_outlined, color: Colors.white),
                               onPressed: () {
-                                Navigator.of(context).pushNamed('/${pages[8]}');
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (context) => pages[8]),
+                                );
                               },
                             ),
                             IconButton(
                               icon: const Icon(Icons.settings_outlined, color: Colors.white),
                               onPressed: () {
-                                Navigator.of(context).pushNamed('/${pages[9]}');
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (context) => pages[9]),
+                                );
                               },
                             ),
                             PopupMenuButton<String>(

@@ -11,9 +11,14 @@ class LoginModel{
   LoginModel(this._socialLogin);
 
   Future login() async {
+    print('📱 LoginModel.login() 호출됨');
     isLogined = await _socialLogin.login();
+    print('📱 _socialLogin.login() 결과: $isLogined');
     if (isLogined) {
       user = await UserApi.instance.me();
+      print('📱 사용자 정보 가져오기 성공');
+    } else {
+      print('📱 로그인 실패 - isLogined = false');
     }
   }
 

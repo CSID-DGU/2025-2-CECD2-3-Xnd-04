@@ -135,7 +135,9 @@ class RecipeDialog extends Dialog{
                               inform: ingredientDetailInfo
                           );
                           // 식재료 소개 페이지로 이동
-                          Navigator.of(context).pushNamed('/' + pages[6].toString());
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => pages[6]),
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                             padding: EdgeInsets.fromLTRB(5, 0, 5, 0),

@@ -1,16 +1,12 @@
 import 'package:Frontend/Models/IngredientModel.dart';
 import 'package:dio/dio.dart';
 import 'package:Frontend/Services/authService.dart';
-import 'package:network_info_plus/network_info_plus.dart';
 
 // 요청을 여러번 보내는 이유는 저장 냉장고 id에 대한 정보가 없기 때문
 Future<Response?> requestRecipeModalIngredientInfo(int id, int fiid) async{
   final dio = createAuthDio(); // 401 에러 자동 처리를 위한 인증 Dio 사용
-  final String? ip = await NetworkInfo().getWifiIP();
 
-  final String ingredientDetailURL = (ip!.startsWith('10.0.2')) ?
-  'http://10.0.2.2:8000/api/fridge/' + '${id}/' + 'ingredients/' + '${fiid}/':
-  'http://$HOST/${APIURLS['loadFridge']}${id}/ingredients/${fiid}/';
+  final String ingredientDetailURL = await buildApiUrl('/api/fridge/$id/ingredients/$fiid/');
   try {
     print('현재 인덱스 : ${id}');
 

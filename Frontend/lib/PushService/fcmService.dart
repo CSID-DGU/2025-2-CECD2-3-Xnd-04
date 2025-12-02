@@ -3,7 +3,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:network_info_plus/network_info_plus.dart';
 import 'package:Frontend/Services/authService.dart';
 import 'dart:io';
 
@@ -166,11 +165,7 @@ class FCMService {
 
     try {
       final dio = Dio();
-      final String? ip = await NetworkInfo().getWifiIP();
-
-      final String deviceURL = (ip!.startsWith('10.0.2')) ?
-      'http://10.0.2.2:8000/api/devices/register/' :
-      'http://$HOST/api/devices/register/';
+      final String deviceURL = await buildApiUrl('/api/devices/register/');
 
       final response = await dio.post(
         deviceURL,
@@ -215,11 +210,7 @@ class FCMService {
 
     try {
       final dio = Dio();
-      final String? ip = await NetworkInfo().getWifiIP();
-
-      final String toggleURL = (ip!.startsWith('10.0.2')) ?
-      'http://10.0.2.2:8000/api/devices/toggle/' :
-      'http://' + HOST! + '/api/devices/toggle/';
+      final String toggleURL = await buildApiUrl('/api/devices/toggle/');
 
       final response = await dio.patch(
         toggleURL,

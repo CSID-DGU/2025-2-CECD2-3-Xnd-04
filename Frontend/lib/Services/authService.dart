@@ -24,12 +24,44 @@ final APIURLS = {
   'savedRecipe' : 'api/savedRecipe/',
 };
 
+// 🔥 네트워크 정보 안전하게 가져오기 (Release 빌드에서도 작동)
+Future<bool> isEmulator() async {
+  try {
+    final String? ip = await NetworkInfo().getWifiIP();
+    return ip != null && ip.startsWith('10.0.2');
+  } catch (e) {
+    // network_info_plus 플러그인 에러 발생 시 실제 기기로 간주
+    print('⚠️ NetworkInfo 플러그인 오류 - 실제 기기로 판단');
+    return false;
+  }
+}
+
+// 🔥 URL 빌더 헬퍼 함수
+Future<String> buildApiUrl(String path, {String port = ':8000'}) async {
+  final bool emulator = await isEmulator();
+
+  if (emulator) {
+    return 'http://10.0.2.2$port$path';
+  } else {
+    // HOST 끝의 슬래시와 path 시작의 슬래시 중복 제거
+    String baseUrl = HOST!.endsWith('/') ? HOST!.substring(0, HOST!.length - 1) : HOST!;
+    String cleanPath = path.startsWith('/') ? path : '/$path';
+    return baseUrl + cleanPath;
+  }
+}
+
 Future<bool> sendKakaoAccessToken(String accessToken) async {
   final dio = Dio();
-  final String? ip = await NetworkInfo().getWifiIP();
-  final String authURL = (ip!.startsWith('10.0.2')) ?
-  'http://10.0.2.2:8000/api/auth/kakao-login/' :
-  'http://$HOST/${APIURLS['kakaoLogin']}';
+  // final String? ip = await NetworkInfo().getWifiIP();
+  // final String authURL = (ip!.startsWith('10.0.2')) ?
+  // 'http://10.0.2.2:8000/api/auth/kakao-login/' :
+  // HOST! + APIURLS['kakaoLogin']!;
+  final String authURL = HOST! + APIURLS['kakaoLogin']!;
+
+  print('🔗 카카오 로그인 요청 URL: $authURL');
+  // print('📡 IP 주소: $ip');
+  print('🏠 HOST 값: $HOST');
+
   try {
     final response = await dio.post(
       authURL, // 👉 백엔드 API 주소
@@ -157,10 +189,7 @@ Future<bool> checkSession() async {
   // 토큰이 있으면 간단한 API 호출로 유효성 검사
   try {
     final dio = Dio();
-    final String? ip = await NetworkInfo().getWifiIP();
-    final String fridgeURL = (ip!.startsWith('10.0.2'))
-        ? 'http://10.0.2.2:8000/api/fridge/'
-        : 'http://$HOST/${APIURLS['loadFridge']}';
+    final String fridgeURL = await buildApiUrl('/api/fridge/');
 
     final response = await dio.get(
       fridgeURL,
