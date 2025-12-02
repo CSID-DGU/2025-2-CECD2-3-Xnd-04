@@ -231,7 +231,7 @@ class FridgeDetailView(APIView):
             'fridge': fridge_id,
             'layer': determined_layer,
             'status': determined_status,
-            'ingredient_pic': final_storage_path,  # S3 키 또는 로컬 임시 경로
+            'ingredient_pic': "https://xndingredientsimagestorage.s3.ap-northeast-2.amazonaws.com/" + final_storage_path,  # S3 키 또는 로컬 임시 경로
             'ingredient_name': detected_name,
             'category_yolo': pipeline_result.get('category_yolo'),
             'yolo_confidence': pipeline_result.get('yolo_confidence'),

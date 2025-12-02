@@ -196,8 +196,10 @@ def process_image_pipeline(user_id: int, image_paths: List[str], layer: str, ima
 
             # --- 출고 후보 (X축 감소) ---
             elif delta_x < -X_MIN_MOVEMENT:
+                is_consistent_outbound = (start_x > end_x)
+
                 # 방향성 검증: X_start > X_peak > X_end 가 모두 성립해야 함
-                is_consistent_outbound = (start_x > X_peak) and (X_peak > end_x)
+                #is_consistent_outbound = (start_x > X_peak) and (X_peak > end_x)
 
                 if not is_consistent_outbound:
                     ACTION_DETAIL_LOG.append("❌ 출고: 이동 방향 불일치 (X-Axis Failure)")  # X축 일관성 실패
@@ -294,7 +296,7 @@ def process_image_pipeline(user_id: int, image_paths: List[str], layer: str, ima
         ]
         winner_max_conf = max(winner_scores) if winner_scores else 0.0
 
-        FINAL_CUTOFF = 0.6  # 최종 판정 객체의 신뢰도 임계값
+        FINAL_CUTOFF = 0.4  # 최종 판정 객체의 신뢰도 임계값
 
         # -----------------------------------------------------------
         # 2. OCR용 Best Shot 선정 (스코어링 기반으로 변경 + 투표 결과 필터링)
@@ -481,7 +483,7 @@ def run_yolo_detection(image_path: str) -> Dict[str, Any]:
 
     try:
         # [수정] imgsz=640 인자를 추가하여 최소 해상도를 확보 (640x640으로 분석)
-        results = model.predict(source=image_path, imgsz=640, conf=0.15, iou=0.5, verbose=True)
+        results = model.predict(source=image_path, imgsz=400, conf=0.15, iou=0.5, verbose=True)
 
         if not results or not results[0].boxes:
             return None  # 탐지 실패 시 None 반환
@@ -808,7 +810,7 @@ def integrate_results(base_data: Dict[str, Any], yolo_result: Dict[str, Any], oc
     best_fuzz_match = None
     max_fuzz_score = -1.0
 
-    YOLO_CONFIDENCE_THRESHOLD = 0.7
+    YOLO_CONFIDENCE_THRESHOLD = 0.4
     PRODUCT_SIMILARITY_THRESHOLD = 0.65
 
     # 🟢 [캐싱 적용] 첫 호출 시 DB 접근, 이후 메모리에서 가져옴
