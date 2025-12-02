@@ -38,7 +38,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.Xnd"
-        minSdk = flutter.minSdkVersion
+        minSdk = 23 // 테스트 디버깅용 수정
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
