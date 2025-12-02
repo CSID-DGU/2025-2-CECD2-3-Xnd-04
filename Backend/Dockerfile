@@ -43,4 +43,4 @@ RUN mkdir -p /app/staticfiles
 EXPOSE 8000
 
 # Gunicorn으로 Django 실행
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "Xnd.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--timeout", "300", "--graceful-timeout", "300", "Xnd.wsgi:application"]
