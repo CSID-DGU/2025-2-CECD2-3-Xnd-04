@@ -18,7 +18,6 @@ class _SurveyViewState extends State<SurveyView> {
     'ingredients': <String>[],
     'favoriteRecipe': <String>[],
     'servingSize': '',
-    'cookingFrequency': '',
     'dietaryRestrictions': <String>[],
     'skillLevel': '',
     'cookingEquipment': <String>[],
@@ -46,13 +45,6 @@ class _SurveyViewState extends State<SurveyView> {
       'type': 'single',
       'key': 'servingSize',
       'options': ['1인분', '2인분', '3인분', '4인분', '5인분', '6인분 이상'],
-      'required': true,
-    },
-    {
-      'question': '주로 요리를 얼마나 자주 하시나요?',
-      'type': 'single',
-      'key': 'cookingFrequency',
-      'options': ['매일', '주 3-4회', '주 1-2회', '월 1-2회', '거의 안함'],
       'required': true,
     },
     {

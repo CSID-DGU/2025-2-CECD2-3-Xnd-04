@@ -98,14 +98,15 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
   int getDueDate(FridgeIngredientModel ingredient){
     DateTime now = DateTime.now();
     if (ingredient.storable_due == null || ingredient.storable_due!.isEmpty) {
-      // 기본값으로 7일 후 설정
-      return 7;
+      // 유통기한 정보가 없을 때 특별한 값 반환 (999는 "유통기한 미인식" 표시용)
+      return 999;
     }
     DateTime dueDateParsed = DateTime.parse(ingredient.storable_due!.substring(0, 10));
     return dueDateParsed.difference(now).inDays + 1;
   }
 
   Color getDueDateColor(int dueDate) {
+    if (dueDate == 999) return Colors.grey; // 유통기한 미인식
     if (dueDate <= 0) return Colors.black;
     if (dueDate == 1) return Colors.red;
     if (dueDate == 2) return Colors.orange;
@@ -113,6 +114,7 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
   }
 
   String getDueDateLabel(int dueDate) {
+    if (dueDate == 999) return '유통기한\n입력필요';
     if (dueDate < 0) return 'D+${dueDate.abs()}';
     return 'D-$dueDate';
   }
@@ -399,6 +401,7 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
     Color borderColor = getDueDateColor(dueDate);
     String dueDateLabel = getDueDateLabel(dueDate);
     bool isSelected = _selectedIngredientIds.contains(ingredient.id);
+    bool isOutbound = ingredient.status == 'outbound';
 
     Widget ingredientWidget = Column(
       children: [
@@ -442,18 +445,45 @@ class IngredientsPage extends State<IngredientsView> with SingleTickerProviderSt
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
-                    child: SizedBox.expand(
-                      child: ingredient.imgUrl != null && ingredient.imgUrl!.isNotEmpty
-                        ? Image.network(
-                            ingredient.imgUrl!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            height: double.infinity,
-                          )
-                        : Container(
-                            color: Colors.grey[300],
-                            child: Icon(Icons.image_not_supported, color: Colors.grey[600], size: 40),
+                    child: Stack(
+                      children: [
+                        SizedBox.expand(
+                          child: ingredient.imgUrl != null && ingredient.imgUrl!.isNotEmpty
+                            ? Image.network(
+                                ingredient.imgUrl!,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                              )
+                            : Container(
+                                color: Colors.grey[300],
+                                child: Icon(Icons.image_not_supported, color: Colors.grey[600], size: 40),
+                              ),
+                        ),
+                        // 출고 상태일 때 블러 처리
+                        if (isOutbound)
+                          Positioned.fill(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: BackdropFilter(
+                                filter: ui.ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                                child: Container(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  child: Center(
+                                    child: Text(
+                                      '출고',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
+                      ],
                     ),
                   )
                 )
