@@ -8,3 +8,16 @@ nul
 # Environment files
 Backend/.env
 Backend/.env.example
+
+# macOS files
+.DS_Store
+**/.DS_Store
+
+# Python virtual environments
+myenv/
+venv/
+env/
+ENV/
+
+# User data
+자료/
