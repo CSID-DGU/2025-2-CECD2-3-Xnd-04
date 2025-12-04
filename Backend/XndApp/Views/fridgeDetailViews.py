@@ -1,3 +1,5 @@
+# 파일: XndApp/Views/fridge_views.py
+
 import requests
 from rest_framework import status
 from rest_framework.views import APIView
@@ -28,7 +30,6 @@ class FridgeDetailView(APIView):
         try:
             fridge = Fridge.objects.get(fridge_id=fridge_id, user=user)
             # 수량 개념이 없으므로, 현재는 layer만 필터링합니다.
-            # 현재는 status가 'outbound'가 아닌 항목만 보여준다고 가정합니다.
             ingredients = FridgeIngredients.objects.filter(fridge=fridge_id).order_by('layer')
             serializer = FridgeIngredientsSerializer(ingredients, many=True)
 
@@ -253,10 +254,10 @@ class FridgeDetailView(APIView):
         if determined_status == 'outbound':
             # 5-A. 출고 처리 (UPDATE: status 변경)
 
+            # [수정] layer 필터링 제거 -> 냉장고 전체에서 해당 식재료의 가장 최근 inbound 항목을 찾음
             existing_item = FridgeIngredients.objects.filter(
                 fridge=fridge_id,
                 ingredient_name__iexact=detected_name,
-                layer=determined_layer,
                 status='inbound'  # status가 inbound인 항목만 출고 대상으로 간주
             ).order_by('-stored_at').first()
 
@@ -265,7 +266,7 @@ class FridgeDetailView(APIView):
                 existing_item.status = 'outbound'
                 existing_item.save(update_fields=['status'])
 
-                print(f"✅ 출고 업데이트 완료: {detected_name} (Layer {determined_layer}) status OUTBOUND로 변경.")
+                print(f"✅ 출고 업데이트 완료: {detected_name} (냉장고 전체) status OUTBOUND로 변경. (출고된 재고는 Layer {existing_item.layer}에 있었음)")
 
                 response_serializer = FridgeIngredientsSerializer(existing_item)
                 response_data = response_serializer.data
@@ -273,7 +274,7 @@ class FridgeDetailView(APIView):
 
             else:
                 # 항목이 없으면: 경고 및 POST 시도 안 함
-                print(f"❌ 출고 실패: {detected_name} (Layer {determined_layer}) 활성 재고가 DB에 없습니다.")
+                print(f"❌ 출고 실패: {detected_name} 활성 재고가 냉장고에 없습니다.")
                 return Response(
                     {"error": "출고 실패", "message": f"DB에 {detected_name} 활성 재고가 없어 상태를 변경할 수 없습니다."},
                     status=status.HTTP_404_NOT_FOUND)
