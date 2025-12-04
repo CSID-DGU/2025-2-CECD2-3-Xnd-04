@@ -19,9 +19,22 @@ import traceback
 import cv2
 import numpy as np
 from django.db.models import F
-# [추가] S3 업로드를 위한 boto3 import 추가
+import re  # 🚨 [추가] 정규표현식 사용을 위해 import
 import boto3
 from botocore.exceptions import ClientError
+
+
+# 🚨 [추가] RPi 파일명에서 타임스탬프를 추출하는 헬퍼 함수
+def extract_timestamp_from_path(file_path):
+    """
+    RPi가 저장한 파일명(예: fridge_shot_20251204_154530_123.jpg)에서
+    밀리초 단위의 타임스탬프 문자열을 추출하여 재정렬 키로 사용
+    """
+    # YYYYMMDD_HHMMSS_mmm 패턴 (\d{8}_\d{6}_\d{3}) 추출
+    match = re.search(r'(\d{8}_\d{6}_\d{3})', os.path.basename(file_path))
+    if match:
+        return match.group(1)
+    return '0'
 
 
 class FridgeDetailView(APIView):
@@ -29,7 +42,6 @@ class FridgeDetailView(APIView):
         user = request.user
         try:
             fridge = Fridge.objects.get(fridge_id=fridge_id, user=user)
-            # 수량 개념이 없으므로, 현재는 layer만 필터링합니다.
             ingredients = FridgeIngredients.objects.filter(fridge=fridge_id).order_by('layer')
             serializer = FridgeIngredientsSerializer(ingredients, many=True)
 
@@ -49,14 +61,12 @@ class FridgeDetailView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    # ===== [추가] S3 업로드 함수 =====
+    # ===== S3 업로드 함수 (동일) =====
     def upload_to_s3(self, file_path, s3_key):
         """
         로컬 파일을 S3에 업로드하고 S3 경로(키)를 반환합니다.
-        (settings에 AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME 필요)
         """
         try:
-            # boto3 클라이언트를 사용하여 S3에 업로드
             s3_client = boto3.client(
                 's3',
                 aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
@@ -92,7 +102,7 @@ class FridgeDetailView(APIView):
         except Fridge.DoesNotExist:
             return Response({"error": "냉장고를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
-        # 이미지 파일 리스트 수집
+        # 이미지 파일 리스트 수집 (image_0, image_1... 순으로 보낸다고 가정)
         image_files = []
         sorted_keys = sorted([k for k in request.FILES.keys() if k.startswith('image_')])
         for key in sorted_keys:
@@ -101,7 +111,6 @@ class FridgeDetailView(APIView):
         layer = request.data.get('layer')
         action_type = request.data.get('action_type')
 
-        # [추가] RPi가 보내는 해상도 정보 추출 (없을 경우 기본값 1920x1080 사용)
         image_width = int(request.data.get('image_width', 1920))
         image_height = int(request.data.get('image_height', 1080))
 
@@ -126,12 +135,10 @@ class FridgeDetailView(APIView):
         os.makedirs(temp_dir, exist_ok=True)
 
         try:
-            timestamp = int(time.time())
 
-            # 1. 모든 이미지 파일을 로컬 임시 폴더에 저장
+            # 1. 모든 이미지 파일을 로컬 임시 폴더에 저장 (RPi가 보낸 파일명 그대로 저장)
             for idx, img_file in enumerate(image_files):
-                file_extension = os.path.splitext(img_file.name)[1]
-                filename = f"{user_identifier}_{timestamp}_{idx}{file_extension}"
+                filename = img_file.name  # RPi에서 생성된 타임스탬프 파일명 사용
                 file_path = os.path.join(temp_dir, filename)
 
                 with open(file_path, 'wb+') as destination:
@@ -139,6 +146,10 @@ class FridgeDetailView(APIView):
                         destination.write(chunk)
 
                 saved_file_paths.append(file_path)
+
+            # 🚨 [핵심 추가] 타임스탬프 기준으로 파일 경로 리스트 재정렬
+            # 네트워크 지연으로 인한 순서 뒤바뀜 방지
+            saved_file_paths.sort(key=extract_timestamp_from_path)
 
             pipeline_result = None
 
@@ -152,10 +163,9 @@ class FridgeDetailView(APIView):
 
         try:
             # 2. 파이프라인 실행
-            # [수정] 해상도 인자를 pipeline_logic.py에 전달
             pipeline_result = process_image_pipeline(
                 pipeline_user_id,
-                image_paths=saved_file_paths,
+                image_paths=saved_file_paths,  # 🚨 정렬된 리스트 전달
                 layer=layer,
                 image_width=image_width,
                 image_height=image_height,
@@ -178,13 +188,15 @@ class FridgeDetailView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # ------------------------------------------------------------------
-        # 3. Best Shot 선정, S3 업로드 및 청소
+        # 3. Best Shot 선정, S3 업로드 및 청소 (동일)
         # ------------------------------------------------------------------
 
         detected_name = pipeline_result.get('ingredient_name', '미확인')
         if not detected_name: detected_name = '미확인'
 
         status_kor = '입고' if pipeline_result.get('status') == 'inbound' else '출고'
+
+        # NOTE: raw_timestamp가 없다면 current time 사용
         timestamp_for_name = pipeline_result.get('raw_timestamp', int(time.time()))
 
         best_shot_path = pipeline_result.get('ingredient_pic')
@@ -202,10 +214,8 @@ class FridgeDetailView(APIView):
 
         except Exception as e:
             print(f"❌ S3 최종 업로드 실패! DB에 임시 로컬 경로 저장: {e}")
-            # S3 업로드 실패 시, DB에 임시 파일의 로컬 경로를 저장합니다.
             final_storage_path = best_shot_path
 
-            # 3-B. [청소] 모든 임시 파일 삭제
         print(f"🗑️ 임시 파일 {len(saved_file_paths)}개 삭제 중...")
         for temp_path in saved_file_paths:
             if os.path.exists(temp_path):
@@ -215,7 +225,7 @@ class FridgeDetailView(APIView):
                     print(f"  ⚠️ 삭제 실패: {temp_path} - {e}")
 
         # ------------------------------------------------------------------
-        # 4. DB 저장/업데이트 로직
+        # 4. DB 저장/업데이트 로직 (동일)
         # ------------------------------------------------------------------
 
         determined_status = pipeline_result.get('status', 'inbound')
@@ -228,11 +238,10 @@ class FridgeDetailView(APIView):
             print(f"[{detected_name}]의 FoodStorageLife DB 매핑에 실패하여 ID가 None으로 저장됩니다.")
 
         final_data = {
-            # DB에 저장/업데이트할 최종 데이터 필드
             'fridge': fridge_id,
             'layer': determined_layer,
             'status': determined_status,
-            'ingredient_pic': "https://xndingredientsimagestorage.s3.ap-northeast-2.amazonaws.com/" + final_storage_path,  # S3 키 또는 로컬 임시 경로
+            'ingredient_pic': "https://xndingredientsimagestorage.s3.ap-northeast-2.amazonaws.com/" + final_storage_path,
             'ingredient_name': detected_name,
             'category_yolo': pipeline_result.get('category_yolo'),
             'yolo_confidence': pipeline_result.get('yolo_confidence'),
@@ -246,42 +255,36 @@ class FridgeDetailView(APIView):
         }
 
         # --------------------------------------------------
-        # 5. 분기 처리: OUTBOUND (UPDATE) vs INBOUND (POST/CREATE)
+        # 5. 분기 처리: OUTBOUND (UPDATE) vs INBOUND (POST/CREATE) (동일)
         # --------------------------------------------------
 
-        http_status = status.HTTP_201_CREATED  # 기본값: 생성
+        http_status = status.HTTP_201_CREATED
 
         if determined_status == 'outbound':
-            # 5-A. 출고 처리 (UPDATE: status 변경)
-
-            # [수정] layer 필터링 제거 -> 냉장고 전체에서 해당 식재료의 가장 최근 inbound 항목을 찾음
             existing_item = FridgeIngredients.objects.filter(
                 fridge=fridge_id,
                 ingredient_name__iexact=detected_name,
-                status='inbound'  # status가 inbound인 항목만 출고 대상으로 간주
+                status='inbound'
             ).order_by('-stored_at').first()
 
             if existing_item:
-                # 항목이 존재하면: UPDATE (status를 'outbound'로 변경)
                 existing_item.status = 'outbound'
                 existing_item.save(update_fields=['status'])
 
-                print(f"✅ 출고 업데이트 완료: {detected_name} (냉장고 전체) status OUTBOUND로 변경. (출고된 재고는 Layer {existing_item.layer}에 있었음)")
+                print(
+                    f"✅ 출고 업데이트 완료: {detected_name} (냉장고 전체) status OUTBOUND로 변경. (출고된 재고는 Layer {existing_item.layer}에 있었음)")
 
                 response_serializer = FridgeIngredientsSerializer(existing_item)
                 response_data = response_serializer.data
                 http_status = status.HTTP_200_OK
 
             else:
-                # 항목이 없으면: 경고 및 POST 시도 안 함
                 print(f"❌ 출고 실패: {detected_name} 활성 재고가 냉장고에 없습니다.")
                 return Response(
                     {"error": "출고 실패", "message": f"DB에 {detected_name} 활성 재고가 없어 상태를 변경할 수 없습니다."},
                     status=status.HTTP_404_NOT_FOUND)
 
         else:
-            # 5-B. 입고 처리 (POST / CREATE)
-
             if final_data.get('expiry_date_status') == 'UNCERTAIN':
                 final_data['expiry_date'] = None
 
@@ -298,10 +301,9 @@ class FridgeDetailView(APIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # --------------------------------------------------
-        # 6. 최종 응답
+        # 6. 최종 응답 (동일)
         # --------------------------------------------------
 
-        # [최종 응답] Pi 요청인 경우 (파이프라인 로그를 포함하여 리턴)
         if request.data.get('action_type') == 'analyzing':
 
             final_log_summary = {
@@ -318,9 +320,7 @@ class FridgeDetailView(APIView):
                 "detail_log": pipeline_result.get('decision_log', '로그 정보 없음'),
                 "log": "AI pipeline executed successfully."
             }
-            # 출고 시에도 200 OK를 리턴하여 성공을 알림
             return Response(final_log_summary, status=http_status)
 
         else:
-            # [최종 응답] 일반 모바일 앱 요청: 기존 DB 정보 전체 리턴
             return Response(response_data, status=http_status)
