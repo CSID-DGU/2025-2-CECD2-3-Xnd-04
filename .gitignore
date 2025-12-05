@@ -8,3 +8,4 @@ nul
 # Environment files
 Backend/.env
 Backend/.env.example
+Backend/models/
