@@ -14,6 +14,7 @@ vision_api_key.json
 /auth/vision_api_key.json
 
 media/
+models/
 
 firebase-service-account.json
 XndApp/Services/inference_process.log

@@ -241,7 +241,7 @@ class FridgeDetailView(APIView):
             'fridge': fridge_id,
             'layer': determined_layer,
             'status': determined_status,
-            'ingredient_pic': "https://xndingredientsimagestorage.s3.ap-northeast-2.amazonaws.com/" + final_storage_path,
+            'ingredient_pic': settings.MEDIA_URL + final_storage_path,
             'ingredient_name': detected_name,
             'category_yolo': pipeline_result.get('category_yolo'),
             'yolo_confidence': pipeline_result.get('yolo_confidence'),
