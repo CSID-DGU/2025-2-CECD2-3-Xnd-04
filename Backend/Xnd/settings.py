@@ -4,12 +4,16 @@ from datetime import timedelta
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
 # import firebase_admin
 # from firebase_admin import credentials
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+import sys
+sys.path.append(str(BASE_DIR / "XndApp" / "utils"))
+load_dotenv()
+import print_patch
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY')

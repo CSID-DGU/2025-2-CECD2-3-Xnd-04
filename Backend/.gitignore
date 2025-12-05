@@ -16,3 +16,5 @@ vision_api_key.json
 media/
 
 firebase-service-account.json
+XndApp/Services/inference_process.log
+XndApp/utils/print_patch.py

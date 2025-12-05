@@ -1,5 +1,3 @@
-# 파일: XndApp/Services/pipeline_logic.py
-
 import os
 import numpy as np
 import cv2
@@ -19,6 +17,12 @@ import logging
 logger = logging.getLogger('PipelineLogic')
 logger.setLevel(logging.INFO)
 
+logger.propagate = False
+
+logdir = os.path.join(settings.BASE_DIR, "XndApp", "Services", "inference_process.log")
+file_handler = logging.FileHandler(logdir)
+logger.addHandler(file_handler)
+
 CACHED_INGREDIENT_LIST = None
 
 # 식재료명/유통기한 인식에서 제외할 키워드 (영양성분 + 제조시설/경고 문구)
@@ -26,7 +30,7 @@ EXCLUSION_KEYWORDS = [
     '나트륨', '탄수화물', '당류', '지방', '트랜스지방', '포화지방',
     '콜레스테롤', '단백질', '칼슘', '열량', 'g', 'mg', 'kcal', '%',
     '제조시설', '사용된', '시설에서', '원재료', '함유', '알레르기', '성분', '주의', '사용할', '수', '있습니다', '제품은', '원재료명',
-    '부정', '불량', '가지'
+    '부정', '불량', '가지', '안심', '식품'
 ]
 
 STANDARD_MAP = {
@@ -330,6 +334,10 @@ def process_image_pipeline(user_id: int, image_paths: List[str], layer: str, ima
             logger.info(f"🗳️ [투표 보정] {target_yolo_result['category_name']} -> {most_weighted_category} (점수 1위)로 변경")
             target_yolo_result['category_name'] = most_weighted_category
 
+        if target_yolo_result:
+            logger.info(f"🗳️ 식재료명: {target_yolo_result['category_name']}")
+        logger.info(f"🗳️ 신뢰도 값 : {winner_max_conf}")
+
         # 🚨 [X/Y 교환] 층수 판단 (수정됨: X값이 클수록 1층)
         # NOTE: 이 로직은 층수 판단이 반대로 나왔던 문제를 해결합니다.
         if len(valid_detections) == 1:
@@ -424,7 +432,7 @@ def process_image_pipeline(user_id: int, image_paths: List[str], layer: str, ima
             final_data['cropped_ingredient_pic'] = original_cropped_path
     else:
         final_data['cropped_ingredient_pic'] = None
-
+    logger.info('-----------------------------------------------------------------------')
     return final_data
 
 
@@ -436,7 +444,7 @@ def run_yolo_detection(image_path: str) -> Dict[str, Any]:
         return None
 
     try:
-        results = model.predict(source=image_path, imgsz=416, conf=0.15, iou=0.5, verbose=True)
+        results = model.predict(source=image_path, imgsz=512, conf=0.15, iou=0.5, verbose=True)
 
         if not results or not results[0].boxes:
             return None
@@ -606,7 +614,7 @@ def extract_ocr_info(ocr_raw_output: Dict[str, Any]) -> Dict[str, Any]:
                         except ValueError:
                             continue
 
-                    date_format_parts = 2
+                        date_format_parts = 2
 
                     if parsed_date and 2000 <= parsed_date.year <= 2100:
                         found_dates_info.append((parsed_date, block, date_format_parts))
@@ -768,6 +776,7 @@ def integrate_results(base_data: Dict[str, Any], yolo_result: Dict[str, Any], oc
     candidate_name = None
 
     determined_ingredient_name = '식재료 미확인'
+    is_ocr_based_determination = False # <<--- 플래그 추가
 
     # 1. (최우선) YOLO 강제 확정: YOLO 신뢰도가 0.7 이상일 경우
     if yolo_category not in ['FALLBACK_MODE', '식재료 미확인'] and \
@@ -793,11 +802,13 @@ def integrate_results(base_data: Dict[str, Any], yolo_result: Dict[str, Any], oc
 
         if max_fuzz_score >= TYPO_THRESHOLD and best_fuzz_match:
             determined_ingredient_name = best_fuzz_match
+            is_ocr_based_determination = True # <<--- OCR 기반 확정
             ACTION_DETAIL_LOG.append(f"✅ Levenshtein 확정: DB 표준명 {best_fuzz_match}로 오타 보정")
 
         # 3. Word2Vec 신뢰도 기반 확정 (Levenshtein 실패했으나 Word2Vec은 높을 때)
         elif final_product_name and product_similarity_score >= PRODUCT_SIMILARITY_THRESHOLD:
             determined_ingredient_name = final_product_name
+            is_ocr_based_determination = True # <<--- OCR 기반 확정
             ACTION_DETAIL_LOG.append(f"✅ Word2Vec 확정: 유사도 {product_similarity_score:.2f}로 {final_product_name} 사용")
 
         # 4. YOLO 신뢰도 기준 미달이나 fallback으로 YOLO 사용 (0.4 ~ 0.7 사이)
@@ -807,18 +818,20 @@ def integrate_results(base_data: Dict[str, Any], yolo_result: Dict[str, Any], oc
             ACTION_DETAIL_LOG.append(f"⚠️ YOLO 폴백 사용: {yolo_confidence:.2f} (최소 {YOLO_MIN_FALLBACK_CONFIDENCE} 통과)")
 
     # ------------------------------------------------------------------------------------
-    # 🚨 [YOLO 0.4 미달 강제 미확인 로직] 최종 확정 후 신뢰도 미달 시 취소
-    # 이 로직은 OCR/Levenshtein/Word2Vec 경로를 통해 확정된 이름이 YOLO 0.4 기준을 충족했는지 마지막에 확인합니다.
+    # 🚨 [YOLO 0.4 미달 강제 미확인 로직] 최종 확정 후 신뢰도 미달 시 취소 (수정된 로직)
 
     if determined_ingredient_name != '식재료 미확인':
         # 1. DB 표준명으로 정규화
         determined_ingredient_name = get_standard_name(determined_ingredient_name)
 
         # 2. 🚨 [추가 검증]: YOLO 신뢰도가 0.4 미만일 경우 강제 미확인 처리
-        if yolo_confidence is not None and yolo_confidence < YOLO_MIN_FALLBACK_CONFIDENCE:
+        #     OCR 기반 확정(is_ocr_based_determination == True)인 경우는 이 로직을 통과시킴
+        if (not is_ocr_based_determination) and \
+           yolo_confidence is not None and yolo_confidence < YOLO_MIN_FALLBACK_CONFIDENCE:
+
             if yolo_category not in ['FALLBACK_MODE', '식재료 미확인']:
                 ACTION_DETAIL_LOG.append(
-                    f"❌ 확정 취소: Levenshtein/Word2Vec 확정되었으나 YOLO 신뢰도({yolo_confidence:.2f})가 최소 기준({YOLO_MIN_FALLBACK_CONFIDENCE}) 미달."
+                    f"❌ 확정 취소: YOLO 기반 확정이었으나 YOLO 신뢰도({yolo_confidence:.2f})가 최소 기준({YOLO_MIN_FALLBACK_CONFIDENCE}) 미달."
                 )
                 determined_ingredient_name = '식재료 미확인'
 
