@@ -23,7 +23,7 @@ from XndApp.Models.ingredients import Ingredient
 from XndApp.Models.RecipeIngredient import RecipeIngredient
 
 # CSV 파일 경로 설정
-FILE_PATH = "recipe_dataset.csv"
+FILE_PATH = "RecipeDataset.csv"
 
 def parse_list_string(data_str):
     if not data_str: return []
